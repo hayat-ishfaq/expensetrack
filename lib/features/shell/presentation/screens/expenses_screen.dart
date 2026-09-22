@@ -424,6 +424,7 @@ class _ExpenseTile extends ConsumerWidget {
         : null;
     final catColor = custom?.color ?? expense.category.color;
     final catIcon = custom?.icon ?? expense.category.icon;
+    final catLabel = custom?.label ?? expense.category.label;
     final dateStr = DateFormat('dd MMM').format(expense.spentAt);
     final hasSubcat =
         expense.subcategory != null && expense.subcategory!.trim().isNotEmpty;
@@ -523,7 +524,7 @@ class _ExpenseTile extends ConsumerWidget {
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
-                      cat.label,
+                      catLabel,
                       style: theme.textTheme.labelSmall?.copyWith(
                         color: scheme.onSurfaceVariant,
                         fontSize: 10,

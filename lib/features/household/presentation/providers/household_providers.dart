@@ -5,10 +5,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../shared/models/household.dart';
 import '../../../../shared/models/household_member.dart';
 import '../../../auth/presentation/providers/session_provider.dart';
-import '../../../core/providers/firebase_providers.dart';
+import '../../../expenses/domain/custom_category.dart';
 import '../../data/firebase_household_repository.dart';
 import '../../domain/household_repository.dart';
-import '../../expenses/domain/custom_category.dart';
 
 /// Composition root for the household feature. Overridden in tests.
 final householdRepositoryProvider = Provider<HouseholdRepository>((ref) {

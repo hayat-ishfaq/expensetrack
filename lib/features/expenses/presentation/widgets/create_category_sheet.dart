@@ -274,7 +274,7 @@ class _CreateCategorySheetState extends ConsumerState<CreateCategorySheet> {
                 child: ListView.separated(
                   scrollDirection: Axis.horizontal,
                   itemCount: _availableColors.length,
-                  separatorBuilder: (_, __) => const SizedBox(width: 10),
+                  separatorBuilder: (_, _) => const SizedBox(width: 10),
                   itemBuilder: (context, index) {
                     final color = _availableColors[index];
                     final isSelected = color == _selectedColor;

@@ -1,6 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-import 'package:flutter/foundation.dart';
 import '../../features/expenses/domain/custom_category.dart';
 
 /// Default curated subcategories for standard expense categories.

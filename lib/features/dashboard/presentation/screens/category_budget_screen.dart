@@ -9,7 +9,6 @@ import '../../../../shared/models/household.dart';
 import '../../../../shared/models/household_member.dart';
 import '../../../../shared/widgets/app_snackbar.dart';
 import '../../../auth/presentation/providers/session_provider.dart';
-import '../../../expenses/domain/custom_category.dart';
 import '../../../expenses/domain/expense_category.dart';
 import '../../../expenses/presentation/widgets/create_category_sheet.dart';
 import '../../../household/presentation/providers/household_providers.dart';

@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:expensetrack/features/expenses/domain/custom_category.dart';
 import 'package:expensetrack/shared/models/household.dart';
 import 'package:flutter_test/flutter_test.dart';

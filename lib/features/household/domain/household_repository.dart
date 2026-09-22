@@ -1,6 +1,6 @@
-import '../../expenses/domain/custom_category.dart';
 import '../../../shared/models/household.dart';
 import '../../../shared/models/household_member.dart';
+import '../../expenses/domain/custom_category.dart';
 
 /// Household ("flat") boundary. Creates/joins households and streams household
 /// data; the Firebase implementation is replaced with fakes in tests.

@@ -8,6 +8,7 @@ import '../../../../core/errors/app_exception.dart';
 import '../../../../core/errors/firebase_error_mapper.dart';
 import '../../../../core/utils/money.dart';
 import '../../../../core/utils/validators.dart';
+import '../../../../shared/models/household.dart';
 import '../../../../shared/models/household_member.dart';
 import '../../../../shared/widgets/app_snackbar.dart';
 import '../../../../shared/widgets/loading_button.dart';
