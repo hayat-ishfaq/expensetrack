@@ -290,6 +290,26 @@ class MoreScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 16),
 
+          // App Tour / Onboarding
+          Card(
+            elevation: 0,
+            color: scheme.surfaceContainerLow,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(18),
+              side: BorderSide(
+                color: scheme.outlineVariant.withValues(alpha: 0.4),
+              ),
+            ),
+            child: ListTile(
+              leading: const Icon(Icons.auto_stories_rounded),
+              title: const Text('App Tour & Features'),
+              subtitle: const Text('Replay animated onboarding introduction'),
+              trailing: const Icon(Icons.chevron_right_rounded),
+              onTap: () => context.push(Routes.onboarding),
+            ),
+          ),
+          const SizedBox(height: 12),
+
           // Account Actions
           Card(
             elevation: 0,

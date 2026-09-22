@@ -6,6 +6,7 @@ import '../../features/auth/domain/session_state.dart';
 import '../../features/auth/presentation/providers/session_provider.dart';
 import '../../features/auth/presentation/screens/forgot_password_screen.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
+import '../../features/auth/presentation/screens/onboarding_screen.dart';
 import '../../features/auth/presentation/screens/signup_screen.dart';
 import '../../features/auth/presentation/screens/splash_screen.dart';
 import '../../features/auth/presentation/screens/welcome_screen.dart';
@@ -26,6 +27,7 @@ import 'routes.dart';
 
 /// Routes reachable while signed out. Everything else requires a session.
 const Set<String> _authPaths = {
+  Routes.onboarding,
   Routes.welcome,
   Routes.login,
   Routes.signup,
@@ -52,6 +54,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: Routes.splash,
         name: 'splash',
         builder: (context, state) => const SplashScreen(),
+      ),
+      GoRoute(
+        path: Routes.onboarding,
+        name: 'onboarding',
+        builder: (context, state) => const OnboardingScreen(),
       ),
       GoRoute(
         path: Routes.welcome,
@@ -177,9 +184,9 @@ String? _redirect(GoRouterState state, SessionState? session) {
 
     // Signed out: auth screens only.
     case SessionSignedOut():
-      if (path == Routes.splash) return Routes.welcome;
+      if (path == Routes.splash) return Routes.onboarding;
       if (_authPaths.contains(path)) return null;
-      return Routes.welcome;
+      return Routes.onboarding;
 
     // Signed in but no household yet: household setup only.
     case SessionNeedsHousehold():

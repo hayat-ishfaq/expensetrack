@@ -7,7 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'support/fake_auth_repository.dart';
 
 void main() {
-  testWidgets('signed-out user lands on the welcome screen', (tester) async {
+  testWidgets('signed-out user lands on the onboarding screen', (tester) async {
     SharedPreferences.setMockInitialValues({});
     final fakeAuth = FakeAuthRepository();
 
@@ -19,8 +19,8 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Shared expenses,\nsimplified.'), findsOneWidget);
-    expect(find.text('Get started'), findsOneWidget);
-    expect(find.text('I already have an account'), findsOneWidget);
+    expect(find.text('FlatSplit'), findsOneWidget);
+    expect(find.text('Skip'), findsOneWidget);
+    expect(find.text('Next'), findsOneWidget);
   });
 }

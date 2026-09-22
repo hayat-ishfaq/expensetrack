@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
 
-/// Material 3 theme for FlatSplit: a clean fintech look with subtle
-/// elevation, consistent radii and one blue seed for light and dark modes.
+/// Luxury Material 3 theme for FlatSplit:
+/// Obsidian dark mode, vibrant royal indigo and emerald tones, consistent curved geometry,
+/// and frosted glassmorphic surface tokens.
 abstract final class AppTheme {
-  static const Color seedColor = Color(0xFF2563EB);
-  static const double radius = 14;
+  static const Color seedColor = Color(0xFF4F46E5); // Royal Indigo
+  static const Color emeraldColor = Color(0xFF10B981); // Emerald Mint
+  static const Color roseColor = Color(0xFFF43F5E); // Coral Rose
+  static const Color amberColor = Color(0xFFF59E0B); // Warm Gold
+
+  static const double radius = 18;
 
   static ThemeData light() => _build(Brightness.light);
   static ThemeData dark() => _build(Brightness.dark);
@@ -18,7 +23,7 @@ abstract final class AppTheme {
       useMaterial3: true,
       colorScheme: scheme,
       scaffoldBackgroundColor:
-          isDark ? const Color(0xFF0F1218) : const Color(0xFFF6F7F9),
+          isDark ? const Color(0xFF090D16) : const Color(0xFFF8FAFC),
 
       appBarTheme: AppBarTheme(
         backgroundColor: Colors.transparent,
@@ -28,8 +33,8 @@ abstract final class AppTheme {
         scrolledUnderElevation: 0,
         centerTitle: false,
         titleTextStyle: TextStyle(
-          fontSize: 17,
-          fontWeight: FontWeight.w600,
+          fontSize: 18,
+          fontWeight: FontWeight.w800,
           letterSpacing: -0.3,
           color: scheme.onSurface,
         ),
@@ -38,21 +43,25 @@ abstract final class AppTheme {
       cardTheme: CardThemeData(
         elevation: 0,
         margin: EdgeInsets.zero,
-        color: scheme.surface,
+        color: isDark ? const Color(0xFF111726) : scheme.surface,
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(radius),
-          side: BorderSide(color: scheme.outlineVariant.withValues(alpha: 0.7)),
+          side: BorderSide(
+            color: isDark
+                ? Colors.white.withValues(alpha: 0.08)
+                : scheme.outlineVariant.withValues(alpha: 0.5),
+          ),
         ),
       ),
 
       dialogTheme: DialogThemeData(
-        backgroundColor: scheme.surface,
+        backgroundColor: isDark ? const Color(0xFF111726) : scheme.surface,
         surfaceTintColor: Colors.transparent,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         titleTextStyle: TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.w600,
+          fontSize: 19,
+          fontWeight: FontWeight.w800,
           letterSpacing: -0.3,
           color: scheme.onSurface,
         ),
@@ -65,26 +74,34 @@ abstract final class AppTheme {
 
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: isDark ? scheme.surfaceContainer : Colors.white,
+        fillColor: isDark ? const Color(0xFF161F33) : Colors.white,
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 16,
           vertical: 16,
         ),
         hintStyle: TextStyle(
-          fontSize: 15,
-          color: scheme.onSurfaceVariant.withValues(alpha: 0.75),
+          fontSize: 14.5,
+          color: scheme.onSurfaceVariant.withValues(alpha: 0.65),
         ),
-        labelStyle: TextStyle(fontSize: 15, color: scheme.onSurfaceVariant),
+        labelStyle: TextStyle(fontSize: 14.5, color: scheme.onSurfaceVariant),
         floatingLabelStyle: TextStyle(
-          fontSize: 15,
-          fontWeight: FontWeight.w600,
+          fontSize: 14.5,
+          fontWeight: FontWeight.w700,
           color: scheme.primary,
         ),
-        border: _outlineBorder(scheme.outlineVariant),
-        enabledBorder: _outlineBorder(scheme.outlineVariant),
-        focusedBorder: _outlineBorder(scheme.primary, width: 1.6),
+        border: _outlineBorder(
+          isDark
+              ? Colors.white.withValues(alpha: 0.1)
+              : scheme.outlineVariant.withValues(alpha: 0.6),
+        ),
+        enabledBorder: _outlineBorder(
+          isDark
+              ? Colors.white.withValues(alpha: 0.1)
+              : scheme.outlineVariant.withValues(alpha: 0.6),
+        ),
+        focusedBorder: _outlineBorder(scheme.primary, width: 1.8),
         errorBorder: _outlineBorder(scheme.error),
-        focusedErrorBorder: _outlineBorder(scheme.error, width: 1.6),
+        focusedErrorBorder: _outlineBorder(scheme.error, width: 1.8),
         errorStyle: TextStyle(fontSize: 12.5, color: scheme.error),
       ),
 
@@ -99,11 +116,11 @@ abstract final class AppTheme {
           disabledForegroundColor: scheme.onSurface.withValues(alpha: 0.38),
           textStyle: const TextStyle(
             fontSize: 15,
-            fontWeight: FontWeight.w600,
-            letterSpacing: 0.1,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0.2,
           ),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(14),
           ),
         ),
       ),
@@ -115,11 +132,11 @@ abstract final class AppTheme {
           padding: const EdgeInsets.symmetric(horizontal: 20),
           textStyle: const TextStyle(
             fontSize: 15,
-            fontWeight: FontWeight.w600,
-            letterSpacing: 0.1,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0.2,
           ),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(14),
           ),
         ),
       ),
@@ -129,62 +146,54 @@ abstract final class AppTheme {
           foregroundColor: scheme.primary,
           textStyle: const TextStyle(
             fontSize: 14.5,
-            fontWeight: FontWeight.w600,
+            fontWeight: FontWeight.w700,
           ),
         ),
       ),
 
       navigationBarTheme: NavigationBarThemeData(
-        backgroundColor: scheme.surface,
+        backgroundColor: isDark ? const Color(0xFF0C111C) : scheme.surface,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
-        height: 66,
-        indicatorColor: scheme.primaryContainer.withValues(alpha: 0.7),
-        labelTextStyle: WidgetStateProperty.resolveWith(
-          (states) => TextStyle(
+        indicatorColor: scheme.primary.withValues(alpha: 0.18),
+        labelTextStyle: WidgetStateProperty.resolveWith((states) {
+          final isSelected = states.contains(WidgetState.selected);
+          return TextStyle(
             fontSize: 12,
-            fontWeight: states.contains(WidgetState.selected)
-                ? FontWeight.w600
-                : FontWeight.w500,
-          ),
-        ),
-      ),
-
-      snackBarTheme: SnackBarThemeData(
-        behavior: SnackBarBehavior.floating,
-        elevation: 2,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      ),
-
-      bottomSheetTheme: BottomSheetThemeData(
-        backgroundColor: scheme.surface,
-        surfaceTintColor: Colors.transparent,
-        showDragHandle: true,
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-        ),
+            fontWeight: isSelected ? FontWeight.w800 : FontWeight.w500,
+            color: isSelected ? scheme.primary : scheme.onSurfaceVariant,
+          );
+        }),
+        iconTheme: WidgetStateProperty.resolveWith((states) {
+          final isSelected = states.contains(WidgetState.selected);
+          return IconThemeData(
+            size: 24,
+            color: isSelected ? scheme.primary : scheme.onSurfaceVariant,
+          );
+        }),
       ),
 
       dividerTheme: DividerThemeData(
-        color: scheme.outlineVariant,
+        color: isDark
+            ? Colors.white.withValues(alpha: 0.08)
+            : scheme.outlineVariant.withValues(alpha: 0.4),
         thickness: 1,
         space: 1,
       ),
 
-      progressIndicatorTheme: ProgressIndicatorThemeData(color: scheme.primary),
-
-      listTileTheme: ListTileThemeData(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
+      bottomSheetTheme: BottomSheetThemeData(
+        backgroundColor: isDark ? const Color(0xFF101726) : scheme.surface,
+        surfaceTintColor: Colors.transparent,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(26)),
         ),
-        iconColor: scheme.onSurfaceVariant,
       ),
     );
   }
 
-  static OutlineInputBorder _outlineBorder(Color color, {double width = 1.2}) {
+  static OutlineInputBorder _outlineBorder(Color color, {double width = 1.0}) {
     return OutlineInputBorder(
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(14),
       borderSide: BorderSide(color: color, width: width),
     );
   }

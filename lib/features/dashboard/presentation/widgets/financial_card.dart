@@ -39,10 +39,23 @@ class FinancialSummaryCards extends StatelessWidget {
             ? 'You owe'
             : 'Settled up';
 
-    return Column(
-      children: [
-        // Top 2 Cards: Total Spending & Your Balance (Hero metrics)
-        Row(
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.0, end: 1.0),
+      duration: const Duration(milliseconds: 550),
+      curve: Curves.easeOutCubic,
+      builder: (context, val, child) {
+        return Transform.translate(
+          offset: Offset(0, 16 * (1.0 - val)),
+          child: Opacity(
+            opacity: val,
+            child: child,
+          ),
+        );
+      },
+      child: Column(
+        children: [
+          // Top 2 Cards: Total Spending & Your Balance (Hero metrics)
+          Row(
           children: [
             Expanded(
               child: _MetricCard(
@@ -145,7 +158,7 @@ class FinancialSummaryCards extends StatelessWidget {
           ],
         ),
       ],
-    );
+    ),);
   }
 }
 
