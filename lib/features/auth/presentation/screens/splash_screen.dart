@@ -84,7 +84,7 @@ class _SplashBranding extends StatelessWidget {
                     'assets/images/app_logo.png',
                     width: 84,
                     height: 84,
-                    errorBuilder: (_, __, ___) => Container(
+                    errorBuilder: (_, _, _) => Container(
                       width: 84,
                       height: 84,
                       color: scheme.primary,

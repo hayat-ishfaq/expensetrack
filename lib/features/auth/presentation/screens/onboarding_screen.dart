@@ -103,7 +103,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           'assets/images/app_logo.png',
                           width: 32,
                           height: 32,
-                          errorBuilder: (_, __, ___) => Container(
+                          errorBuilder: (_, _, _) => Container(
                             width: 32,
                             height: 32,
                             color: scheme.primary,
