@@ -256,7 +256,7 @@ class _BudgetProgressCardState extends ConsumerState<BudgetProgressCard> {
                     ? const Color(0xFFEF4444)
                     : catStatus.isApproaching
                         ? const Color(0xFFF59E0B)
-                        : catStatus.category.color;
+                        : catStatus.color;
 
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 10),
@@ -266,14 +266,14 @@ class _BudgetProgressCardState extends ConsumerState<BudgetProgressCard> {
                       Row(
                         children: [
                           Icon(
-                            catStatus.category.icon,
+                            catStatus.icon,
                             size: 15,
-                            color: catStatus.category.color,
+                            color: catStatus.color,
                           ),
                           const SizedBox(width: 6),
                           Expanded(
                             child: Text(
-                              catStatus.category.label,
+                              catStatus.label,
                               style: theme.textTheme.bodySmall?.copyWith(
                                 fontWeight: FontWeight.w600,
                               ),
@@ -320,7 +320,7 @@ class _BudgetProgressCardState extends ConsumerState<BudgetProgressCard> {
                     ? const Color(0xFFEF4444)
                     : myStatus.isApproaching
                         ? const Color(0xFFF59E0B)
-                        : myStatus.category.color;
+                        : myStatus.color;
 
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 10),
@@ -330,14 +330,14 @@ class _BudgetProgressCardState extends ConsumerState<BudgetProgressCard> {
                       Row(
                         children: [
                           Icon(
-                            myStatus.category.icon,
+                            myStatus.icon,
                             size: 15,
-                            color: myStatus.category.color,
+                            color: myStatus.color,
                           ),
                           const SizedBox(width: 6),
                           Expanded(
                             child: Text(
-                              myStatus.category.label,
+                              myStatus.label,
                               style: theme.textTheme.bodySmall?.copyWith(
                                 fontWeight: FontWeight.w600,
                               ),
@@ -376,7 +376,7 @@ class _BudgetProgressCardState extends ConsumerState<BudgetProgressCard> {
                       if (isOver) ...[
                         const SizedBox(height: 2),
                         Text(
-                          'You spent your full ${myStatus.category.label} budget (Over by ${Money.format(-myStatus.myRemainingPaisa)})',
+                          'You spent your full ${myStatus.label} budget (Over by ${Money.format(-myStatus.myRemainingPaisa)})',
                           style: const TextStyle(
                             fontSize: 10,
                             fontWeight: FontWeight.w700,

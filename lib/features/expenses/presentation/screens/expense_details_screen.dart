@@ -60,7 +60,17 @@ class ExpenseDetailsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    final cat = expense.category;
+    final household = ref.watch(currentHouseholdProvider).value;
+
+    final custom = expense.customCategoryId != null
+        ? household?.customCategories
+            .where((c) => c.id == expense.customCategoryId)
+            .firstOrNull
+        : null;
+    final catLabel = custom?.label ?? expense.category.label;
+    final catIcon = custom?.icon ?? expense.category.icon;
+    final catColor = custom?.color ?? expense.category.color;
+
     final members = ref.watch(householdMembersProvider).value ?? const [];
     final memberMap = {for (final m in members) m.id: m};
     final payer = memberMap[expense.paidById];
@@ -98,10 +108,10 @@ class ExpenseDetailsScreen extends ConsumerWidget {
                   width: 64,
                   height: 64,
                   decoration: BoxDecoration(
-                    color: cat.color.withValues(alpha: 0.15),
+                    color: catColor.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(20),
                   ),
-                  child: Icon(cat.icon, color: cat.color, size: 32),
+                  child: Icon(catIcon, color: catColor, size: 32),
                 ),
                 const SizedBox(height: 14),
                 Text(
@@ -122,23 +132,60 @@ class ExpenseDetailsScreen extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(height: 12),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: cat.color.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    cat.label,
-                    style: TextStyle(
-                      color: cat.color,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 12,
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 6,
+                  alignment: WrapAlignment.center,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 5,
+                      ),
+                      decoration: BoxDecoration(
+                        color: catColor.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(catIcon, size: 14, color: catColor),
+                          const SizedBox(width: 5),
+                          Text(
+                            catLabel,
+                            style: TextStyle(
+                              color: catColor,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
+                    if (expense.subcategory != null &&
+                        expense.subcategory!.trim().isNotEmpty)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 5,
+                        ),
+                        decoration: BoxDecoration(
+                          color: scheme.surfaceContainerHighest,
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: scheme.outlineVariant.withValues(alpha: 0.5),
+                          ),
+                        ),
+                        child: Text(
+                          expense.subcategory!,
+                          style: TextStyle(
+                            color: scheme.onSurface,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
               ],
             ),

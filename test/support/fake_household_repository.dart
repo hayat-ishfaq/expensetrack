@@ -1,3 +1,4 @@
+import 'package:expensetrack/features/expenses/domain/custom_category.dart';
 import 'package:expensetrack/features/household/domain/household_repository.dart';
 import 'package:expensetrack/shared/models/household.dart';
 import 'package:expensetrack/shared/models/household_member.dart';
@@ -61,6 +62,36 @@ class FakeHouseholdRepository implements HouseholdRepository {
         categoryBudgetsPaisa: categoryBudgetsPaisa,
         memberCategoryBudgetsPaisa: memberCategoryBudgetsPaisa,
       );
+    }
+  }
+
+  @override
+  Future<void> addCustomCategory({
+    required String householdId,
+    required CustomCategory category,
+  }) async {
+    if (household != null) {
+      final updatedList = List<CustomCategory>.from(household!.customCategories)
+        ..add(category);
+      household = household!.copyWith(customCategories: updatedList);
+    }
+  }
+
+  @override
+  Future<void> addSubcategory({
+    required String householdId,
+    required String categoryId,
+    required String subcategory,
+  }) async {
+    if (household != null) {
+      final updatedMap =
+          Map<String, List<String>>.from(household!.categorySubcategories);
+      final currentList = List<String>.from(updatedMap[categoryId] ?? const []);
+      if (!currentList.contains(subcategory)) {
+        currentList.add(subcategory);
+      }
+      updatedMap[categoryId] = currentList;
+      household = household!.copyWith(categorySubcategories: updatedMap);
     }
   }
 }

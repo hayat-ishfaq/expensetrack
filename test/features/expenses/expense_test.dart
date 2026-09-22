@@ -93,5 +93,59 @@ void main() {
       );
       expect(expense.toMap()['category'], 'rent');
     });
+
+    test('supports customCategoryId and subcategory round-trip', () {
+      final expense = Expense(
+        id: 'e2',
+        householdId: 'h1',
+        description: 'Monthly Gym Membership',
+        category: ExpenseCategory.other,
+        customCategoryId: 'cat_fitness_123',
+        subcategory: 'Gym Pass',
+        amountPaisa: 500000,
+        paidById: 'u1',
+        splitAmongIds: const ['u1'],
+        splitAmountsPaisa: const [500000],
+        spentAt: DateTime(2026, 9, 21),
+        createdByUserId: 'u1',
+        createdAt: DateTime(2026, 9, 21),
+      );
+
+      final map = expense.toMap();
+      expect(map['customCategoryId'], 'cat_fitness_123');
+      expect(map['subcategory'], 'Gym Pass');
+      expect(map['category'], 'cat_fitness_123');
+
+      final restored = Expense.fromMap('e2', map);
+      expect(restored.customCategoryId, 'cat_fitness_123');
+      expect(restored.subcategory, 'Gym Pass');
+      expect(restored.category, ExpenseCategory.other);
+    });
+
+    test('copyWith updates fields correctly', () {
+      final expense = Expense(
+        id: 'e3',
+        householdId: 'h1',
+        description: 'Lunch',
+        category: ExpenseCategory.food,
+        amountPaisa: 120000,
+        paidById: 'u1',
+        splitAmongIds: const ['u1'],
+        splitAmountsPaisa: const [120000],
+        spentAt: DateTime(2026, 9, 22),
+        createdByUserId: 'u1',
+        createdAt: DateTime(2026, 9, 22),
+      );
+
+      final modified = expense.copyWith(
+        subcategory: 'Fast Food',
+        description: 'Burgers',
+      );
+
+      expect(modified.subcategory, 'Fast Food');
+      expect(modified.description, 'Burgers');
+      expect(modified.amountPaisa, 120000);
+      expect(modified.id, 'e3');
+    });
   });
 }

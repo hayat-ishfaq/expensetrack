@@ -1,3 +1,4 @@
+import '../../expenses/domain/custom_category.dart';
 import '../../../shared/models/household.dart';
 import '../../../shared/models/household_member.dart';
 
@@ -39,5 +40,18 @@ abstract interface class HouseholdRepository {
     required String householdId,
     required Map<String, int> categoryBudgetsPaisa,
     Map<String, Map<String, int>> memberCategoryBudgetsPaisa = const {},
+  });
+
+  /// Adds a custom category to the household.
+  Future<void> addCustomCategory({
+    required String householdId,
+    required CustomCategory category,
+  });
+
+  /// Adds a subcategory to a specific category (standard or custom) in the household.
+  Future<void> addSubcategory({
+    required String householdId,
+    required String categoryId,
+    required String subcategory,
   });
 }

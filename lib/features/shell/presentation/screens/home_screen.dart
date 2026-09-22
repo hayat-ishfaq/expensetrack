@@ -183,7 +183,7 @@ class HomeScreen extends ConsumerWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                '${alert.category.label} Budget Exceeded!',
+                                '${alert.label} Budget Exceeded!',
                                 style: const TextStyle(
                                   fontWeight: FontWeight.w800,
                                   fontSize: 13,
@@ -192,7 +192,7 @@ class HomeScreen extends ConsumerWidget {
                               ),
                               const SizedBox(height: 2),
                               Text(
-                                'You spent your whole ${alert.category.label.toLowerCase()} budget for this month (${Money.format(alert.mySpentPaisa)} spent of ${Money.format(alert.myBudgetPaisa)} limit).',
+                                'You spent your whole ${alert.label.toLowerCase()} budget for this month (${Money.format(alert.mySpentPaisa)} spent of ${Money.format(alert.myBudgetPaisa)} limit).',
                                 style: theme.textTheme.bodySmall?.copyWith(
                                   fontWeight: FontWeight.w500,
                                 ),
@@ -354,6 +354,8 @@ class HomeScreen extends ConsumerWidget {
                           description: exp.description,
                           amountPaisa: exp.amountPaisa,
                           category: exp.category,
+                          customCategoryId: exp.customCategoryId,
+                          subcategory: exp.subcategory,
                           spentAt: exp.spentAt,
                           payerName:
                               memberNameMap[exp.paidById] ?? 'Flatmate',
@@ -381,11 +383,13 @@ class HomeScreen extends ConsumerWidget {
   }
 }
 
-class _RecentExpenseTile extends StatelessWidget {
+class _RecentExpenseTile extends ConsumerWidget {
   const _RecentExpenseTile({
     required this.description,
     required this.amountPaisa,
     required this.category,
+    this.customCategoryId,
+    this.subcategory,
     required this.spentAt,
     required this.payerName,
     required this.onTap,
@@ -394,6 +398,8 @@ class _RecentExpenseTile extends StatelessWidget {
   final String description;
   final int amountPaisa;
   final dynamic category;
+  final String? customCategoryId;
+  final String? subcategory;
   final DateTime spentAt;
   final String payerName;
   final VoidCallback onTap;
@@ -410,9 +416,19 @@ class _RecentExpenseTile extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final household = ref.watch(currentHouseholdProvider).value;
+
+    final custom = customCategoryId != null
+        ? household?.customCategories
+            .where((c) => c.id == customCategoryId)
+            .firstOrNull
+        : null;
+    final catColor = custom?.color ?? category.color as Color;
+    final catIcon = custom?.icon ?? category.icon as IconData;
+    final hasSubcat = subcategory != null && subcategory!.trim().isNotEmpty;
 
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
@@ -435,10 +451,10 @@ class _RecentExpenseTile extends StatelessWidget {
                 width: 42,
                 height: 42,
                 decoration: BoxDecoration(
-                  color: category.color.withValues(alpha: 0.15),
+                  color: catColor.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(category.icon, color: category.color, size: 20),
+                child: Icon(catIcon, color: catColor, size: 20),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -454,12 +470,35 @@ class _RecentExpenseTile extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 2),
-                    Text(
-                      'Paid by $payerName · ${_relativeDate(spentAt)}',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: scheme.onSurfaceVariant,
-                        fontSize: 11,
-                      ),
+                    Row(
+                      children: [
+                        Text(
+                          'Paid by $payerName · ${_relativeDate(spentAt)}',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: scheme.onSurfaceVariant,
+                            fontSize: 11,
+                          ),
+                        ),
+                        if (hasSubcat) ...[
+                          const SizedBox(width: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 6, vertical: 1),
+                            decoration: BoxDecoration(
+                              color: catColor.withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              subcategory!,
+                              style: TextStyle(
+                                fontSize: 9.5,
+                                fontWeight: FontWeight.w700,
+                                color: catColor,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
                   ],
                 ),

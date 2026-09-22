@@ -13,10 +13,12 @@ import '../../../../shared/widgets/app_snackbar.dart';
 import '../../../../shared/widgets/loading_button.dart';
 import '../../../auth/presentation/providers/session_provider.dart';
 import '../../../household/presentation/providers/household_providers.dart';
+import '../../domain/custom_category.dart';
 import '../../domain/expense.dart';
 import '../../domain/expense_category.dart';
 import '../../domain/split_modes.dart';
 import '../providers/expense_providers.dart';
+import '../widgets/create_category_sheet.dart';
 
 class AddExpenseScreen extends ConsumerStatefulWidget {
   const AddExpenseScreen({super.key});
@@ -31,6 +33,8 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
   final _descriptionController = TextEditingController();
 
   ExpenseCategory _category = ExpenseCategory.food;
+  CustomCategory? _selectedCustomCategory;
+  String? _selectedSubcategory;
   DateTime _spentAt = DateTime.now();
   String? _paidById;
   SplitMode _splitMode = SplitMode.equal;
@@ -141,7 +145,52 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
     }
   }
 
+  Future<void> _promptAddSubcategory(String categoryId) async {
+    final controller = TextEditingController();
+    final newSubcat = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Add Subcategory'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          textCapitalization: TextCapitalization.words,
+          decoration: const InputDecoration(
+            hintText: 'e.g. Chai, Groceries, Generator Fuel',
+          ),
+          onSubmitted: (val) => Navigator.of(ctx).pop(val.trim()),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(controller.text.trim()),
+            child: const Text('Add'),
+          ),
+        ],
+      ),
+    );
+
+    if (newSubcat != null && newSubcat.isNotEmpty) {
+      final household = ref.read(currentHouseholdProvider).value;
+      if (household != null) {
+        ref.read(householdActionsProvider.notifier).addSubcategory(
+              householdId: household.id,
+              categoryId: categoryId,
+              subcategory: newSubcat,
+            );
+      }
+      setState(() => _selectedSubcategory = newSubcat);
+      HapticFeedback.selectionClick();
+    }
+  }
+
   void _showCategoryPicker() {
+    final household = ref.read(currentHouseholdProvider).value;
+    final customCategories = household?.customCategories ?? const [];
+
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -150,9 +199,9 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
       ),
       builder: (context) {
         return DraggableScrollableSheet(
-          initialChildSize: 0.55,
-          minChildSize: 0.4,
-          maxChildSize: 0.85,
+          initialChildSize: 0.65,
+          minChildSize: 0.45,
+          maxChildSize: 0.9,
           expand: false,
           builder: (context, scrollController) {
             return Padding(
@@ -171,78 +220,222 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  Text(
-                    'Select Category',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.w700,
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Select Category',
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.w700,
+                            ),
+                      ),
+                      FilledButton.tonalIcon(
+                        onPressed: () async {
+                          Navigator.of(context).pop();
+                          final created =
+                              await CreateCategorySheet.show(context);
+                          if (created != null && mounted) {
+                            setState(() {
+                              _selectedCustomCategory = created;
+                              _category = ExpenseCategory.other;
+                              _selectedSubcategory = null;
+                            });
+                          }
+                        },
+                        icon: const Icon(Icons.add_rounded, size: 16),
+                        label: const Text('Custom'),
+                        style: FilledButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 8),
+                          textStyle: const TextStyle(
+                              fontSize: 12, fontWeight: FontWeight.w700),
                         ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 16),
                   Expanded(
-                    child: GridView.builder(
+                    child: ListView(
                       controller: scrollController,
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 3,
-                        mainAxisSpacing: 12,
-                        crossAxisSpacing: 12,
-                        childAspectRatio: 1.05,
-                      ),
-                      itemCount: ExpenseCategory.values.length,
-                      itemBuilder: (context, index) {
-                        final cat = ExpenseCategory.values[index];
-                        final isSelected = cat == _category;
-                        return InkWell(
-                          onTap: () {
-                            setState(() => _category = cat);
-                            Navigator.of(context).pop();
-                          },
-                          borderRadius: BorderRadius.circular(16),
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: isSelected
-                                  ? cat.color.withValues(alpha: 0.15)
-                                  : Theme.of(context)
+                      children: [
+                        if (customCategories.isNotEmpty) ...[
+                          Text(
+                            'HOUSEHOLD CUSTOM CATEGORIES',
+                            style: Theme.of(context)
+                                .textTheme
+                                .labelSmall
+                                ?.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: 1.1,
+                                  color: Theme.of(context)
                                       .colorScheme
-                                      .surfaceContainerHighest,
-                              border: Border.all(
-                                color: isSelected
-                                    ? cat.color
-                                    : Colors.transparent,
-                                width: 2,
-                              ),
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.all(10),
-                                  decoration: BoxDecoration(
-                                    color: cat.color.withValues(alpha: 0.15),
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: Icon(cat.icon,
-                                      color: cat.color, size: 24),
+                                      .onSurfaceVariant,
                                 ),
-                                const SizedBox(height: 6),
-                                Text(
-                                  cat.label,
-                                  textAlign: TextAlign.center,
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .labelMedium
-                                      ?.copyWith(
-                                        fontWeight: isSelected
-                                            ? FontWeight.w700
-                                            : FontWeight.w500,
-                                      ),
-                                ),
-                              ],
-                            ),
                           ),
-                        );
-                      },
+                          const SizedBox(height: 10),
+                          GridView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            gridDelegate:
+                                const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 3,
+                              mainAxisSpacing: 12,
+                              crossAxisSpacing: 12,
+                              childAspectRatio: 1.05,
+                            ),
+                            itemCount: customCategories.length,
+                            itemBuilder: (context, index) {
+                              final cat = customCategories[index];
+                              final isSelected =
+                                  _selectedCustomCategory?.id == cat.id;
+                              return InkWell(
+                                onTap: () {
+                                  setState(() {
+                                    _selectedCustomCategory = cat;
+                                    _category = ExpenseCategory.other;
+                                    _selectedSubcategory = null;
+                                  });
+                                  Navigator.of(context).pop();
+                                },
+                                borderRadius: BorderRadius.circular(16),
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: isSelected
+                                        ? cat.color.withValues(alpha: 0.15)
+                                        : Theme.of(context)
+                                            .colorScheme
+                                            .surfaceContainerHighest,
+                                    border: Border.all(
+                                      color: isSelected
+                                          ? cat.color
+                                          : Colors.transparent,
+                                      width: 2,
+                                    ),
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                  child: Column(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.center,
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.all(10),
+                                        decoration: BoxDecoration(
+                                          color: cat.color
+                                              .withValues(alpha: 0.15),
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: Icon(cat.icon,
+                                            color: cat.color, size: 24),
+                                      ),
+                                      const SizedBox(height: 6),
+                                      Text(
+                                        cat.label,
+                                        textAlign: TextAlign.center,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .labelMedium
+                                            ?.copyWith(
+                                              fontWeight: isSelected
+                                                  ? FontWeight.w700
+                                                  : FontWeight.w500,
+                                            ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                          const SizedBox(height: 18),
+                        ],
+                        Text(
+                          'STANDARD CATEGORIES',
+                          style:
+                              Theme.of(context).textTheme.labelSmall?.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                    letterSpacing: 1.1,
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurfaceVariant,
+                                  ),
+                        ),
+                        const SizedBox(height: 10),
+                        GridView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          gridDelegate:
+                              const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 3,
+                            mainAxisSpacing: 12,
+                            crossAxisSpacing: 12,
+                            childAspectRatio: 1.05,
+                          ),
+                          itemCount: ExpenseCategory.values.length,
+                          itemBuilder: (context, index) {
+                            final cat = ExpenseCategory.values[index];
+                            final isSelected = _selectedCustomCategory ==
+                                    null &&
+                                cat == _category;
+                            return InkWell(
+                              onTap: () {
+                                setState(() {
+                                  _category = cat;
+                                  _selectedCustomCategory = null;
+                                  _selectedSubcategory = null;
+                                });
+                                Navigator.of(context).pop();
+                              },
+                              borderRadius: BorderRadius.circular(16),
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: isSelected
+                                      ? cat.color.withValues(alpha: 0.15)
+                                      : Theme.of(context)
+                                          .colorScheme
+                                          .surfaceContainerHighest,
+                                  border: Border.all(
+                                    color: isSelected
+                                        ? cat.color
+                                        : Colors.transparent,
+                                    width: 2,
+                                  ),
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.all(10),
+                                      decoration: BoxDecoration(
+                                        color:
+                                            cat.color.withValues(alpha: 0.15),
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: Icon(cat.icon,
+                                          color: cat.color, size: 24),
+                                    ),
+                                    const SizedBox(height: 6),
+                                    Text(
+                                      cat.label,
+                                      textAlign: TextAlign.center,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .labelMedium
+                                          ?.copyWith(
+                                            fontWeight: isSelected
+                                                ? FontWeight.w700
+                                                : FontWeight.w500,
+                                          ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ],
                     ),
                   ),
                 ],
@@ -378,6 +571,8 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
       householdId: householdId,
       description: _descriptionController.text.trim(),
       category: _category,
+      customCategoryId: _selectedCustomCategory?.id,
+      subcategory: _selectedSubcategory,
       amountPaisa: _amountPaisa,
       paidById: _paidById!,
       splitAmongIds: splitAmongIds,
@@ -535,65 +730,78 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                 Row(
                   children: [
                     // Category selector chip
-                    Expanded(
-                      child: InkWell(
-                        onTap: _showCategoryPicker,
-                        borderRadius: BorderRadius.circular(16),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 14,
-                            vertical: 12,
-                          ),
-                          decoration: BoxDecoration(
-                            color: scheme.surfaceContainerLow,
+                    Builder(
+                      builder: (context) {
+                        final activeCatLabel =
+                            _selectedCustomCategory?.label ?? _category.label;
+                        final activeCatIcon =
+                            _selectedCustomCategory?.icon ?? _category.icon;
+                        final activeCatColor =
+                            _selectedCustomCategory?.color ?? _category.color;
+
+                        return Expanded(
+                          child: InkWell(
+                            onTap: _showCategoryPicker,
                             borderRadius: BorderRadius.circular(16),
-                            border: Border.all(
-                              color: scheme.outlineVariant.withValues(alpha: 0.5),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 12,
+                              ),
+                              decoration: BoxDecoration(
+                                color: scheme.surfaceContainerLow,
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(
+                                  color: scheme.outlineVariant.withValues(alpha: 0.5),
+                                ),
+                              ),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(6),
+                                    decoration: BoxDecoration(
+                                      color: activeCatColor.withValues(alpha: 0.15),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Icon(
+                                      activeCatIcon,
+                                      color: activeCatColor,
+                                      size: 18,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          _selectedCustomCategory != null
+                                              ? 'Custom Category'
+                                              : 'Category',
+                                          style: theme.textTheme.labelSmall
+                                              ?.copyWith(
+                                            color: scheme.onSurfaceVariant,
+                                          ),
+                                        ),
+                                        Text(
+                                          activeCatLabel,
+                                          style: theme.textTheme.bodyMedium
+                                              ?.copyWith(
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const Icon(Icons.arrow_drop_down_rounded),
+                                ],
+                              ),
                             ),
                           ),
-                          child: Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(6),
-                                decoration: BoxDecoration(
-                                  color: _category.color.withValues(alpha: 0.15),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: Icon(
-                                  _category.icon,
-                                  color: _category.color,
-                                  size: 18,
-                                ),
-                              ),
-                              const SizedBox(width: 10),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Category',
-                                      style: theme.textTheme.labelSmall
-                                          ?.copyWith(
-                                        color: scheme.onSurfaceVariant,
-                                      ),
-                                    ),
-                                    Text(
-                                      _category.label,
-                                      style: theme.textTheme.bodyMedium
-                                          ?.copyWith(
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const Icon(Icons.arrow_drop_down_rounded),
-                            ],
-                          ),
-                        ),
-                      ),
+                        );
+                      },
                     ),
                     const SizedBox(width: 12),
 
@@ -660,6 +868,105 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                       ),
                     ),
                   ],
+                ),
+                const SizedBox(height: 14),
+
+                // Subcategories Section
+                Builder(
+                  builder: (context) {
+                    final activeCatId =
+                        _selectedCustomCategory?.id ?? _category.id;
+                    final activeCatColor =
+                        _selectedCustomCategory?.color ?? _category.color;
+                    final household = ref.watch(currentHouseholdProvider).value;
+                    final availableSubcats = household?.getSubcategories(activeCatId) ??
+                        defaultCategorySubcategories[activeCatId] ??
+                        const [];
+
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'SUBCATEGORY (OPTIONAL)',
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 1.1,
+                                color: scheme.onSurfaceVariant,
+                              ),
+                            ),
+                            if (_selectedSubcategory != null)
+                              GestureDetector(
+                                onTap: () => setState(() => _selectedSubcategory = null),
+                                child: Text(
+                                  'Clear',
+                                  style: theme.textTheme.labelSmall?.copyWith(
+                                    color: scheme.error,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Row(
+                            children: [
+                              ...availableSubcats.map((subcat) {
+                                final isSelected = _selectedSubcategory == subcat;
+                                return Padding(
+                                  padding: const EdgeInsets.only(right: 8),
+                                  child: FilterChip(
+                                    label: Text(subcat),
+                                    selected: isSelected,
+                                    showCheckmark: false,
+                                    avatar: isSelected
+                                        ? const Icon(Icons.check, size: 16)
+                                        : null,
+                                    backgroundColor: scheme.surfaceContainerLow,
+                                    selectedColor: activeCatColor.withValues(alpha: 0.2),
+                                    side: BorderSide(
+                                      color: isSelected
+                                          ? activeCatColor
+                                          : scheme.outlineVariant.withValues(alpha: 0.4),
+                                    ),
+                                    labelStyle: TextStyle(
+                                      fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                                      color: isSelected ? activeCatColor : scheme.onSurface,
+                                      fontSize: 13,
+                                    ),
+                                    onSelected: (selected) {
+                                      HapticFeedback.selectionClick();
+                                      setState(() {
+                                        _selectedSubcategory = selected ? subcat : null;
+                                      });
+                                    },
+                                  ),
+                                );
+                              }),
+                              ActionChip(
+                                avatar: const Icon(Icons.add_rounded, size: 16),
+                                label: const Text('Add Subcategory'),
+                                backgroundColor: scheme.surfaceContainerLow,
+                                side: BorderSide(
+                                  color: scheme.outlineVariant.withValues(alpha: 0.4),
+                                ),
+                                labelStyle: TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  color: scheme.primary,
+                                  fontSize: 13,
+                                ),
+                                onPressed: () => _promptAddSubcategory(activeCatId),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    );
+                  },
                 ),
                 const SizedBox(height: 12),
 

@@ -1,6 +1,8 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../auth/presentation/providers/session_provider.dart';
+import '../../../expenses/domain/custom_category.dart';
 import '../../../expenses/domain/expense_category.dart';
 import '../../../expenses/presentation/providers/expense_providers.dart';
 import '../../../household/presentation/providers/household_providers.dart';
@@ -82,6 +84,10 @@ final budgetStatusProvider = Provider<BudgetStatus?>((ref) {
 /// Progress and health of a single category budget (flat-wide).
 class CategoryBudgetStatus {
   const CategoryBudgetStatus({
+    required this.categoryId,
+    required this.label,
+    required this.icon,
+    required this.color,
     required this.category,
     required this.budgetPaisa,
     required this.spentPaisa,
@@ -91,6 +97,10 @@ class CategoryBudgetStatus {
     required this.isExceeded,
   });
 
+  final String categoryId;
+  final String label;
+  final IconData icon;
+  final Color color;
   final ExpenseCategory category;
   final int budgetPaisa;
   final int spentPaisa;
@@ -113,12 +123,25 @@ final categoryBudgetsStatusProvider =
   household.categoryBudgetsPaisa.forEach((catId, budgetPaisa) {
     if (budgetPaisa <= 0) return;
     final cat = ExpenseCategory.fromId(catId);
-    final spent = stats.categoryBreakdown[cat] ?? 0;
+    final custom = household.customCategories
+        .where((c) => c.id == catId)
+        .firstOrNull;
+    final label = custom?.label ?? cat.label;
+    final icon = custom?.icon ?? cat.icon;
+    final color = custom?.color ?? cat.color;
+
+    final spent = stats.categoryIdBreakdown[catId] ??
+        stats.categoryBreakdown[cat] ??
+        0;
     final pct = (spent / budgetPaisa) * 100.0;
     final remaining = budgetPaisa - spent;
 
     result.add(
       CategoryBudgetStatus(
+        categoryId: catId,
+        label: label,
+        icon: icon,
+        color: color,
         category: cat,
         budgetPaisa: budgetPaisa,
         spentPaisa: spent,
@@ -138,6 +161,10 @@ final categoryBudgetsStatusProvider =
 /// Progress and health of a member's individual allocation for a category.
 class MemberCategoryBudgetStatus {
   const MemberCategoryBudgetStatus({
+    required this.categoryId,
+    required this.label,
+    required this.icon,
+    required this.color,
     required this.category,
     required this.totalCategoryBudgetPaisa,
     required this.totalCategorySpentPaisa,
@@ -149,6 +176,10 @@ class MemberCategoryBudgetStatus {
     required this.isExceeded,
   });
 
+  final String categoryId;
+  final String label;
+  final IconData icon;
+  final Color color;
   final ExpenseCategory category;
   final int totalCategoryBudgetPaisa;
   final int totalCategorySpentPaisa;
@@ -174,16 +205,31 @@ final myCategoryBudgetsStatusProvider =
   household.categoryBudgetsPaisa.forEach((catId, totalBudget) {
     if (totalBudget <= 0) return;
     final cat = ExpenseCategory.fromId(catId);
+    final custom = household.customCategories
+        .where((c) => c.id == catId)
+        .firstOrNull;
+    final label = custom?.label ?? cat.label;
+    final icon = custom?.icon ?? cat.icon;
+    final color = custom?.color ?? cat.color;
+
     final myBudget = household.getMemberCategoryBudget(catId, userId);
     if (myBudget <= 0) return;
 
-    final mySpent = stats.userCategorySpending[cat] ?? 0;
-    final totalSpent = stats.categoryBreakdown[cat] ?? 0;
+    final mySpent = stats.userCategoryIdBreakdown[catId] ??
+        stats.userCategorySpending[cat] ??
+        0;
+    final totalSpent = stats.categoryIdBreakdown[catId] ??
+        stats.categoryBreakdown[cat] ??
+        0;
     final pct = (mySpent / myBudget) * 100.0;
     final remaining = myBudget - mySpent;
 
     result.add(
       MemberCategoryBudgetStatus(
+        categoryId: catId,
+        label: label,
+        icon: icon,
+        color: color,
         category: cat,
         totalCategoryBudgetPaisa: totalBudget,
         totalCategorySpentPaisa: totalSpent,

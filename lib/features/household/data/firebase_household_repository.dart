@@ -10,6 +10,7 @@ import '../../../core/errors/firebase_error_mapper.dart';
 import '../../../core/utils/validators.dart';
 import '../../../shared/models/household.dart';
 import '../../../shared/models/household_member.dart';
+import '../../expenses/domain/custom_category.dart';
 import '../domain/household_repository.dart';
 import '../domain/invite_code.dart';
 
@@ -269,6 +270,42 @@ class FirebaseHouseholdRepository implements HouseholdRepository {
           .update({
         'categoryBudgetsPaisa': categoryBudgetsPaisa,
         'memberCategoryBudgetsPaisa': memberCategoryBudgetsPaisa,
+      });
+    } catch (error) {
+      throw toAppException(error);
+    }
+  }
+
+  @override
+  Future<void> addCustomCategory({
+    required String householdId,
+    required CustomCategory category,
+  }) async {
+    try {
+      await _firestore
+          .collection(FirestoreCollections.households)
+          .doc(householdId)
+          .update({
+        'customCategories': FieldValue.arrayUnion([category.toMap()]),
+      });
+    } catch (error) {
+      throw toAppException(error);
+    }
+  }
+
+  @override
+  Future<void> addSubcategory({
+    required String householdId,
+    required String categoryId,
+    required String subcategory,
+  }) async {
+    try {
+      await _firestore
+          .collection(FirestoreCollections.households)
+          .doc(householdId)
+          .update({
+        'categorySubcategories.$categoryId':
+            FieldValue.arrayUnion([subcategory.trim()]),
       });
     } catch (error) {
       throw toAppException(error);

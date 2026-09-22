@@ -5,12 +5,31 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/errors/firebase_error_mapper.dart';
 import '../../../../core/utils/money.dart';
+import '../../../../shared/models/household.dart';
 import '../../../../shared/models/household_member.dart';
 import '../../../../shared/widgets/app_snackbar.dart';
 import '../../../auth/presentation/providers/session_provider.dart';
+import '../../../expenses/domain/custom_category.dart';
 import '../../../expenses/domain/expense_category.dart';
+import '../../../expenses/presentation/widgets/create_category_sheet.dart';
 import '../../../household/presentation/providers/household_providers.dart';
 import '../providers/dashboard_providers.dart';
+
+class _BudgetCategoryItem {
+  const _BudgetCategoryItem({
+    required this.id,
+    required this.label,
+    required this.icon,
+    required this.color,
+    this.isCustom = false,
+  });
+
+  final String id;
+  final String label;
+  final IconData icon;
+  final Color color;
+  final bool isCustom;
+}
 
 class CategoryBudgetScreen extends ConsumerStatefulWidget {
   const CategoryBudgetScreen({super.key});
@@ -25,6 +44,31 @@ class _CategoryBudgetScreenState extends ConsumerState<CategoryBudgetScreen> {
   final Map<String, Map<String, TextEditingController>> _memberControllers = {};
   final Set<String> _expandedCategories = {};
   bool _initialized = false;
+
+  List<_BudgetCategoryItem> _getCategoryItems(Household? household) {
+    final list = <_BudgetCategoryItem>[];
+    if (household != null && household.customCategories.isNotEmpty) {
+      for (final custom in household.customCategories) {
+        list.add(_BudgetCategoryItem(
+          id: custom.id,
+          label: custom.label,
+          icon: custom.icon,
+          color: custom.color,
+          isCustom: true,
+        ));
+      }
+    }
+    for (final cat in ExpenseCategory.values) {
+      list.add(_BudgetCategoryItem(
+        id: cat.id,
+        label: cat.label,
+        icon: cat.icon,
+        color: cat.color,
+        isCustom: false,
+      ));
+    }
+    return list;
+  }
 
   @override
   void initState() {
@@ -54,20 +98,29 @@ class _CategoryBudgetScreenState extends ConsumerState<CategoryBudgetScreen> {
     final members = ref.read(householdMembersProvider).value ?? const [];
     if (household == null) return;
 
-    for (final cat in ExpenseCategory.values) {
-      final paisa = household.categoryBudgetsPaisa[cat.id] ?? 0;
+    final items = _getCategoryItems(household);
+    for (final item in items) {
+      final paisa = household.categoryBudgetsPaisa[item.id] ?? 0;
+      _controllers[item.id] ??= TextEditingController();
       if (paisa > 0) {
         final rupees = (paisa / 100).round();
-        _controllers[cat.id]?.text = rupees.toString();
+        _controllers[item.id]!.text = rupees.toString();
       }
 
       // Member controllers
+      _memberControllers[item.id] ??= {};
       for (final member in members) {
-        final memberPaisa = household.getMemberCategoryBudget(cat.id, member.id);
-        final ctrl = TextEditingController(
-          text: memberPaisa > 0 ? (memberPaisa / 100).round().toString() : '',
-        );
-        _memberControllers[cat.id]![member.id] = ctrl;
+        final memberPaisa =
+            household.getMemberCategoryBudget(item.id, member.id);
+        var ctrl = _memberControllers[item.id]?[member.id];
+        if (ctrl == null) {
+          ctrl = TextEditingController(
+            text: memberPaisa > 0 ? (memberPaisa / 100).round().toString() : '',
+          );
+          _memberControllers[item.id]![member.id] = ctrl;
+        } else if (memberPaisa > 0) {
+          ctrl.text = (memberPaisa / 100).round().toString();
+        }
       }
     }
     _initialized = true;
@@ -174,13 +227,17 @@ class _CategoryBudgetScreenState extends ConsumerState<CategoryBudgetScreen> {
       _populateFromHousehold();
     }
 
-    // Ensure all joined members have controllers
-    for (final cat in ExpenseCategory.values) {
+    final categoryItems = _getCategoryItems(household);
+
+    // Ensure all joined members and categories have controllers
+    for (final catItem in categoryItems) {
+      _controllers[catItem.id] ??= TextEditingController();
+      _memberControllers[catItem.id] ??= {};
       for (final member in members) {
-        if (!_memberControllers[cat.id]!.containsKey(member.id)) {
+        if (!_memberControllers[catItem.id]!.containsKey(member.id)) {
           final memberPaisa =
-              household?.getMemberCategoryBudget(cat.id, member.id) ?? 0;
-          _memberControllers[cat.id]![member.id] = TextEditingController(
+              household?.getMemberCategoryBudget(catItem.id, member.id) ?? 0;
+          _memberControllers[catItem.id]![member.id] = TextEditingController(
             text: memberPaisa > 0 ? (memberPaisa / 100).round().toString() : '',
           );
         }
@@ -197,7 +254,19 @@ class _CategoryBudgetScreenState extends ConsumerState<CategoryBudgetScreen> {
       appBar: AppBar(
         title: const Text('Category Budgets'),
         actions: [
-          if (isOwner)
+          if (isOwner) ...[
+            IconButton(
+              onPressed: () async {
+                final created = await CreateCategorySheet.show(context);
+                if (created != null && mounted) {
+                  setState(() {
+                    _initialized = false;
+                  });
+                }
+              },
+              icon: const Icon(Icons.add_circle_outline_rounded),
+              tooltip: 'Add Custom Category',
+            ),
             TextButton(
               onPressed: () {
                 for (final c in _controllers.values) {
@@ -212,6 +281,7 @@ class _CategoryBudgetScreenState extends ConsumerState<CategoryBudgetScreen> {
               },
               child: const Text('Clear All'),
             ),
+          ],
         ],
       ),
       body: Column(
@@ -318,13 +388,14 @@ class _CategoryBudgetScreenState extends ConsumerState<CategoryBudgetScreen> {
           Expanded(
             child: ListView.separated(
               padding: const EdgeInsets.fromLTRB(16, 4, 16, 100),
-              itemCount: ExpenseCategory.values.length,
+              itemCount: categoryItems.length,
               separatorBuilder: (_, _) => const SizedBox(height: 12),
               itemBuilder: (context, index) {
-                final cat = ExpenseCategory.values[index];
-                final controller = _controllers[cat.id]!;
-                final spentPaisa = stats.categoryBreakdown[cat] ?? 0;
-                final mySpentPaisa = stats.userCategorySpending[cat] ?? 0;
+                final catItem = categoryItems[index];
+                final controller = _controllers[catItem.id]!;
+                final spentPaisa = stats.categoryIdBreakdown[catItem.id] ?? 0;
+                final mySpentPaisa =
+                    stats.userCategoryIdBreakdown[catItem.id] ?? 0;
                 final catBudgetRupees =
                     int.tryParse(controller.text.trim()) ?? 0;
                 final catBudgetPaisa = catBudgetRupees * 100;
@@ -332,11 +403,11 @@ class _CategoryBudgetScreenState extends ConsumerState<CategoryBudgetScreen> {
                 final isOver =
                     catBudgetPaisa > 0 && spentPaisa > catBudgetPaisa;
 
-                final isExpanded = _expandedCategories.contains(cat.id);
+                final isExpanded = _expandedCategories.contains(catItem.id);
 
                 // Compute total member allocation sum for this category
                 int allocatedMemberRupees = 0;
-                final memberMap = _memberControllers[cat.id] ?? {};
+                final memberMap = _memberControllers[catItem.id] ?? {};
                 for (final ctrl in memberMap.values) {
                   allocatedMemberRupees += int.tryParse(ctrl.text.trim()) ?? 0;
                 }
@@ -362,13 +433,13 @@ class _CategoryBudgetScreenState extends ConsumerState<CategoryBudgetScreen> {
                           Container(
                             padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
-                              color: cat.color.withValues(alpha: 0.15),
+                              color: catItem.color.withValues(alpha: 0.15),
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: Icon(
-                              cat.icon,
+                              catItem.icon,
                               size: 20,
-                              color: cat.color,
+                              color: catItem.color,
                             ),
                           ),
                           const SizedBox(width: 12),
@@ -376,11 +447,38 @@ class _CategoryBudgetScreenState extends ConsumerState<CategoryBudgetScreen> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(
-                                  cat.label,
-                                  style: theme.textTheme.titleSmall?.copyWith(
-                                    fontWeight: FontWeight.w700,
-                                  ),
+                                Row(
+                                  children: [
+                                    Text(
+                                      catItem.label,
+                                      style:
+                                          theme.textTheme.titleSmall?.copyWith(
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                    if (catItem.isCustom) ...[
+                                      const SizedBox(width: 6),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 6, vertical: 2),
+                                        decoration: BoxDecoration(
+                                          color: catItem.color
+                                              .withValues(alpha: 0.2),
+                                          borderRadius:
+                                              BorderRadius.circular(6),
+                                        ),
+                                        child: Text(
+                                          'CUSTOM',
+                                          style: TextStyle(
+                                            fontSize: 9,
+                                            fontWeight: FontWeight.w800,
+                                            color: catItem.color,
+                                            letterSpacing: 0.5,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ],
                                 ),
                                 Text(
                                   'Flat spent: ${Money.format(spentPaisa)}',
@@ -444,17 +542,17 @@ class _CategoryBudgetScreenState extends ConsumerState<CategoryBudgetScreen> {
                           children: [
                             _QuickChip(
                               label: '+1,000',
-                              onTap: () => _addAmount(cat.id, 1000),
+                              onTap: () => _addAmount(catItem.id, 1000),
                             ),
                             const SizedBox(width: 6),
                             _QuickChip(
                               label: '+5,000',
-                              onTap: () => _addAmount(cat.id, 5000),
+                              onTap: () => _addAmount(catItem.id, 5000),
                             ),
                             const SizedBox(width: 6),
                             _QuickChip(
                               label: '+10,000',
-                              onTap: () => _addAmount(cat.id, 10000),
+                              onTap: () => _addAmount(catItem.id, 10000),
                             ),
                             if (catBudgetRupees > 0) ...[
                               const SizedBox(width: 6),
@@ -486,9 +584,9 @@ class _CategoryBudgetScreenState extends ConsumerState<CategoryBudgetScreen> {
                           onTap: () {
                             setState(() {
                               if (isExpanded) {
-                                _expandedCategories.remove(cat.id);
+                                _expandedCategories.remove(catItem.id);
                               } else {
-                                _expandedCategories.add(cat.id);
+                                _expandedCategories.add(catItem.id);
                               }
                             });
                           },
@@ -536,8 +634,10 @@ class _CategoryBudgetScreenState extends ConsumerState<CategoryBudgetScreen> {
                             Align(
                               alignment: Alignment.centerRight,
                               child: TextButton.icon(
-                                onPressed: () => _splitEqually(cat.id, members),
-                                icon: const Icon(Icons.call_split_rounded, size: 14),
+                                onPressed: () =>
+                                    _splitEqually(catItem.id, members),
+                                icon: const Icon(Icons.call_split_rounded,
+                                    size: 14),
                                 label: const Text('Divide Equally'),
                                 style: TextButton.styleFrom(
                                   visualDensity: VisualDensity.compact,

@@ -15,6 +15,8 @@ class Expense {
     required this.householdId,
     required this.description,
     required this.category,
+    this.customCategoryId,
+    this.subcategory,
     required this.amountPaisa,
     required this.paidById,
     required this.splitAmongIds,
@@ -29,6 +31,13 @@ class Expense {
   final String householdId;
   final String description;
   final ExpenseCategory category;
+
+  /// Optional ID of a household custom category if not using standard enum.
+  final String? customCategoryId;
+
+  /// Optional subcategory name (e.g. 'Groceries', 'Fast Food', 'Bill').
+  final String? subcategory;
+
   final int amountPaisa;
 
   /// uid of the member who fronted the money.
@@ -48,28 +57,42 @@ class Expense {
   /// Split type used: 'equal', 'custom', or 'percentage'.
   final String splitType;
 
-  factory Expense.fromMap(String id, Map<String, dynamic> map) => Expense(
-        id: id,
-        householdId: map['householdId'] as String? ?? '',
-        description: map['description'] as String? ?? '',
-        category: ExpenseCategory.fromId(map['category'] as String?),
-        amountPaisa: map['amountPaisa'] as int? ?? 0,
-        paidById: map['paidById'] as String? ?? '',
-        splitAmongIds:
-            (map['splitAmongIds'] as List?)?.cast<String>() ?? const [],
-        splitAmountsPaisa:
-            (map['splitAmountsPaisa'] as List?)?.cast<int>() ?? const [],
-        spentAt: (map['spentAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
-        createdByUserId: map['createdByUserId'] as String? ?? '',
-        createdAt: (map['createdAt'] as Timestamp?)?.toDate() ??
-            DateTime.now(),
-        splitType: map['splitType'] as String? ?? 'equal',
-      );
+  factory Expense.fromMap(String id, Map<String, dynamic> map) {
+    final catRaw = map['category'] as String?;
+    final customCatId = map['customCategoryId'] as String? ??
+        (ExpenseCategory.fromId(catRaw) == ExpenseCategory.other &&
+                catRaw != null &&
+                catRaw != 'other'
+            ? catRaw
+            : null);
+
+    return Expense(
+      id: id,
+      householdId: map['householdId'] as String? ?? '',
+      description: map['description'] as String? ?? '',
+      category: ExpenseCategory.fromId(catRaw),
+      customCategoryId: customCatId,
+      subcategory: map['subcategory'] as String?,
+      amountPaisa: map['amountPaisa'] as int? ?? 0,
+      paidById: map['paidById'] as String? ?? '',
+      splitAmongIds:
+          (map['splitAmongIds'] as List?)?.cast<String>() ?? const [],
+      splitAmountsPaisa:
+          (map['splitAmountsPaisa'] as List?)?.cast<int>() ?? const [],
+      spentAt: (map['spentAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      createdByUserId: map['createdByUserId'] as String? ?? '',
+      createdAt: (map['createdAt'] as Timestamp?)?.toDate() ??
+          DateTime.now(),
+      splitType: map['splitType'] as String? ?? 'equal',
+    );
+  }
 
   Map<String, dynamic> toMap() => {
         'householdId': householdId,
         'description': description,
-        'category': category.id,
+        'category': customCategoryId ?? category.id,
+        'customCategoryId': customCategoryId,
+        'subcategory': subcategory,
         'amountPaisa': amountPaisa,
         'paidById': paidById,
         'splitAmongIds': splitAmongIds,
@@ -80,6 +103,35 @@ class Expense {
         'splitType': splitType,
       };
 
+  Expense copyWith({
+    String? description,
+    ExpenseCategory? category,
+    String? customCategoryId,
+    String? subcategory,
+    int? amountPaisa,
+    String? paidById,
+    List<String>? splitAmongIds,
+    List<int>? splitAmountsPaisa,
+    DateTime? spentAt,
+    String? splitType,
+  }) =>
+      Expense(
+        id: id,
+        householdId: householdId,
+        description: description ?? this.description,
+        category: category ?? this.category,
+        customCategoryId: customCategoryId ?? this.customCategoryId,
+        subcategory: subcategory ?? this.subcategory,
+        amountPaisa: amountPaisa ?? this.amountPaisa,
+        paidById: paidById ?? this.paidById,
+        splitAmongIds: splitAmongIds ?? this.splitAmongIds,
+        splitAmountsPaisa: splitAmountsPaisa ?? this.splitAmountsPaisa,
+        spentAt: spentAt ?? this.spentAt,
+        createdByUserId: createdByUserId,
+        createdAt: createdAt,
+        splitType: splitType ?? this.splitType,
+      );
+
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -87,11 +139,21 @@ class Expense {
           other.id == id &&
           other.description == description &&
           other.category == category &&
+          other.customCategoryId == customCategoryId &&
+          other.subcategory == subcategory &&
           other.amountPaisa == amountPaisa &&
           other.paidById == paidById &&
           other.splitType == splitType;
 
   @override
-  int get hashCode =>
-      Object.hash(id, description, category, amountPaisa, paidById, splitType);
+  int get hashCode => Object.hash(
+        id,
+        description,
+        category,
+        customCategoryId,
+        subcategory,
+        amountPaisa,
+        paidById,
+        splitType,
+      );
 }

@@ -400,7 +400,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
   }
 }
 
-class _ExpenseTile extends StatelessWidget {
+class _ExpenseTile extends ConsumerWidget {
   const _ExpenseTile({
     required this.expense,
     required this.payerName,
@@ -412,11 +412,21 @@ class _ExpenseTile extends StatelessWidget {
   final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    final cat = expense.category;
+    final household = ref.watch(currentHouseholdProvider).value;
+
+    final custom = expense.customCategoryId != null
+        ? household?.customCategories
+            .where((c) => c.id == expense.customCategoryId)
+            .firstOrNull
+        : null;
+    final catColor = custom?.color ?? expense.category.color;
+    final catIcon = custom?.icon ?? expense.category.icon;
     final dateStr = DateFormat('dd MMM').format(expense.spentAt);
+    final hasSubcat =
+        expense.subcategory != null && expense.subcategory!.trim().isNotEmpty;
 
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
@@ -439,10 +449,10 @@ class _ExpenseTile extends StatelessWidget {
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
-                  color: cat.color.withValues(alpha: 0.15),
+                  color: catColor.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(14),
                 ),
-                child: Icon(cat.icon, color: cat.color, size: 22),
+                child: Icon(catIcon, color: catColor, size: 22),
               ),
               const SizedBox(width: 14),
               Expanded(
@@ -459,11 +469,34 @@ class _ExpenseTile extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 3),
-                    Text(
-                      'Paid by $payerName · $dateStr',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: scheme.onSurfaceVariant,
-                      ),
+                    Row(
+                      children: [
+                        Text(
+                          'Paid by $payerName · $dateStr',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: scheme.onSurfaceVariant,
+                          ),
+                        ),
+                        if (hasSubcat) ...[
+                          const SizedBox(width: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 6, vertical: 1),
+                            decoration: BoxDecoration(
+                              color: catColor.withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              expense.subcategory!,
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                                color: catColor,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
                   ],
                 ),

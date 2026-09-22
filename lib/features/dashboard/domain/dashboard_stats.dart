@@ -9,7 +9,9 @@ class DashboardStats {
     required this.userPaidPaisa,
     required this.userBalancePaisa,
     required this.categoryBreakdown,
+    this.categoryIdBreakdown = const {},
     this.userCategorySpending = const {},
+    this.userCategoryIdBreakdown = const {},
     required this.dailySpending,
     required this.expenseCount,
     this.highestCategory,
@@ -34,8 +36,14 @@ class DashboardStats {
   /// Category breakdown for the entire household: Category -> amount in paisa.
   final Map<ExpenseCategory, int> categoryBreakdown;
 
+  /// Map of category ID (standard or custom) -> amount in paisa for the household.
+  final Map<String, int> categoryIdBreakdown;
+
   /// Category spending for the current user (amount paid by this user): Category -> amount in paisa.
   final Map<ExpenseCategory, int> userCategorySpending;
+
+  /// Map of category ID -> amount paid by this user in paisa.
+  final Map<String, int> userCategoryIdBreakdown;
 
   /// Daily spending map: Day of month (1..31) -> amount in paisa.
   final Map<int, int> dailySpending;
@@ -66,16 +74,21 @@ class DashboardStats {
     var userPaid = 0;
     final categoryMap = <ExpenseCategory, int>{};
     final userCatMap = <ExpenseCategory, int>{};
+    final categoryIdMap = <String, int>{};
+    final userCategoryIdMap = <String, int>{};
     final dayMap = <int, int>{};
 
     for (final exp in monthExpenses) {
       totalPaisa += exp.amountPaisa;
+      final catKey = exp.customCategoryId ?? exp.category.id;
 
       // Track how much user paid
       if (exp.paidById == userId) {
         userPaid += exp.amountPaisa;
         userCatMap[exp.category] =
             (userCatMap[exp.category] ?? 0) + exp.amountPaisa;
+        userCategoryIdMap[catKey] =
+            (userCategoryIdMap[catKey] ?? 0) + exp.amountPaisa;
       }
 
       // Track user share from splits
@@ -87,6 +100,8 @@ class DashboardStats {
       // Category breakdown for household
       categoryMap[exp.category] =
           (categoryMap[exp.category] ?? 0) + exp.amountPaisa;
+      categoryIdMap[catKey] =
+          (categoryIdMap[catKey] ?? 0) + exp.amountPaisa;
 
       // Daily spending
       final day = exp.spentAt.day;
@@ -119,7 +134,9 @@ class DashboardStats {
       userPaidPaisa: userPaid,
       userBalancePaisa: userPaid - userShare,
       categoryBreakdown: categoryMap,
+      categoryIdBreakdown: categoryIdMap,
       userCategorySpending: userCatMap,
+      userCategoryIdBreakdown: userCategoryIdMap,
       dailySpending: dayMap,
       expenseCount: monthExpenses.length,
       highestCategory: highestCat,

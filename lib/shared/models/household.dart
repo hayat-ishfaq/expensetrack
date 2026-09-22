@@ -1,5 +1,23 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import 'package:flutter/foundation.dart';
+import '../../features/expenses/domain/custom_category.dart';
+
+/// Default curated subcategories for standard expense categories.
+const Map<String, List<String>> defaultCategorySubcategories = {
+  'food': ['Groceries', 'Fast Food', 'Snacks & Chai', 'Dining Out', 'Meat & Veg'],
+  'electricity': ['Monthly Bill', 'Generator Fuel', 'Maintenance'],
+  'internet': ['Monthly Bill', 'Router / Equipment', 'Add-on Data'],
+  'water': ['Water Tanker', 'Drinking Bottles', 'Pipeline Bill'],
+  'gas': ['Gas Cylinder', 'Pipeline Bill'],
+  'household': ['Cleaning Items', 'Furniture', 'Kitchenware', 'Repairs'],
+  'transport': ['Fuel / Petrol', 'Careem / Uber', 'Public Transit', 'Vehicle Maintenance'],
+  'entertainment': ['Movies & Outings', 'Subscriptions', 'Gaming', 'Events'],
+  'rent': ['Monthly Rent', 'Building Maintenance', 'Security Deposit'],
+  'cleaning': ['Maid Salary', 'Cleaning Supplies', 'Laundry'],
+  'other': ['Medical', 'Emergency', 'General'],
+};
+
 /// A shared household ("flat"), mirroring the `households/{id}` document.
 class Household {
   const Household({
@@ -11,6 +29,8 @@ class Household {
     required this.monthlyBudgetPaisa,
     this.categoryBudgetsPaisa = const {},
     this.memberCategoryBudgetsPaisa = const {},
+    this.customCategories = const [],
+    this.categorySubcategories = const {},
     required this.currency,
     required this.createdAt,
   });
@@ -33,6 +53,12 @@ class Household {
   /// Category ID -> (User ID -> budget in paisa).
   final Map<String, Map<String, int>> memberCategoryBudgetsPaisa;
 
+  /// User-defined custom categories created for this household.
+  final List<CustomCategory> customCategories;
+
+  /// Subcategories defined for categories (maps categoryId -> list of subcategory names).
+  final Map<String, List<String>> categorySubcategories;
+
   final String currency;
   final DateTime createdAt;
 
@@ -48,6 +74,25 @@ class Household {
   /// Get a specific member's budget in a specific category (in paisa), or 0 if unset.
   int getMemberCategoryBudget(String categoryId, String userId) {
     return memberCategoryBudgetsPaisa[categoryId]?[userId] ?? 0;
+  }
+
+  /// Returns all available subcategories for [categoryId], combining default
+  /// suggestions, custom category subcategories, and any added household subcategories.
+  List<String> getSubcategories(String categoryId) {
+    final result = <String>{};
+    if (defaultCategorySubcategories.containsKey(categoryId)) {
+      result.addAll(defaultCategorySubcategories[categoryId]!);
+    }
+    for (final custom in customCategories) {
+      if (custom.id == categoryId) {
+        result.addAll(custom.subcategories);
+        break;
+      }
+    }
+    if (categorySubcategories.containsKey(categoryId)) {
+      result.addAll(categorySubcategories[categoryId]!);
+    }
+    return result.toList();
   }
 
   factory Household.fromMap(String id, Map<String, dynamic> map) {
@@ -72,6 +117,24 @@ class Household {
       });
     }
 
+    final rawCustomCats = map['customCategories'] as List?;
+    final customCategories = rawCustomCats
+            ?.map((c) =>
+                CustomCategory.fromMap(Map<String, dynamic>.from(c as Map)))
+            .toList() ??
+        const <CustomCategory>[];
+
+    final rawSubcats = map['categorySubcategories'] as Map?;
+    final categorySubcategories = <String, List<String>>{};
+    if (rawSubcats != null) {
+      rawSubcats.forEach((catId, list) {
+        if (list is List) {
+          categorySubcategories[catId.toString()] =
+              list.map((e) => e.toString()).toList();
+        }
+      });
+    }
+
     return Household(
       id: id,
       name: map['name'] as String? ?? '',
@@ -81,6 +144,8 @@ class Household {
       monthlyBudgetPaisa: map['monthlyBudgetPaisa'] as int? ?? 0,
       categoryBudgetsPaisa: categoryBudgets,
       memberCategoryBudgetsPaisa: memberCategoryBudgets,
+      customCategories: customCategories,
+      categorySubcategories: categorySubcategories,
       currency: map['currency'] as String? ?? 'PKR',
       createdAt: (map['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
     );
@@ -95,6 +160,8 @@ class Household {
         'monthlyBudgetPaisa': monthlyBudgetPaisa,
         'categoryBudgetsPaisa': categoryBudgetsPaisa,
         'memberCategoryBudgetsPaisa': memberCategoryBudgetsPaisa,
+        'customCategories': customCategories.map((c) => c.toMap()).toList(),
+        'categorySubcategories': categorySubcategories,
         'currency': currency,
         'createdAt': Timestamp.fromDate(createdAt),
       };
@@ -105,6 +172,8 @@ class Household {
     int? monthlyBudgetPaisa,
     Map<String, int>? categoryBudgetsPaisa,
     Map<String, Map<String, int>>? memberCategoryBudgetsPaisa,
+    List<CustomCategory>? customCategories,
+    Map<String, List<String>>? categorySubcategories,
   }) =>
       Household(
         id: id,
@@ -118,6 +187,9 @@ class Household {
             categoryBudgetsPaisa ?? this.categoryBudgetsPaisa,
         memberCategoryBudgetsPaisa:
             memberCategoryBudgetsPaisa ?? this.memberCategoryBudgetsPaisa,
+        customCategories: customCategories ?? this.customCategories,
+        categorySubcategories:
+            categorySubcategories ?? this.categorySubcategories,
         currency: currency,
         createdAt: createdAt,
       );
