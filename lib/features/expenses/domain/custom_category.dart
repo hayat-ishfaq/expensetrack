@@ -16,8 +16,48 @@ class CustomCategory {
   final int colorValue;
   final List<String> subcategories;
 
-  // ignore: non_const_argument_for_const_parameter
-  IconData get icon => IconData(iconCodePoint, fontFamily: 'MaterialIcons');
+  static final Map<int, IconData> knownIcons = {
+    for (final icon in [
+      Icons.sports_esports_rounded,
+      Icons.fitness_center_rounded,
+      Icons.pets_rounded,
+      Icons.medical_services_rounded,
+      Icons.school_rounded,
+      Icons.flight_takeoff_rounded,
+      Icons.card_giftcard_rounded,
+      Icons.local_cafe_rounded,
+      Icons.fastfood_rounded,
+      Icons.shopping_bag_rounded,
+      Icons.pool_rounded,
+      Icons.music_note_rounded,
+      Icons.local_gas_station_rounded,
+      Icons.home_repair_service_rounded,
+      Icons.directions_bike_rounded,
+      Icons.savings_rounded,
+      Icons.laptop_chromebook_rounded,
+      Icons.child_care_rounded,
+      Icons.camera_alt_rounded,
+      Icons.book_rounded,
+      Icons.spa_rounded,
+      Icons.local_laundry_service_rounded,
+      Icons.celebration_rounded,
+      Icons.category_rounded,
+      Icons.home_work_rounded,
+      Icons.restaurant_rounded,
+      Icons.shopping_cart_rounded,
+      Icons.bolt_rounded,
+      Icons.local_fire_department_rounded,
+      Icons.water_drop_rounded,
+      Icons.wifi_rounded,
+      Icons.cleaning_services_rounded,
+      Icons.directions_car_rounded,
+      Icons.weekend_rounded,
+      Icons.movie_rounded,
+    ])
+      icon.codePoint: icon,
+  };
+
+  IconData get icon => knownIcons[iconCodePoint] ?? Icons.category_rounded;
   Color get color => Color(colorValue);
 
   factory CustomCategory.fromMap(Map<String, dynamic> map) {
