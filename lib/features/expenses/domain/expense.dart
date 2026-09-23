@@ -73,12 +73,15 @@ class Expense {
       category: ExpenseCategory.fromId(catRaw),
       customCategoryId: customCatId,
       subcategory: map['subcategory'] as String?,
-      amountPaisa: map['amountPaisa'] as int? ?? 0,
+      amountPaisa: (map['amountPaisa'] as num?)?.toInt() ?? 0,
       paidById: map['paidById'] as String? ?? '',
       splitAmongIds:
-          (map['splitAmongIds'] as List?)?.cast<String>() ?? const [],
-      splitAmountsPaisa:
-          (map['splitAmountsPaisa'] as List?)?.cast<int>() ?? const [],
+          (map['splitAmongIds'] as List?)?.map((e) => e.toString()).toList() ??
+              const [],
+      splitAmountsPaisa: (map['splitAmountsPaisa'] as List?)
+              ?.map((e) => (e as num).toInt())
+              .toList() ??
+          const [],
       spentAt: (map['spentAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
       createdByUserId: map['createdByUserId'] as String? ?? '',
       createdAt: (map['createdAt'] as Timestamp?)?.toDate() ??
