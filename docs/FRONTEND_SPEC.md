@@ -1,119 +1,129 @@
-# FlatSplit — Frontend Specification Document
+# CoSpend — Frontend Specification Document
 
-**Version**: 1.2.0  
-**Design System**: Modern Emerald Glassmorphism  
-**Target Density**: Mobile (Android & iOS)  
+**Version**: 1.5.0  
+**Design Philosophy**: Premium Fintech & Modern Banking (inspired by Revolut, Wise, and Monarch Money)  
+**Target Platform**: Android (API 21+) & iOS (iOS 13+)  
 
 ---
 
 ## 1. Visual Design System & Tokens
 
-### 1.1 Color Palette
-The interface uses a curated, high-contrast palette tailored for financial clarity and premium visual feel.
+Defined centrally in `lib/core/theme/design_system.dart` and implemented via `lib/core/theme/app_theme.dart`.
 
-| Token | Light Theme | Dark Theme | Purpose |
+### 1.1 Curated Color Palette
+Strict 5-hue financial palette guaranteeing visual harmony:
+
+| Token | Hex | HSL | Role / Purpose |
 | :--- | :--- | :--- | :--- |
-| **Primary** | `#059669` (Emerald 600) | `#10B981` (Emerald 500) | Primary branding, buttons, active indicators |
-| **Primary Container** | `#D1FAE5` (Emerald 100) | `#064E3B` (Emerald 900) | Banner accents, active cards |
-| **Background / Canvas** | `#F8FAFC` (Slate 50) | `#0F172A` (Slate 900) | App surface canvas |
-| **Surface (Cards)** | `#FFFFFF` (White) | `#1E293B` (Slate 800) | Floating cards, tiles, lists |
-| **Surface High** | `#F1F5F9` (Slate 100) | `#334155` (Slate 700) | Input fields, chip backgrounds |
-| **Text Primary** | `#0F172A` (Slate 900) | `#F8FAFC` (Slate 50) | Primary titles, monetary figures |
-| **Text Secondary** | `#64748B` (Slate 500) | `#94A3B8` (Slate 400) | Subtitles, helper text, timestamps |
-| **Success / Creditor** | `#10B981` | `#34D399` | Positive balances ("You are owed"), on track |
-| **Warning** | `#F59E0B` (Amber 500) | `#FBBF24` (Amber 400) | Approaching budget limit ($> 80\%$) |
-| **Danger / Debtor** | `#EF4444` (Red 500) | `#F87171` (Red 400) | Exceeded budget alerts, money owed ("You owe") |
+| **Prussian Blue** | `#0A2542` | `211°, 74%, 15%` | Primary headers, hero amounts, active filter pills, avatar accent rings, deep gradient hero cards |
+| **Jade Green** | `#00BC57` | `148°, 100%, 37%` | Brand accent, primary CTAs, active tab indicators, progress bar "on-track" fill |
+| **Pure White** | `#FFFFFF` | `0°, 0%, 100%` | Card surfaces, modal sheets, dialog backgrounds, button text on dark surfaces |
+| **Canvas Background** | `#F7F8FA` | `220°, 20%, 98%` | Warm off-white page background providing high-contrast elevation for white cards |
+| **Alert Red** | `#EF4444` | `0°, 84%, 60%` | Strictly reserved for budget-exceeded alerts and destructive action confirmations |
 
-### 1.2 Typography
-- **Primary Font**: `GoogleFonts.outfit` for prominent headings and currency values.
-- **Secondary Font**: `GoogleFonts.inter` for dense list items, form labels, and body text.
-- **Figures / Numbers**: Tabular numerals enabled for aligned financial lists (`fontFeatures: [FontFeature.tabularFigures()]`).
+### 1.2 Geometry & Corner Radii
+- **Cards, Containers & Text Inputs**: Strict `12px` rounded corners (`CoSpendRadii.card = 12.0`).
+- **Buttons, Chips, Badges & Search Bars**: Full stadium pills (`CoSpendRadii.pill = 999.0`).
+- **No ad-hoc border radii**: Every interactive element strictly maps to `12px` or `999px`.
+
+### 1.3 Depth & Elevation (Fintech Shadows)
+- Replaces harsh Material shadows and thick black borders with subtle Prussian-Blue-tinted depth:
+  ```dart
+  BoxShadow(
+    color: Color(0x0C0A2542), // 5% opacity Prussian Blue
+    blurRadius: 14,
+    offset: Offset(0, 4),
+  )
+  ```
+
+### 1.4 Typography & Hierarchy
+- **Primary Headings & Hero Amounts**: High contrast Prussian Blue (`#0A2542`), 20–36px bold.
+- **Section Labels**: 11–12px, semibold, uppercase, letter-spacing `0.8` (e.g. `RECENT TRANSACTIONS`, `CATEGORY BREAKDOWN`).
+- **Captions & Metadata**: Slate gray (`#64748B`), 12–13px regular.
+- **Numbers & Monetary Figures**: Bold tabular figures with explicit currency prefix (`Rs. X,XXX`).
 
 ---
 
-## 2. Core Design Components
+## 2. Core Reusable Fintech Components
 
-### 2.1 Metric & Financial Summary Cards (`FinancialSummaryCards`)
-- 4 grid cards displaying: **Total Spent**, **Your Share**, **You Paid**, and **Net Balance**.
-- Elevated with subtle 1px border borders (`alpha: 0.1`) and soft shadows (`blurRadius: 10, offset: (0, 4)`).
-- Distinct color accents: Emerald for positive balances, Coral red for debts.
+### 2.1 `CoSpendCard`
+- White card container with `12px` corner radius, `Color(0x0C0A2542)` soft shadow, and optional 1px subtle border.
 
-### 2.2 Budget Progress Card (`BudgetProgressCard`)
-- Multi-state card displaying:
-  - Header: Status tag (`On track`, `Approaching limit`, `Budget exceeded`).
-  - Dual action button: `tune` (Adjust Budgets) for Owner; `visibility` (View Limits) for Members.
-  - Linear smooth progress bar with dynamic color transitions (Green $\to$ Amber $\to$ Red).
-  - Expandable member quotas drawer ("Show my quotas").
+### 2.2 `BouncingButton`
+- Wrapper for clickable surfaces providing tactile `0.97` scale-down physics on tap with swift recovery.
 
-### 2.3 LoadingButton (`LoadingButton`)
-- Full-width tactile action button supporting asynchronous loading spinner without layout shifts.
-- Disabled state styling with reduced opacity and ripple suppression.
+### 2.3 `TintedIcon`
+- 36px circular tinted icon container in Prussian Blue (`0x140A2542`) or Jade Green (`0x1400BC57`), delivering consistent visual weight without random rainbow chips.
 
-### 2.4 Category Icon & Color Engine
-- 36 pre-indexed Material icons (Food, Cart, Bus, Bolt, Wifi, Rent, Gym, Gift, etc.).
-- 12 curated vibrant pastel background colors for categories.
-- Zero non-constant `IconData` invocations, ensuring smooth release compilation.
+### 2.4 `CoSpendSegmentedControl`
+- Custom sliding pill control replacing Flutter's default blocky `SegmentedButton`. Supports smooth thumb animation across split options.
+
+### 2.5 `SectionLabel`
+- Standardized uppercase header widget enforcing typography guidelines across all screens.
 
 ---
 
 ## 3. Screen-by-Screen Specifications
 
-### 3.1 Authentication & Onboarding
-- **OnboardingScreen**: 3-step carousel showcasing:
-  1. *Track Shared Expenses with Ease*
-  2. *Smart Category Budgets & Quotas*
-  3. *One-Tap Debt Settlement*
-- **Login & SignUp**: Clean vertical form with instant regex validation, password visibility toggles, and Google/Email options.
-- **HouseholdSetupScreen**: Dual entry options:
-  - *Create a Flat*: Asks for flat name, generates owner credentials.
-  - *Join a Flat*: Input field accepting raw codes (`7K29`) or full WhatsApp pasted text. Automatically navigates to Home on success.
+### 3.1 HomeScreen (Dashboard)
+- **Top Bar**:
+  - Full user name with dynamic time greeting (`Good afternoon, Bilal 👋`).
+  - User avatar with thin Prussian Blue accent border.
+  - Interactive pill month selector dropdown (`March 2026 ▾`).
+  - Notification bell with unread badge opening `NotificationsSheet`.
+- **4-Card Financial Metric Grid** (`FinancialCard`):
+  - 2x2 grid displaying:
+    1. *Total Allocated Budget* (Prussian Blue tinted icon, household target)
+    2. *Total Spendings* (Jade Green tinted icon, total flat spend)
+    3. *Your Total Allocated Share* (Prussian Blue tinted icon, personal quota)
+    4. *Total Spending by You* (Jade Green tinted icon, personal out-of-pocket)
+  - Top-left 36px circular icon, bold hero amount, 11px uppercase label, and helper subtitle.
+- **Hero Budget Progress Card** (`BudgetProgressCard`):
+  - Deep Prussian Blue gradient (`#0A2542` $\to$ `#133863`).
+  - Bold white spending figures with Jade Green progress bar.
+  - Single-hue status rows: Jade Green for $<80\%$, Amber for $80-99\%$, Alert Red for $\ge 100\%$.
+- **Exceeded Alert Banner**:
+  - Soft `#FFF5F5` background, solid red left accent stripe, concise overspend explanation.
+- **Recent Transactions Feed**:
+  - Clean `CoSpendCard` rows with `TintedIcon` category badge, roommate attribution, and bold amount.
+- **Floating Action Button (FAB)**:
+  - Solid Jade Green stadium pill (`+ Add Expense`) with soft floating drop shadow.
 
-### 3.2 HomeScreen (Dashboard)
-- **Top Greeting Bar**: Contextual greeting (`Good morning / afternoon / evening, [User] 👋`) with Flat name badge and quick `Invite (FLAT-XXXX)` action chip.
-- **Exceeded Budget Alert Banner**: Prominent warning banner when personal or flat category budget is breached.
-- **4 Financial Summary Cards**: Real-time spending calculations.
-- **Budget Progress Card**: Real-time progress bar.
-- **Daily Spending Trend**: Visual bar breakdown for the active month.
-- **Recent Expenses Feed**: Last 5 transactions with category avatars and payer attribution.
+### 3.2 ExpensesScreen (Feed & Filter)
+- **Pill Search Bar**: Stadium-shaped text input with subtle shadow and magnifying glass icon.
+- **Segmented Filter Chips**:
+  - Active: Solid Prussian Blue pill with white text.
+  - Inactive: Crisp white pill with thin 1px border.
+- **Transaction Cards**: 12px rounded cards grouped under date section headers.
 
-### 3.3 ExpensesScreen (List)
-- **Month Picker**: Month-by-month filter.
-- **Category Filter Chips**: Horizontal scrollable chips for all standard and custom categories.
-- **Expense List**: Slidable / clickable expense cards showing title, payer avatar, subcategory chip, date, and share amounts.
+### 3.3 AddExpenseScreen (Expense Logging)
+- **Minimalist Hero Amount Input**: Clean card with "Rs." prefix in Prussian Blue and 36px bold amount input.
+- **Metadata Selector Chips**: 12px rounded dropdown chips for Category and Date.
+- **Sub-category Pills**: Horizontal scrollable list with Jade Green active fill.
+- **"Paid by" Selector**: Roommate avatar with outlined "Change" pill.
+- **Sliding Split Mode Switcher**: `CoSpendSegmentedControl` supporting *Equally*, *Unequally*, and *Percentage*.
+- **Roommate Checklist**: Circular Jade Green check toggles replacing square checkboxes.
+- **Save CTA**: Solid stadium Jade Green button with `BouncingButton` micro-interaction.
 
-### 3.4 AddExpenseScreen
-- **Monetary Keypad**: Large input field formatted in Rupees.
-- **Category Picker**: Grid of standard categories plus "+ Custom" button launching `CreateCategorySheet`.
-- **Sub-Category Filter Chips**: Dynamic tag chips based on selected category, plus inline `+ Sub` add button.
-- **Payer Selector**: Horizontal list of roommates.
-- **Participant Multi-Select**: Checkboxes to include/exclude specific roommates.
-- **Split Mode Switcher**: Tab bar switching between *Equal*, *Unequal (Amounts)*, and *Percentage*.
+### 3.4 CategoryBudgetScreen (Budgets Tab)
+- **Summary Hero**: Deep Prussian Blue gradient card displaying total flat target vs. actual total spent.
+- **Category Cards**:
+  - Subtle `CONFIGURED` or `EXCEEDED` pill badge instead of full card colored borders.
+  - **No Disabled Input Chrome**: When viewed by roommates, fields render clean, bold statement-style text (`Rs. 15,000 / month` or `'Not set'`).
+- **Owner Edit Flow**: Modal bottom sheet with quick adjustment pills (`+1k`, `+5k`, `+10k`) and a stadium save button.
 
-### 3.5 CategoryBudgetScreen
-- **Role-Aware Display**:
-  - *Owner View*: Full editing capabilities, "+ Add Custom Category", "Clear All", quick increment chips (`+1,000`, `+5,000`, `+10,000`), "Divide Equally", and floating "Save Budgets" bottom sheet.
-  - *Member View*: Prominent lock banner (`"View-Only: Only the flat owner can set or adjust budgets"`). All input fields are disabled (`enabled: false`), increment chips and save buttons are hidden.
-- **Member Division Accordion**: Expandable panel under each category allowing the owner to divide limits equally or enter custom member quotas.
+### 3.5 MoreScreen (Settings & Profile)
+- **Profile Card**: Clean `CoSpendCard` with accent-bordered user avatar, flatmate name, role tag pill (`FLAT OWNER` / `ROOMMATE`), and contact details.
+- **Standardized Settings Rows**: 52px items with `TintedIcon` leading widgets, chevron trailing icons, and inset 1px dividers.
+- **Appearance Selector**: Custom Jade Green active ring/dot radio indicators for Theme Mode (System, Light, Dark).
+- **Danger Actions**: Leave Flat and Sign Out rows styled with Alert Red tinted icons.
 
-### 3.6 SettleUpScreen
-- **Net Balances List**: Visual cards showing each member's credit or debit standing.
-- **Suggested Debt Transfers**: Smart, minimized payments (e.g. `Hamza pays Bilal Rs. 2,400`).
-- **Mark as Settled**: One-tap recording that persists the settlement and zeroes out the debt.
-
-### 3.7 MoreScreen
-- **User Profile**: Name, email, and joined flat.
-- **Flat Management**:
-  - Category Budgets tile (shows target and count for Owner; "View limits" for Member).
-  - Join another flat.
-  - Share invite sheet (`InviteMembersSheet`).
-  - Theme mode selector (Light / Dark / System).
-  - Leave flat action with confirmation dialog.
-  - Sign out.
+### 3.6 NotificationsSheet
+- Modal bottom sheet with top drag handle pill, circular Jade Green bell icon, and clean transaction activity cards with relative timestamps (`"2m ago"`).
 
 ---
 
-## 4. Micro-Interactions & Transitions
-1. **Button Presses**: 96% scale press animation on primary cards.
-2. **Page Navigation**: Clean Material fade/slide transitions via GoRouter.
-3. **Dynamic Form Validations**: Error text appears with animated fade-in without shifting layout heights.
-4. **Snackbar Feedback**: Non-intrusive floating toasts with semantic icons (check circle for success, exclamation circle for error).
+## 4. Micro-Interactions & Physics
+1. **Tap Feedback**: `BouncingButton` reduces scale to `0.97` on tap down and springs back smoothly on release.
+2. **Progress Animation**: All linear and circular progress indicators animate over `600ms` using `Curves.easeOutCubic`.
+3. **Pill Transitions**: Filter chips and segmented controls transition background colors over `200ms`.

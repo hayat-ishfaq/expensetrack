@@ -2,7 +2,7 @@
 
 **Product Name**: CoSpend (formerly FlatSplit)  
 **Platform**: Android & iOS (Flutter)  
-**Version**: 1.4.0  
+**Version**: 1.5.0  
 **Target Audience**: Flatmates, roommates, co-living groups, students, and shared households  
 **Document Owner**: Engineering & Product Team  
 **Status**: Active / In Production  
@@ -135,8 +135,15 @@ To be the most intuitive, beautiful, and effortless co-living financial operatin
 - **Dark/Light Theme**: Automatic system detection with manual override.
 - **Curated CoSpend Palette**:
   - *Jade Green* (`#00BC57` / `hsla(148, 100%, 37%, 1)`): Primary brand accent, progress fill, budget remainder, and CTAs.
-  - *Prussian Blue* (`#0A2542` / `hsla(211, 74%, 15%, 1)`): Deep navy contrast headers, dark mode foundation canvas, and card borders.
-  - *Crisp White & Soft Slate* (`#FFFFFF` / `#F8FAFC`): Clean, uncluttered light mode canvas eliminating visual noise.
+  - *Prussian Blue* (`#0A2542` / `hsla(211, 74%, 15%, 1)`): Deep navy contrast headers, dark mode foundation canvas, active filter pills, and gradient hero cards.
+  - *Crisp White & Off-White Canvas* (`#FFFFFF` / `#F7F8FA`): Clean, uncluttered light mode canvas eliminating visual noise with warm separation.
+  - *Alert Red* (`#EF4444`): Strictly reserved for budget-exceeded alerts and destructive confirmations.
+- **Fintech Component System (`lib/core/theme/design_system.dart`)**:
+  - 12px rounded corner radii for all cards, text fields, and modal sheets.
+  - 999px full-pill stadium geometry for action buttons, chips, badges, and search bars.
+  - Soft Prussian-Blue-tinted shadows (`rgba(10, 37, 66, 0.05)` to `0.08` with 14px blur).
+  - 11–12px uppercase section labels with 0.8 letter-spacing.
+  - Tactile micro-interactions (`BouncingButton` with 0.97 scale feedback).
 - **Brand Identity & Iconography**:
   - Official high-resolution CoSpend emblem (`assets/images/app_logo.png`).
   - Production-ready Android mipmap launcher icons generated across all densities (`mdpi`, `hdpi`, `xhdpi`, `xxhdpi`, `xxxhdpi`).

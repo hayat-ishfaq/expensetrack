@@ -1,13 +1,13 @@
-# FlatSplit — Technical Architecture Document
+# CoSpend — Technical Architecture Document
 
-**System Version**: 1.2.0  
+**System Version**: 1.5.0  
 **Stack**: Flutter (Dart 3.x), Riverpod 2.x, Firebase (Auth & Cloud Firestore), GoRouter  
 **Target Environments**: Android (API 21+), iOS (iOS 13+)  
 
 ---
 
 ## 1. Architectural Philosophy & Overview
-FlatSplit is engineered around **Feature-First Clean Architecture** principles, enforcing strict separation of concerns, single-direction data flow, and isolated testability.
+**CoSpend** (formerly FlatSplit) is engineered around **Feature-First Clean Architecture** principles, enforcing strict separation of concerns, single-direction data flow, and isolated testability.
 
 ```
 ┌────────────────────────────────────────────────────────┐
@@ -30,6 +30,7 @@ FlatSplit is engineered around **Feature-First Clean Architecture** principles, 
 1. **Unidirectional Reactive Flow**: UI triggers actions on Riverpod Notifiers -> Notifiers invoke Domain Repositories -> Data Layer updates Firestore -> Firestore Streams emit real-time snapshots back into Riverpod providers -> UI reacts smoothly.
 2. **Integer-Safe Monetary Engine**: Floating-point rounding errors (`0.1 + 0.2 = 0.30000000000000004`) are strictly prohibited in financial code. All amounts are stored and computed in 64-bit integer paisas (`1 PKR = 100 Paisa`).
 3. **Strict Domain Purity**: Domain entities and mathematical engines (e.g. `SettlementEngine`, `SplitCalculator`, `InviteCode`) have zero dependencies on Flutter or Firebase, enabling blazing fast unit test execution ($< 2$ seconds for the entire test suite).
+4. **Fintech Design System Layer**: Centralized visual tokens, geometry, and micro-interactions encapsulated in `lib/core/theme/design_system.dart`.
 
 ---
 
@@ -44,29 +45,31 @@ lib/
 │   │   ├── app_router.dart     # GoRouter instance & dynamic auth/household redirect logic
 │   │   ├── routes.dart         # Path constants
 │   │   └── not_found_screen.dart
-│   └── theme/                  # Theme definitions (Light & Dark AppTheme)
 │
 ├── core/                       # Shared platform primitives & utilities
 │   ├── constants/              # AppConstants, FirestoreCollections
 │   ├── errors/                 # AppException hierarchy & FirebaseErrorMapper
+│   ├── theme/                  # Design System & Theme Engine
+│   │   ├── app_theme.dart      # ThemeData configuration (Light & Dark)
+│   │   └── design_system.dart  # Tokens, Colors, Shadows, Radii & Reusable Widgets
 │   └── utils/                  # Money (Paisa formatting), Validators, DateFormatters
 │
 ├── features/                   # Encapsulated vertical feature slices
-│   ├── auth/                   # Authentication & profile management
+│   ├── auth/                   # Authentication, profile & avatar studio
 │   │   ├── domain/             # AuthUser, AuthRepository, SessionState
 │   │   ├── data/               # FirebaseAuthRepository
-│   │   └── presentation/       # Login, SignUp, Splash, SessionProvider
-│   ├── household/              # Flat setup, members, invite codes & settings
-│   │   ├── domain/             # Household, HouseholdMember, InviteCode
+│   │   └── presentation/       # Login, SignUp, Splash, EditProfileScreen, AvatarPickerSheet
+│   ├── household/              # Flat setup, members, invite codes & notifications
+│   │   ├── domain/             # Household, HouseholdMember, InviteCode, SpendNotification
 │   │   ├── data/               # FirebaseHouseholdRepository
-│   │   └── presentation/       # CreateFlat, JoinFlat, HouseholdProviders
+│   │   └── presentation/       # CreateFlat, JoinFlat, NotificationsSheet, HouseholdProviders
 │   ├── expenses/               # Expense logging, custom categories, splitting
 │   │   ├── domain/             # Expense, SplitCalculator, CustomCategory
 │   │   ├── data/               # FirebaseExpenseRepository
 │   │   └── presentation/       # AddExpenseScreen, ExpensesScreen, ExpenseProviders
 │   ├── dashboard/              # Aggregations, financial cards, budget targets
 │   │   ├── domain/             # DashboardStats
-│   │   └── presentation/       # CategoryBudgetScreen, BudgetProgressCard, DashboardProviders
+│   │   └── presentation/       # CategoryBudgetScreen, FinancialCard, BudgetProgressCard
 │   ├── settlement/             # Debt minimization engine & settlement records
 │   │   ├── domain/             # SettlementEngine, Balance, Transfer
 │   │   ├── data/               # FirebaseSettlementRepository
@@ -76,7 +79,7 @@ lib/
 │
 └── shared/                     # Reusable cross-feature widgets and models
     ├── models/                 # AppUser, Household, HouseholdMember
-    └── widgets/                # LoadingButton, AppSnackbar, ConfirmDialog
+    └── widgets/                # AppAvatar, LoadingButton, AppSnackbar, ConfirmDialog
 ```
 
 ---
@@ -91,6 +94,7 @@ graph TD
     C --> E[currentHouseholdProvider]
     E --> F[householdMembersProvider]
     E --> G[expensesStreamProvider]
+    E --> N[householdNotificationsStreamProvider]
     G --> H[dashboardStatsProvider: Monthly Aggregations]
     H --> I[budgetStatusProvider: Household Limits]
     H --> J[categoryBudgetsStatusProvider]
@@ -103,7 +107,7 @@ graph TD
 - **`SessionInitializing`**: App is booting, displaying the splash screen.
 - **`SessionSignedOut`**: No Firebase user authenticated. Router locks navigation to `/welcome`, `/login`, `/signup`, or `/onboarding`.
 - **`SessionNeedsHousehold`**: User signed in, but `user.householdId == null`. Router directs user to `/household/setup`.
-- **`SessionReady`**: User signed in with an active flat. Full access to Home, Expenses, Settle, Budgets, and More.
+- **`SessionReady`**: User signed in with an active flat. Full access to Home, Expenses, Budgets, and More.
 
 ---
 
@@ -114,7 +118,10 @@ graph TD
   ├── name: String
   ├── email: String
   ├── householdId: String?
-  ├── photoUrl: String?
+  ├── photoUrl: String?           # Base64 data URI or HTTP/HTTPS URL
+  ├── phoneNumber: String?        # Contact / WhatsApp number
+  ├── upiId: String?              # Payment handle (UPI / EasyPaisa / JazzCash)
+  ├── roomNotes: String?          # Room assignment / bio
   └── createdAt: Timestamp
 
 /inviteCodes/{code} (e.g. "FLAT-7K29")
@@ -139,6 +146,9 @@ graph TD
   │     ├── email: String
   │     ├── role: String ("owner" | "member")
   │     ├── photoUrl: String?
+  │     ├── phoneNumber: String?
+  │     ├── upiId: String?
+  │     ├── roomNotes: String?
   │     └── joinedAt: Timestamp
   │
   ├── /expenses/{expenseId}
@@ -155,12 +165,22 @@ graph TD
   │     ├── createdByUserId: String
   │     └── createdAt: Timestamp
   │
-  └── /settlements/{settlementId}
-        ├── fromUserId: String
-        ├── toUserId: String
-        ├── amountPaisa: int
-        ├── settledAt: Timestamp
-        └── recordedByUserId: String
+  ├── /settlements/{settlementId}
+  │     ├── fromUserId: String
+  │     ├── toUserId: String
+  │     ├── amountPaisa: int
+  │     ├── settledAt: Timestamp
+  │     └── recordedByUserId: String
+  │
+  └── /notifications/{notificationId}
+        ├── eventType: String ("expense_created" | "budget_exceeded")
+        ├── title: String
+        ├── message: String
+        ├── actorId: String
+        ├── actorName: String
+        ├── amountPaisa: int?
+        ├── createdAt: Timestamp
+        └── readByUserIds: List<String>
 ```
 
 ---
@@ -195,7 +215,32 @@ To eliminate Flutter Android release build failures caused by dynamic `IconData(
 
 ---
 
-## 6. Error Handling & Resilience
+## 6. Fintech Design System Architecture (`lib/core/theme/design_system.dart`)
+
+The UI layer is decoupled from ad-hoc styling via strict tokens:
+- **`CoSpendColors`**:
+  - `prussianBlue`: `#0A2542` (Primary Brand & Typography)
+  - `jadeGreen`: `#00BC57` (Accent & On-Track Indicator)
+  - `canvas`: `#F7F8FA` (Slightly warm off-white surface)
+  - `cardSurface`: `#FFFFFF` (Elevated card background)
+  - `alertRed`: `#EF4444` (Exclusively for budget breaches)
+- **`CoSpendRadii`**:
+  - `card`: `12px`
+  - `input`: `12px`
+  - `pill`: `999px`
+- **`CoSpendShadows`**:
+  - `softCard`: `BoxShadow(color: Color(0x0C0A2542), blurRadius: 14, offset: Offset(0, 4))`
+- **Reusable Fintech Primitives**:
+  - `CoSpendCard`: 12px rounded, soft-shadowed white container.
+  - `BouncingButton`: Micro-interaction component with 0.97 scale tap feedback.
+  - `TintedIcon`: 36px circular tinted icon container in Prussian Blue or Jade Green.
+  - `SectionLabel`: 11–12px uppercase semibold label with 0.8 letter-spacing.
+  - `CoSpendSegmentedControl`: Custom sliding pill control replacing stock Flutter widgets.
+
+---
+
+## 7. Error Handling & Resilience
 - **`AppException` Hierarchy**: Typed, structured application errors (`AuthException`, `HouseholdException`, `NetworkException`, `ValidationException`).
 - **`FirebaseErrorMapper`**: Maps low-level platform error codes (`invalid-credential`, `permission-denied`, `unavailable`) into clear, actionable user messages.
 - **Dual Invite Lookup**: When joining a flat, queries the `inviteCodes` index; if absent, falls back to querying `households` by `inviteCode` and automatically self-heals the index.
+- **Resilient Profile Persistence**: Uses Firestore `.set(userUpdates, SetOptions(merge: true))` to safely handle new or partial documents, and isolates data URIs from `FirebaseAuth.currentUser.updatePhotoURL()`.
