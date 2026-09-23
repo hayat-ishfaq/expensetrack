@@ -42,31 +42,35 @@ class _AvatarPickerSheetState extends State<AvatarPickerSheet> {
 
   Future<void> _pickImage(ImageSource source) async {
     try {
+      setState(() {
+        _isProcessingImage = true;
+      });
       final picker = ImagePicker();
       final picked = await picker.pickImage(
         source: source,
-        maxWidth: 320,
-        maxHeight: 320,
-        imageQuality: 70,
+        maxWidth: 256,
+        maxHeight: 256,
+        imageQuality: 65,
       );
       if (picked != null) {
-        setState(() {
-          _isProcessingImage = true;
-        });
         final bytes = await picked.readAsBytes();
         final base64String = base64Encode(bytes);
-        setState(() {
-          _selected = 'data:image/jpeg;base64,$base64String';
-          _showCustomUrl = false;
-          _urlController.clear();
-          _isProcessingImage = false;
-        });
+        final dataUri = 'data:image/jpeg;base64,$base64String';
+        if (mounted) {
+          Navigator.of(context).pop(dataUri);
+        }
+      } else {
+        if (mounted) {
+          setState(() {
+            _isProcessingImage = false;
+          });
+        }
       }
     } catch (e) {
-      setState(() {
-        _isProcessingImage = false;
-      });
       if (mounted) {
+        setState(() {
+          _isProcessingImage = false;
+        });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Failed to load image: $e')),
         );
@@ -211,11 +215,7 @@ class _AvatarPickerSheetState extends State<AvatarPickerSheet> {
                           : Colors.transparent,
                     ),
                     onPressed: () {
-                      setState(() {
-                        _selected = null;
-                        _urlController.clear();
-                        _showCustomUrl = false;
-                      });
+                      Navigator.of(context).pop('');
                     },
                   ),
                 ],
@@ -249,11 +249,7 @@ class _AvatarPickerSheetState extends State<AvatarPickerSheet> {
 
                   return GestureDetector(
                     onTap: () {
-                      setState(() {
-                        _selected = preset.id;
-                        _showCustomUrl = false;
-                        _urlController.clear();
-                      });
+                      Navigator.of(context).pop(preset.id);
                     },
                     child: Column(
                       mainAxisSize: MainAxisSize.min,

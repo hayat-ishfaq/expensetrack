@@ -165,8 +165,10 @@ class FirebaseAuthRepository implements AuthRepository {
       if (user != null) {
         try {
           await user.updateDisplayName(trimmedName);
-          if (photoUrl != null) {
+          if (photoUrl != null && photoUrl.startsWith('http')) {
             await user.updatePhotoURL(photoUrl);
+          } else if (photoUrl == null || photoUrl.isEmpty) {
+            await user.updatePhotoURL(null);
           }
         } catch (_) {}
       }
@@ -182,7 +184,7 @@ class FirebaseAuthRepository implements AuthRepository {
       await _firestore
           .collection(FirestoreCollections.users)
           .doc(uid)
-          .update(userUpdates);
+          .set(userUpdates, SetOptions(merge: true));
 
       if (householdId != null && householdId.isNotEmpty) {
         try {
@@ -197,7 +199,7 @@ class FirebaseAuthRepository implements AuthRepository {
               .doc(householdId)
               .collection(FirestoreCollections.members)
               .doc(uid)
-              .update(memberUpdates);
+              .set(memberUpdates, SetOptions(merge: true));
         } catch (_) {
           // Member document update failure is non-fatal if user left or doc doesn't exist
         }

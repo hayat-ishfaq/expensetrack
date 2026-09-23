@@ -82,7 +82,7 @@ class AuthActions extends AsyncNotifier<void> {
     String? householdId,
   }) async {
     state = const AsyncLoading();
-    state = await AsyncValue.guard(() async {
+    try {
       await _repository.updateProfile(
         uid: uid,
         name: name,
@@ -92,7 +92,12 @@ class AuthActions extends AsyncNotifier<void> {
         bio: bio,
         householdId: householdId,
       );
-    });
+      state = const AsyncData(null);
+      ref.invalidate(currentUserProvider);
+    } catch (e, st) {
+      state = AsyncError(e, st);
+      rethrow;
+    }
   }
 }
 

@@ -173,12 +173,13 @@ class AppAvatar extends StatelessWidget {
       );
     } else if (photoUrl != null &&
         photoUrl!.isNotEmpty &&
-        photoUrl!.startsWith('data:image')) {
+        (photoUrl!.startsWith('data:image') || photoUrl!.contains(';base64,'))) {
       final commaIndex = photoUrl!.indexOf(',');
       final base64String =
           commaIndex != -1 ? photoUrl!.substring(commaIndex + 1) : photoUrl!;
       try {
-        final bytes = base64Decode(base64String);
+        final cleanBase64 = base64String.trim().replaceAll(RegExp(r'\s+'), '');
+        final bytes = base64Decode(cleanBase64);
         child = ClipOval(
           child: Image.memory(
             bytes,

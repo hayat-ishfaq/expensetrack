@@ -53,11 +53,11 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       name: currentName.isNotEmpty ? currentName : 'User',
     );
 
-    if (mounted && selected != _photoUrl) {
-      setState(() {
-        _photoUrl = selected;
-      });
-    }
+    if (selected == null || !mounted) return;
+
+    setState(() {
+      _photoUrl = selected.isEmpty ? null : selected;
+    });
   }
 
   Future<void> _save(AppUser user) async {
@@ -80,6 +80,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
             householdId: user.householdId,
           );
 
+      ref.invalidate(currentUserProvider);
+      ref.invalidate(sessionProvider);
+
       if (!mounted) return;
       showAppSnack(context, 'Profile updated successfully!');
       if (context.canPop()) {
@@ -87,7 +90,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       }
     } catch (e) {
       if (!mounted) return;
-      showAppSnack(context, FirebaseErrorMapper.messageFor(e));
+      showAppSnack(context, FirebaseErrorMapper.messageFor(e), error: true);
     }
   }
 
