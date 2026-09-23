@@ -218,38 +218,8 @@ class HomeScreen extends ConsumerWidget {
         ),
       ),
       // 6. Primary Add Expense Action
-      floatingActionButton: Semantics(
-        button: true,
-        label: 'Add Expense',
-        child: BouncingButton(
-          scale: 0.94,
-          onTap: () => context.push(Routes.addExpense),
-          child: Container(
-            height: 48,
-            padding: const EdgeInsets.symmetric(horizontal: 18),
-            decoration: BoxDecoration(
-              color: CoSpendColors.jadeGreen,
-              borderRadius: CoSpendRadii.pillRadius,
-              boxShadow: CoSpendShadows.floating,
-            ),
-            child: const Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.add_rounded, color: Colors.white, size: 20),
-                SizedBox(width: 8),
-                Text(
-                  'Add Expense',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white,
-                    fontSize: 14,
-                    letterSpacing: 0.2,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
+      floatingActionButton: CoSpendFab(
+        onPressed: () => context.push(Routes.addExpense),
       ),
     );
   }

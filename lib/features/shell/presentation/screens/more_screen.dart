@@ -32,36 +32,49 @@ class MoreScreen extends ConsumerWidget {
 
     final updated = await showDialog<bool>(
       context: context,
-      builder: (dialogCtx) => AlertDialog(
-        title: const Text('Rename Flat'),
-        content: Form(
-          key: formKey,
-          child: TextFormField(
-            controller: controller,
-            decoration: const InputDecoration(
-              labelText: 'Flat name',
-              hintText: 'e.g. Air University Hostel',
-              border: OutlineInputBorder(),
+      builder: (dialogCtx) {
+        final isDark = Theme.of(dialogCtx).brightness == Brightness.dark;
+        return AlertDialog(
+          backgroundColor:
+              isDark ? CoSpendColors.darkCard : CoSpendColors.white,
+          title: Text(
+            'Rename Flat',
+            style: TextStyle(
+              fontWeight: FontWeight.w700,
+              fontSize: 18,
+              color: isDark ? Colors.white : CoSpendColors.textPrimary,
             ),
-            validator: Validators.flatName,
-            autofocus: true,
           ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogCtx).pop(false),
-            child: const Text('Cancel'),
+          content: Form(
+            key: formKey,
+            child: TextFormField(
+              controller: controller,
+              decoration: const InputDecoration(
+                labelText: 'Flat name',
+                hintText: 'e.g. Air University Hostel',
+              ),
+              validator: Validators.flatName,
+              autofocus: true,
+            ),
           ),
-          FilledButton(
-            onPressed: () {
-              if (formKey.currentState!.validate()) {
-                Navigator.of(dialogCtx).pop(true);
-              }
-            },
-            child: const Text('Save'),
-          ),
-        ],
-      ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogCtx).pop(false),
+              child: const Text('Cancel'),
+            ),
+            CoSpendButton(
+              label: 'Save',
+              isFullWidth: false,
+              height: 40,
+              onPressed: () {
+                if (formKey.currentState!.validate()) {
+                  Navigator.of(dialogCtx).pop(true);
+                }
+              },
+            ),
+          ],
+        );
+      },
     );
 
     if (updated == true && context.mounted) {
@@ -108,7 +121,7 @@ class MoreScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
     final session = ref.watch(sessionProvider).value;
     final household = ref.watch(currentHouseholdProvider).value;
     final themeMode = ref.watch(themeModeProvider).value ?? ThemeMode.system;
@@ -152,43 +165,30 @@ class MoreScreen extends ConsumerWidget {
                           Flexible(
                             child: Text(
                               user?.name ?? 'CoSpend member',
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontWeight: FontWeight.w700,
                                 fontSize: 16,
-                                color: CoSpendColors.prussianBlue,
+                                color: isDark
+                                    ? CoSpendColors.darkTextPrimary
+                                    : CoSpendColors.textPrimary,
                               ),
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
                           if (isOwner) ...[
                             const SizedBox(width: 8),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 2,
-                              ),
-                              decoration: BoxDecoration(
-                                color: CoSpendColors.prussianBlue.withValues(alpha: 0.08),
-                                borderRadius: BorderRadius.circular(999),
-                              ),
-                              child: const Text(
-                                'Owner',
-                                style: TextStyle(
-                                  color: CoSpendColors.prussianBlue,
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 10,
-                                ),
-                              ),
-                            ),
+                            const CoSpendBadge(label: 'Owner'),
                           ],
                         ],
                       ),
                       const SizedBox(height: 2),
                       Text(
                         user?.email ?? '',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 12,
-                          color: Color(0xFF6B7280),
+                          color: isDark
+                              ? CoSpendColors.darkTextMuted
+                              : CoSpendColors.textMuted,
                         ),
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -207,10 +207,12 @@ class MoreScreen extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(width: 8),
-                const TintedIcon(
+                TintedIcon(
                   icon: Icons.edit_outlined,
                   size: 16,
-                  color: CoSpendColors.prussianBlue,
+                  color: isDark
+                      ? CoSpendColors.jadeGreen
+                      : CoSpendColors.prussianBlue,
                   containerSize: 32,
                 ),
               ],
@@ -227,9 +229,9 @@ class MoreScreen extends ConsumerWidget {
               child: Column(
                 children: [
                   ListTile(
-                    leading: const TintedIcon(
+                    leading: TintedIcon(
                       icon: Icons.groups_rounded,
-                      color: CoSpendColors.prussianBlue,
+                      color: isDark ? CoSpendColors.jadeGreen : CoSpendColors.prussianBlue,
                       size: 20,
                     ),
                     title: const Text(
@@ -238,16 +240,16 @@ class MoreScreen extends ConsumerWidget {
                     ),
                     subtitle: Text(
                       '${household.name} · Roster & permissions',
-                      style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
+                      style: TextStyle(fontSize: 12, color: isDark ? CoSpendColors.darkTextMuted : CoSpendColors.textMuted),
                     ),
-                    trailing: const Icon(Icons.chevron_right_rounded, color: Color(0xFF9CA3AF)),
+                    trailing: Icon(Icons.chevron_right_rounded, color: isDark ? CoSpendColors.darkTextSubtle : CoSpendColors.textSubtle),
                     onTap: () => context.push(Routes.householdSettings),
                   ),
-                  const Divider(height: 1, indent: 56, endIndent: 16, color: Color(0x0F0A2542)),
+                  Divider(height: 1, indent: 56, endIndent: 16, color: isDark ? CoSpendColors.darkBorder : CoSpendColors.borderLight),
                   ListTile(
-                    leading: const TintedIcon(
+                    leading: TintedIcon(
                       icon: Icons.home_work_rounded,
-                      color: CoSpendColors.prussianBlue,
+                      color: isDark ? CoSpendColors.jadeGreen : CoSpendColors.prussianBlue,
                       size: 20,
                     ),
                     title: const Text(
@@ -256,9 +258,9 @@ class MoreScreen extends ConsumerWidget {
                     ),
                     subtitle: Text(
                       household.name,
-                      style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
+                      style: TextStyle(fontSize: 12, color: isDark ? CoSpendColors.darkTextMuted : CoSpendColors.textMuted),
                     ),
-                    trailing: const Icon(Icons.edit_outlined, size: 18, color: Color(0xFF9CA3AF)),
+                    trailing: Icon(Icons.edit_outlined, size: 18, color: isDark ? CoSpendColors.darkTextSubtle : CoSpendColors.textSubtle),
                     onTap: () => _renameFlat(
                       context,
                       ref,
@@ -266,11 +268,11 @@ class MoreScreen extends ConsumerWidget {
                       household.name,
                     ),
                   ),
-                  const Divider(height: 1, indent: 56, endIndent: 16, color: Color(0x0F0A2542)),
+                  Divider(height: 1, indent: 56, endIndent: 16, color: isDark ? CoSpendColors.darkBorder : CoSpendColors.borderLight),
                   ListTile(
-                    leading: const TintedIcon(
+                    leading: TintedIcon(
                       icon: Icons.pie_chart_rounded,
-                      color: CoSpendColors.prussianBlue,
+                      color: isDark ? CoSpendColors.jadeGreen : CoSpendColors.prussianBlue,
                       size: 20,
                     ),
                     title: const Text(
@@ -285,52 +287,52 @@ class MoreScreen extends ConsumerWidget {
                           : (household.effectiveTotalBudgetPaisa > 0
                               ? 'View limits: ${Money.format(household.effectiveTotalBudgetPaisa)} target'
                               : 'View limits (Managed by flat owner)'),
-                      style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
+                      style: TextStyle(fontSize: 12, color: isDark ? CoSpendColors.darkTextMuted : CoSpendColors.textMuted),
                     ),
-                    trailing: const Icon(Icons.chevron_right_rounded, color: Color(0xFF9CA3AF)),
+                    trailing: Icon(Icons.chevron_right_rounded, color: isDark ? CoSpendColors.darkTextSubtle : CoSpendColors.textSubtle),
                     onTap: () => context.push(Routes.categoryBudgets),
                   ),
-                  const Divider(height: 1, indent: 56, endIndent: 16, color: Color(0x0F0A2542)),
+                  Divider(height: 1, indent: 56, endIndent: 16, color: isDark ? CoSpendColors.darkBorder : CoSpendColors.borderLight),
                   ListTile(
-                    leading: const TintedIcon(
+                    leading: TintedIcon(
                       icon: Icons.swap_horiz_rounded,
-                      color: CoSpendColors.prussianBlue,
+                      color: isDark ? CoSpendColors.jadeGreen : CoSpendColors.prussianBlue,
                       size: 20,
                     ),
                     title: const Text(
                       'Settle Up & Reconciliation',
                       style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
                     ),
-                    subtitle: const Text(
+                    subtitle: Text(
                       'Who owes whom, optimized transfers',
-                      style: TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
+                      style: TextStyle(fontSize: 12, color: isDark ? CoSpendColors.darkTextMuted : CoSpendColors.textMuted),
                     ),
-                    trailing: const Icon(Icons.chevron_right_rounded, color: Color(0xFF9CA3AF)),
+                    trailing: Icon(Icons.chevron_right_rounded, color: isDark ? CoSpendColors.darkTextSubtle : CoSpendColors.textSubtle),
                     onTap: () => context.push(Routes.settlementHistory),
                   ),
-                  const Divider(height: 1, indent: 56, endIndent: 16, color: Color(0x0F0A2542)),
+                  Divider(height: 1, indent: 56, endIndent: 16, color: isDark ? CoSpendColors.darkBorder : CoSpendColors.borderLight),
                   ListTile(
-                    leading: const TintedIcon(
+                    leading: TintedIcon(
                       icon: Icons.group_add_rounded,
-                      color: CoSpendColors.prussianBlue,
+                      color: isDark ? CoSpendColors.jadeGreen : CoSpendColors.prussianBlue,
                       size: 20,
                     ),
                     title: const Text(
                       'Join another flat',
                       style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
                     ),
-                    subtitle: const Text(
+                    subtitle: Text(
                       'Enter an invite code from roommates',
-                      style: TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
+                      style: TextStyle(fontSize: 12, color: isDark ? CoSpendColors.darkTextMuted : CoSpendColors.textMuted),
                     ),
-                    trailing: const Icon(Icons.chevron_right_rounded, color: Color(0xFF9CA3AF)),
+                    trailing: Icon(Icons.chevron_right_rounded, color: isDark ? CoSpendColors.darkTextSubtle : CoSpendColors.textSubtle),
                     onTap: () => context.push(Routes.joinFlat),
                   ),
-                  const Divider(height: 1, indent: 56, endIndent: 16, color: Color(0x0F0A2542)),
+                  Divider(height: 1, indent: 56, endIndent: 16, color: isDark ? CoSpendColors.darkBorder : CoSpendColors.borderLight),
                   ListTile(
-                    leading: const TintedIcon(
+                    leading: TintedIcon(
                       icon: Icons.share_rounded,
-                      color: CoSpendColors.prussianBlue,
+                      color: isDark ? CoSpendColors.jadeGreen : CoSpendColors.prussianBlue,
                       size: 20,
                     ),
                     title: const Text(
@@ -339,13 +341,13 @@ class MoreScreen extends ConsumerWidget {
                     ),
                     subtitle: Text(
                       'Invite code: ${household.inviteCode}',
-                      style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
+                      style: TextStyle(fontSize: 12, color: isDark ? CoSpendColors.darkTextMuted : CoSpendColors.textMuted),
                     ),
-                    trailing: const Icon(Icons.chevron_right_rounded, size: 18, color: Color(0xFF9CA3AF)),
+                    trailing: Icon(Icons.chevron_right_rounded, size: 18, color: isDark ? CoSpendColors.darkTextSubtle : CoSpendColors.textSubtle),
                     onTap: () =>
                         InviteMembersSheet.show(context, household),
                   ),
-                  const Divider(height: 1, indent: 56, endIndent: 16, color: Color(0x0F0A2542)),
+                  Divider(height: 1, indent: 56, endIndent: 16, color: isDark ? CoSpendColors.darkBorder : CoSpendColors.borderLight),
                   ListTile(
                     leading: const TintedIcon(
                       icon: Icons.logout_rounded,
@@ -377,7 +379,7 @@ class MoreScreen extends ConsumerWidget {
               children: [
                 for (int i = 0; i < ThemeMode.values.length; i++) ...[
                   if (i > 0)
-                    const Divider(height: 1, indent: 16, endIndent: 16, color: Color(0x0F0A2542)),
+                    Divider(height: 1, indent: 16, endIndent: 16, color: isDark ? CoSpendColors.darkBorder : CoSpendColors.borderLight),
                   InkWell(
                     onTap: () => ref.read(themeModeProvider.notifier).setMode(ThemeMode.values[i]),
                     child: Padding(
@@ -389,7 +391,9 @@ class MoreScreen extends ConsumerWidget {
                             style: TextStyle(
                               fontWeight: themeMode == ThemeMode.values[i] ? FontWeight.w700 : FontWeight.w500,
                               fontSize: 14,
-                              color: themeMode == ThemeMode.values[i] ? CoSpendColors.prussianBlue : const Color(0xFF374151),
+                              color: themeMode == ThemeMode.values[i]
+                                  ? (isDark ? CoSpendColors.jadeGreen : CoSpendColors.prussianBlue)
+                                  : (isDark ? CoSpendColors.darkTextPrimary : CoSpendColors.textPrimary),
                             ),
                           ),
                           const Spacer(),
@@ -399,7 +403,9 @@ class MoreScreen extends ConsumerWidget {
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               border: Border.all(
-                                color: themeMode == ThemeMode.values[i] ? CoSpendColors.jadeGreen : const Color(0xFFD1D5DB),
+                                color: themeMode == ThemeMode.values[i]
+                                    ? CoSpendColors.jadeGreen
+                                    : (isDark ? CoSpendColors.darkBorder : CoSpendColors.border),
                                 width: 2,
                               ),
                             ),
@@ -429,20 +435,20 @@ class MoreScreen extends ConsumerWidget {
           CoSpendCard(
             padding: EdgeInsets.zero,
             child: ListTile(
-              leading: const TintedIcon(
+              leading: TintedIcon(
                 icon: Icons.auto_stories_rounded,
-                color: CoSpendColors.prussianBlue,
+                color: isDark ? CoSpendColors.jadeGreen : CoSpendColors.prussianBlue,
                 size: 20,
               ),
               title: const Text(
                 'App Tour & Features',
                 style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
               ),
-              subtitle: const Text(
+              subtitle: Text(
                 'Replay animated onboarding introduction',
-                style: TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
+                style: TextStyle(fontSize: 12, color: isDark ? CoSpendColors.darkTextMuted : CoSpendColors.textMuted),
               ),
-              trailing: const Icon(Icons.chevron_right_rounded, color: Color(0xFF9CA3AF)),
+              trailing: Icon(Icons.chevron_right_rounded, color: isDark ? CoSpendColors.darkTextSubtle : CoSpendColors.textSubtle),
               onTap: () => context.push(Routes.onboarding),
             ),
           ),
@@ -473,9 +479,7 @@ class MoreScreen extends ConsumerWidget {
           Center(
             child: Text(
               '${AppConstants.appName} · v1.0.0',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: scheme.onSurfaceVariant,
-              ),
+              style: CoSpendTypography.ofBodySmall(context),
             ),
           ),
         ],

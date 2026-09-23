@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/theme/design_system.dart';
 import '../../../household/presentation/providers/household_providers.dart';
 import '../../domain/custom_category.dart';
 
@@ -153,7 +154,7 @@ class _CreateCategorySheetState extends ConsumerState<CreateCategorySheet> {
       ),
       decoration: BoxDecoration(
         color: scheme.surface,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+        borderRadius: CoSpendRadii.modalTopRadius,
         border: Border.all(
           color: scheme.outlineVariant.withValues(alpha: 0.3),
         ),

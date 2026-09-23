@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/constants/app_constants.dart';
+import '../../../../core/theme/design_system.dart';
 import '../../../../shared/models/household.dart';
 import '../../../../shared/widgets/app_avatar.dart';
 import '../../../../shared/widgets/app_snackbar.dart';
@@ -22,7 +23,7 @@ class InviteMembersSheet extends ConsumerWidget {
       isScrollControlled: true,
       useSafeArea: true,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: CoSpendRadii.modalTopRadius,
       ),
       builder: (_) => InviteMembersSheet(household: household),
     );

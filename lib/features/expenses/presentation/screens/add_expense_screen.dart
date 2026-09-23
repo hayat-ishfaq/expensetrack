@@ -239,7 +239,7 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
       isScrollControlled: true,
       backgroundColor: isDark ? CoSpendColors.darkCanvas : Colors.white,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: CoSpendRadii.modalTopRadius,
       ),
       builder: (context) {
         return DraggableScrollableSheet(
@@ -423,7 +423,7 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
       context: context,
       backgroundColor: isDark ? CoSpendColors.darkCanvas : Colors.white,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: CoSpendRadii.modalTopRadius,
       ),
       builder: (context) {
         return SafeArea(

@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../app/router/routes.dart';
 import '../../../../core/errors/app_exception.dart';
 import '../../../../core/errors/firebase_error_mapper.dart';
+import '../../../../core/theme/design_system.dart';
 import '../../../../core/utils/validators.dart';
 import '../../../../shared/widgets/app_snackbar.dart';
 import '../../../../shared/widgets/loading_button.dart';
@@ -84,20 +85,19 @@ class _CreateFlatScreenState extends ConsumerState<CreateFlatScreen> {
             },
             onSubmitted: (_) => _submit(),
           ),
-          const SizedBox(height: 28),
+          const SizedBox(height: CoSpendSpacing.xl),
           LoadingButton(
             label: 'Create flat',
             isLoading: submitting,
             onPressed: _submit,
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: CoSpendSpacing.md),
           Text(
             "You'll become the owner and can share an invite code with "
             'your roommates right away.',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  height: 1.4,
-                ),
+            style: CoSpendTypography.ofBodySmall(context).copyWith(
+              height: 1.4,
+            ),
           ),
         ],
       ),

@@ -142,7 +142,7 @@ class _NotificationsSheetState extends ConsumerState<NotificationsSheet> {
       ),
       decoration: BoxDecoration(
         color: isDark ? CoSpendColors.darkCanvas : CoSpendColors.canvas,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: CoSpendRadii.modalTopRadius,
       ),
       child: Column(
         children: [

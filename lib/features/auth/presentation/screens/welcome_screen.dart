@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/routes.dart';
 import '../../../../core/constants/app_constants.dart';
+import '../../../../core/theme/design_system.dart';
 import '../../../../shared/widgets/responsive_center.dart';
 
 /// Branded entry screen shown to signed-out users.
@@ -33,22 +34,25 @@ class WelcomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
+      backgroundColor: isDark ? CoSpendColors.darkCanvas : CoSpendColors.canvas,
       body: SafeArea(
         child: ResponsiveCenter(
           maxWidth: 520,
           child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+            padding: const EdgeInsets.symmetric(
+              horizontal: CoSpendSpacing.xl,
+              vertical: CoSpendSpacing.xxl,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                   children: [
                     ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: CoSpendRadii.mediumRadius,
                       child: Image.asset(
                         'assets/images/app_logo.png',
                         width: 44,
@@ -56,39 +60,42 @@ class WelcomeScreen extends StatelessWidget {
                         errorBuilder: (_, _, _) => Container(
                           width: 44,
                           height: 44,
-                          color: scheme.primary,
-                          child: const Icon(Icons.wallet_rounded, color: Colors.white),
+                          color: CoSpendColors.prussianBlue,
+                          child: const Icon(
+                            Icons.wallet_rounded,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: CoSpendSpacing.sm),
                     Text(
                       AppConstants.appName,
-                      style: theme.textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w800,
+                      style: CoSpendTypography.ofHeadline(context).copyWith(
                         letterSpacing: -0.5,
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 48),
+                const SizedBox(height: CoSpendSpacing.huge),
                 Text(
                   'Co-living budgets,\nshared simply.',
-                  style: theme.textTheme.headlineLarge?.copyWith(
-                    fontWeight: FontWeight.w800,
+                  style: CoSpendTypography.ofDisplay(context).copyWith(
                     height: 1.15,
                     letterSpacing: -1.2,
                   ),
                 ),
-                const SizedBox(height: 14),
+                const SizedBox(height: CoSpendSpacing.sm),
                 Text(
                   'Track shared household expenses, set category budgets, and keep flatmates in sync with ${AppConstants.appName}.',
-                  style: theme.textTheme.bodyLarge?.copyWith(
-                    color: scheme.onSurfaceVariant,
+                  style: CoSpendTypography.ofBody(context).copyWith(
+                    color: isDark
+                        ? CoSpendColors.darkTextMuted
+                        : CoSpendColors.textMuted,
                     height: 1.5,
                   ),
                 ),
-                const SizedBox(height: 40),
+                const SizedBox(height: CoSpendSpacing.xxxl),
                 ..._features.map(
                   (feature) => _FeatureTile(
                     icon: feature.icon,
@@ -96,23 +103,21 @@ class WelcomeScreen extends StatelessWidget {
                     subtitle: feature.subtitle,
                   ),
                 ),
-                const SizedBox(height: 8),
-                FilledButton(
+                const SizedBox(height: CoSpendSpacing.sm),
+                CoSpendPrimaryButton(
+                  label: 'Get started',
                   onPressed: () => context.go(Routes.signup),
-                  child: const Text('Get started'),
                 ),
-                const SizedBox(height: 12),
-                OutlinedButton(
+                const SizedBox(height: CoSpendSpacing.sm),
+                CoSpendSecondaryButton(
+                  label: 'I already have an account',
                   onPressed: () => context.go(Routes.login),
-                  child: const Text('I already have an account'),
                 ),
-                const SizedBox(height: 48),
+                const SizedBox(height: CoSpendSpacing.huge),
                 Center(
                   child: Text(
                     AppConstants.tagline,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: scheme.onSurfaceVariant,
-                    ),
+                    style: CoSpendTypography.ofBodySmall(context),
                   ),
                 ),
               ],
@@ -137,40 +142,38 @@ class _FeatureTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 20),
+      padding: const EdgeInsets.only(bottom: CoSpendSpacing.lg),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: scheme.surfaceContainerHighest,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(icon, size: 20, color: scheme.primary),
+          TintedIcon(
+            icon: icon,
+            color: CoSpendColors.jadeGreen,
+            size: 20,
+            containerSize: 40,
           ),
-          const SizedBox(width: 14),
+          const SizedBox(width: CoSpendSpacing.sm + 2),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   title,
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w600,
+                  style: CoSpendTypography.ofTitle(context).copyWith(
+                    fontSize: 15,
                     letterSpacing: -0.2,
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 3),
                 Text(
                   subtitle,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: scheme.onSurfaceVariant,
+                  style: CoSpendTypography.ofBody(context).copyWith(
+                    color: isDark
+                        ? CoSpendColors.darkTextMuted
+                        : CoSpendColors.textMuted,
                     height: 1.45,
                   ),
                 ),

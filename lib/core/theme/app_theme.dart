@@ -209,7 +209,7 @@ abstract final class AppTheme {
 
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
-          foregroundColor: prussianBlue,
+          foregroundColor: isDark ? jadeGreen : prussianBlue,
           textStyle: const TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w700,

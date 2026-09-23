@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../core/theme/design_system.dart';
+
 /// Primary call-to-action button with a built-in loading state.
 ///
 /// The button is disabled while [isLoading] is true or when [onPressed] is
@@ -20,33 +22,13 @@ class LoadingButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final canTap = onPressed != null && !isLoading;
-    final scheme = Theme.of(context).colorScheme;
-
-    return SizedBox(
-      width: double.infinity,
-      child: ElevatedButton(
-        onPressed: canTap ? onPressed : null,
-        child: isLoading
-            ? SizedBox(
-                width: 22,
-                height: 22,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2.5,
-                  color: scheme.onPrimary,
-                ),
-              )
-            : icon == null
-                ? Text(label)
-                : Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(icon, size: 20),
-                      const SizedBox(width: 8),
-                      Text(label),
-                    ],
-                  ),
-      ),
+    return CoSpendPrimaryButton(
+      label: label,
+      onPressed: onPressed,
+      isLoading: isLoading,
+      icon: icon,
+      isFullWidth: true,
+      height: 52.0,
     );
   }
 }

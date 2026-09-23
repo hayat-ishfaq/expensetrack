@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_constants.dart';
+import '../../../../core/theme/design_system.dart';
 import '../../../../shared/widgets/responsive_center.dart';
 
 /// Shared layout for the auth screens: brand header, headline and a scrollable
@@ -21,21 +22,24 @@ class AuthScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
+      backgroundColor: isDark ? CoSpendColors.darkCanvas : CoSpendColors.canvas,
       body: SafeArea(
         child: ResponsiveCenter(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+            padding: const EdgeInsets.symmetric(
+              horizontal: CoSpendSpacing.xl,
+              vertical: CoSpendSpacing.xl,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                   children: [
                     ClipRRect(
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: CoSpendRadii.mediumRadius,
                       child: Image.asset(
                         'assets/images/app_logo.png',
                         width: 40,
@@ -43,7 +47,7 @@ class AuthScaffold extends StatelessWidget {
                         errorBuilder: (_, _, _) => Container(
                           width: 40,
                           height: 40,
-                          color: scheme.primary,
+                          color: CoSpendColors.prussianBlue,
                           child: const Icon(
                             Icons.wallet_rounded,
                             size: 22,
@@ -52,35 +56,38 @@ class AuthScaffold extends StatelessWidget {
                         ),
                       ),
                     ),
-                    const SizedBox(width: 10),
+                    const SizedBox(width: CoSpendSpacing.sm),
                     Text(
                       AppConstants.appName,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
+                      style: CoSpendTypography.ofTitle(context).copyWith(
                         letterSpacing: -0.4,
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 40),
+                const SizedBox(height: CoSpendSpacing.xxxl),
                 Text(
                   title,
-                  style: theme.textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
+                  style: CoSpendTypography.ofHeadline(context).copyWith(
                     letterSpacing: -0.8,
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: CoSpendSpacing.xs),
                 Text(
                   subtitle,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: scheme.onSurfaceVariant,
+                  style: CoSpendTypography.ofBody(context).copyWith(
+                    color: isDark
+                        ? CoSpendColors.darkTextMuted
+                        : CoSpendColors.textMuted,
                     height: 1.5,
                   ),
                 ),
-                const SizedBox(height: 28),
+                const SizedBox(height: CoSpendSpacing.xxl),
                 child,
-                if (footer != null) ...[const SizedBox(height: 20), footer!],
+                if (footer != null) ...[
+                  const SizedBox(height: CoSpendSpacing.lg),
+                  footer!,
+                ],
               ],
             ),
           ),

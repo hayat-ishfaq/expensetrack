@@ -221,16 +221,21 @@ abstract final class CoSpendRadii {
   static const double small = 8.0;
   static const double medium = 12.0;
   static const double large = 16.0;
+  static const double modal = 20.0;
   static const double pill = 999.0;
 
   // Backward compatibility alias
   static const double card = medium;
+  static const double dialog = large;
 
   static final BorderRadius smallRadius = BorderRadius.circular(small);
   static final BorderRadius mediumRadius = BorderRadius.circular(medium);
   static final BorderRadius largeRadius = BorderRadius.circular(large);
+  static final BorderRadius dialogRadius = BorderRadius.circular(dialog);
   static final BorderRadius pillRadius = BorderRadius.circular(pill);
   static final BorderRadius cardRadius = BorderRadius.circular(card);
+  static const BorderRadius modalTopRadius =
+      BorderRadius.vertical(top: Radius.circular(modal));
 }
 
 // =============================================================================
@@ -614,6 +619,57 @@ class CoSpendSecondaryButton extends StatelessWidget {
       foregroundColor:
           isDark ? CoSpendColors.white : CoSpendColors.prussianBlue,
       borderColor: isDark ? CoSpendColors.darkBorder : CoSpendColors.border,
+    );
+  }
+}
+
+/// Standardized extended pill Floating Action Button for primary screen actions (e.g. Add Expense).
+class CoSpendFab extends StatelessWidget {
+  const CoSpendFab({
+    super.key,
+    required this.onPressed,
+    this.label = 'Add Expense',
+    this.icon = Icons.add_rounded,
+  });
+
+  final VoidCallback onPressed;
+  final String label;
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      label: label,
+      child: BouncingButton(
+        scale: 0.94,
+        onTap: onPressed,
+        child: Container(
+          height: 48,
+          padding: const EdgeInsets.symmetric(horizontal: 18),
+          decoration: const BoxDecoration(
+            color: CoSpendColors.jadeGreen,
+            borderRadius: BorderRadius.all(Radius.circular(CoSpendRadii.pill)),
+            boxShadow: CoSpendShadows.floating,
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, color: Colors.white, size: 20),
+              const SizedBox(width: 8),
+              Text(
+                label,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
+                  fontSize: 14,
+                  letterSpacing: 0.2,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
@@ -1246,7 +1302,7 @@ class CoSpendBottomSheetScaffold extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         color: isDark ? CoSpendColors.darkCard : CoSpendColors.white,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+        borderRadius: CoSpendRadii.modalTopRadius,
         border: Border.all(
           color: isDark ? CoSpendColors.darkBorder : CoSpendColors.borderLight,
         ),

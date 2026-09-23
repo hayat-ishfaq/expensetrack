@@ -5,7 +5,9 @@ import 'package:intl/intl.dart';
 
 import '../../../../core/errors/app_exception.dart';
 import '../../../../core/errors/firebase_error_mapper.dart';
+import '../../../../core/theme/design_system.dart';
 import '../../../../core/utils/money.dart';
+import '../../../../shared/widgets/app_avatar.dart';
 import '../../../../shared/widgets/app_snackbar.dart';
 import '../../../../shared/widgets/confirm_dialog.dart';
 import '../../../auth/presentation/providers/session_provider.dart';
@@ -59,7 +61,7 @@ class ExpenseDetailsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
     final household = ref.watch(currentHouseholdProvider).value;
 
     final custom = expense.customCategoryId != null
@@ -78,60 +80,55 @@ class ExpenseDetailsScreen extends ConsumerWidget {
     final isDeleting = ref.watch(expenseActionsProvider).isLoading;
 
     return Scaffold(
+      backgroundColor: isDark ? CoSpendColors.darkCanvas : CoSpendColors.canvas,
       appBar: AppBar(
         title: const Text('Expense Details'),
         actions: [
           IconButton(
             onPressed: isDeleting ? null : () => _deleteExpense(context, ref),
             icon: const Icon(Icons.delete_outline_rounded),
-            color: scheme.error,
+            color: CoSpendColors.alertRed,
             tooltip: 'Delete expense',
           ),
         ],
       ),
       body: ListView(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        padding: const EdgeInsets.symmetric(
+          horizontal: CoSpendSpacing.md,
+          vertical: CoSpendSpacing.md,
+        ),
         children: [
           // Hero Card with Category Icon, Amount, and Title
-          Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: scheme.surfaceContainerLow,
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(
-                color: scheme.outlineVariant.withValues(alpha: 0.4),
-              ),
-            ),
+          CoSpendCard(
+            padding: const EdgeInsets.all(CoSpendSpacing.xl),
             child: Column(
               children: [
-                Container(
-                  width: 64,
-                  height: 64,
-                  decoration: BoxDecoration(
-                    color: catColor.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Icon(catIcon, color: catColor, size: 32),
+                TintedIcon(
+                  icon: catIcon,
+                  color: catColor,
+                  containerSize: 64,
+                  size: 32,
                 ),
-                const SizedBox(height: 14),
+                const SizedBox(height: CoSpendSpacing.md),
                 Text(
                   expense.description,
                   textAlign: TextAlign.center,
-                  style: theme.textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.w800,
+                  style: CoSpendTypography.ofHeadline(context).copyWith(
                     letterSpacing: -0.5,
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: CoSpendSpacing.xs),
                 Text(
                   Money.format(expense.amountPaisa),
-                  style: theme.textTheme.headlineMedium?.copyWith(
+                  style: TextStyle(
+                    fontSize: 26,
                     fontWeight: FontWeight.w800,
-                    color: scheme.primary,
                     letterSpacing: -0.5,
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                    color: isDark ? CoSpendColors.jadeGreen : CoSpendColors.prussianBlue,
                   ),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: CoSpendSpacing.sm),
                 Wrap(
                   spacing: 8,
                   runSpacing: 6,
@@ -144,7 +141,7 @@ class ExpenseDetailsScreen extends ConsumerWidget {
                       ),
                       decoration: BoxDecoration(
                         color: catColor.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(20),
+                        borderRadius: CoSpendRadii.pillRadius,
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -170,16 +167,22 @@ class ExpenseDetailsScreen extends ConsumerWidget {
                           vertical: 5,
                         ),
                         decoration: BoxDecoration(
-                          color: scheme.surfaceContainerHighest,
-                          borderRadius: BorderRadius.circular(20),
+                          color: isDark
+                              ? CoSpendColors.darkCardElevated
+                              : CoSpendColors.surfaceMuted,
+                          borderRadius: CoSpendRadii.pillRadius,
                           border: Border.all(
-                            color: scheme.outlineVariant.withValues(alpha: 0.5),
+                            color: isDark
+                                ? CoSpendColors.darkBorder
+                                : CoSpendColors.borderLight,
                           ),
                         ),
                         child: Text(
                           expense.subcategory!,
                           style: TextStyle(
-                            color: scheme.onSurface,
+                            color: isDark
+                                ? CoSpendColors.darkTextPrimary
+                                : CoSpendColors.textPrimary,
                             fontWeight: FontWeight.w600,
                             fontSize: 12,
                           ),
@@ -190,34 +193,19 @@ class ExpenseDetailsScreen extends ConsumerWidget {
               ],
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: CoSpendSpacing.md),
 
           // Payer & Date Info Card
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: scheme.surfaceContainerLow,
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(
-                color: scheme.outlineVariant.withValues(alpha: 0.4),
-              ),
-            ),
+          CoSpendCard(
+            padding: const EdgeInsets.all(CoSpendSpacing.md),
             child: Column(
               children: [
                 Row(
                   children: [
-                    CircleAvatar(
-                      radius: 20,
-                      backgroundColor: scheme.primaryContainer,
-                      child: Text(
-                        payer != null && payer.name.isNotEmpty
-                            ? payer.name[0].toUpperCase()
-                            : '?',
-                        style: TextStyle(
-                          color: scheme.onPrimaryContainer,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
+                    AppAvatar(
+                      name: payer?.name ?? 'Flatmate',
+                      photoUrl: payer?.photoUrl,
+                      size: 40,
                     ),
                     const SizedBox(width: 14),
                     Expanded(
@@ -226,15 +214,17 @@ class ExpenseDetailsScreen extends ConsumerWidget {
                         children: [
                           Text(
                             'Paid by',
-                            style: theme.textTheme.labelSmall?.copyWith(
-                              color: scheme.onSurfaceVariant,
-                            ),
+                            style: CoSpendTypography.ofCaption(context),
                           ),
+                          const SizedBox(height: 2),
                           Text(
                             payer?.name ?? 'Flatmate',
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontWeight: FontWeight.w700,
                               fontSize: 15,
+                              color: isDark
+                                  ? CoSpendColors.darkTextPrimary
+                                  : CoSpendColors.textPrimary,
                             ),
                           ),
                         ],
@@ -242,20 +232,21 @@ class ExpenseDetailsScreen extends ConsumerWidget {
                     ),
                   ],
                 ),
-                const Divider(height: 24),
+                Divider(
+                  height: 24,
+                  color: isDark
+                      ? CoSpendColors.darkBorder
+                      : CoSpendColors.borderLight,
+                ),
                 Row(
                   children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: scheme.surfaceContainerHighest,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        Icons.calendar_today_rounded,
-                        size: 18,
-                        color: scheme.onSurfaceVariant,
-                      ),
+                    TintedIcon(
+                      icon: Icons.calendar_today_rounded,
+                      color: isDark
+                          ? CoSpendColors.jadeGreen
+                          : CoSpendColors.prussianBlue,
+                      size: 18,
+                      containerSize: 36,
                     ),
                     const SizedBox(width: 14),
                     Column(
@@ -263,15 +254,17 @@ class ExpenseDetailsScreen extends ConsumerWidget {
                       children: [
                         Text(
                           'Date spent',
-                          style: theme.textTheme.labelSmall?.copyWith(
-                            color: scheme.onSurfaceVariant,
-                          ),
+                          style: CoSpendTypography.ofCaption(context),
                         ),
+                        const SizedBox(height: 2),
                         Text(
                           DateFormat('EEEE, dd MMMM yyyy').format(expense.spentAt),
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontWeight: FontWeight.w600,
                             fontSize: 14,
+                            color: isDark
+                                ? CoSpendColors.darkTextPrimary
+                                : CoSpendColors.textPrimary,
                           ),
                         ),
                       ],
@@ -281,27 +274,19 @@ class ExpenseDetailsScreen extends ConsumerWidget {
               ],
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: CoSpendSpacing.lg),
 
-          // Split Breakdown Card
-          Text(
-            'SPLIT BREAKDOWN',
-            style: theme.textTheme.labelSmall?.copyWith(
-              fontWeight: FontWeight.w700,
-              letterSpacing: 0.8,
-              color: scheme.onSurfaceVariant,
-            ),
+          // Split Breakdown Section
+          const CoSpendSectionHeader(
+            title: 'SPLIT BREAKDOWN',
+            padding: EdgeInsets.symmetric(horizontal: 4, vertical: 6),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: CoSpendSpacing.xxs),
 
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: BoxDecoration(
-              color: scheme.surfaceContainerLow,
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(
-                color: scheme.outlineVariant.withValues(alpha: 0.4),
-              ),
+          CoSpendCard(
+            padding: const EdgeInsets.symmetric(
+              horizontal: CoSpendSpacing.md,
+              vertical: CoSpendSpacing.xs,
             ),
             child: Column(
               children: [
@@ -309,13 +294,20 @@ class ExpenseDetailsScreen extends ConsumerWidget {
                   _SplitParticipantRow(
                     memberName:
                         memberMap[expense.splitAmongIds[i]]?.name ?? 'Flatmate',
+                    photoUrl: memberMap[expense.splitAmongIds[i]]?.photoUrl,
                     sharePaisa: i < expense.splitAmountsPaisa.length
                         ? expense.splitAmountsPaisa[i]
                         : 0,
                     isPayer: expense.splitAmongIds[i] == expense.paidById,
+                    isDark: isDark,
                   ),
                   if (i < expense.splitAmongIds.length - 1)
-                    const Divider(height: 16),
+                    Divider(
+                      height: 16,
+                      color: isDark
+                          ? CoSpendColors.darkBorder
+                          : CoSpendColors.borderLight,
+                    ),
                 ],
               ],
             ),
@@ -331,70 +323,59 @@ class _SplitParticipantRow extends StatelessWidget {
     required this.memberName,
     required this.sharePaisa,
     required this.isPayer,
+    required this.isDark,
+    this.photoUrl,
   });
 
   final String memberName;
+  final String? photoUrl;
   final int sharePaisa;
   final bool isPayer;
+  final bool isDark;
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
         children: [
-          CircleAvatar(
-            radius: 15,
-            backgroundColor: scheme.surfaceContainerHighest,
-            child: Text(
-              memberName.isNotEmpty ? memberName[0].toUpperCase() : '?',
-              style: TextStyle(
-                fontWeight: FontWeight.w700,
-                color: scheme.primary,
-                fontSize: 12,
-              ),
-            ),
+          AppAvatar(
+            name: memberName,
+            photoUrl: photoUrl,
+            size: 32,
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Row(
               children: [
-                Text(
-                  memberName,
-                  style: const TextStyle(fontWeight: FontWeight.w600),
+                Flexible(
+                  child: Text(
+                    memberName,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: isDark
+                          ? CoSpendColors.darkTextPrimary
+                          : CoSpendColors.textPrimary,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
                 if (isPayer) ...[
                   const SizedBox(width: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 6,
-                      vertical: 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: scheme.primaryContainer,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      'Payer',
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        color: scheme.onPrimaryContainer,
-                        fontSize: 10,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
+                  const CoSpendBadge(label: 'Payer'),
                 ],
               ],
             ),
           ),
           Text(
             Money.format(sharePaisa),
-            style: const TextStyle(
+            style: TextStyle(
               fontWeight: FontWeight.w700,
               fontSize: 14,
+              fontFeatures: const [FontFeature.tabularFigures()],
+              color: isDark
+                  ? CoSpendColors.darkTextPrimary
+                  : CoSpendColors.textPrimary,
             ),
           ),
         ],

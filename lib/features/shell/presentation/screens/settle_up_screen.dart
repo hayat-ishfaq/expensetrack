@@ -683,24 +683,40 @@ class _DirectionalTransferCard extends StatelessWidget {
       return;
     }
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     showDialog<bool>(
       context: context,
       builder: (dialogCtx) => AlertDialog(
-        title: const Text('Confirm Settlement'),
+        backgroundColor:
+            isDark ? CoSpendColors.darkCard : CoSpendColors.white,
+        title: Text(
+          'Confirm Settlement',
+          style: TextStyle(
+            fontWeight: FontWeight.w700,
+            fontSize: 18,
+            color: isDark ? Colors.white : CoSpendColors.textPrimary,
+          ),
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               'Has ${fromName == "You" ? "your payment of" : "$fromName paid"} ${Money.format(transfer.amountPaisa)} to ${toName == "You" ? "you" : toName} been completed?',
-              style: const TextStyle(fontSize: 14),
+              style: TextStyle(
+                fontSize: 14,
+                color: isDark ? CoSpendColors.darkTextPrimary : CoSpendColors.textPrimary,
+              ),
             ),
             const SizedBox(height: 12),
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: const Color(0xFFF0FDF4),
-                borderRadius: BorderRadius.circular(10),
+                color: isDark
+                    ? CoSpendColors.jadeGreen.withValues(alpha: 0.12)
+                    : const Color(0xFFF0FDF4),
+                borderRadius: CoSpendRadii.cardRadius,
                 border: Border.all(
                   color: CoSpendColors.jadeGreen.withValues(alpha: 0.3),
                 ),
@@ -716,10 +732,12 @@ class _DirectionalTransferCard extends StatelessWidget {
                   Expanded(
                     child: Text(
                       'Reconciling ${Money.format(transfer.amountPaisa)} will mark this transfer as settled.',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
-                        color: CoSpendColors.jadeGreenDark,
+                        color: isDark
+                            ? CoSpendColors.jadeGreen
+                            : CoSpendColors.jadeGreenDark,
                       ),
                     ),
                   ),
@@ -733,15 +751,11 @@ class _DirectionalTransferCard extends StatelessWidget {
             onPressed: () => Navigator.of(dialogCtx).pop(false),
             child: const Text('Cancel'),
           ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: CoSpendColors.jadeGreen,
-              foregroundColor: Colors.white,
-            ),
-            onPressed: () {
-              Navigator.of(dialogCtx).pop(true);
-            },
-            child: const Text('Confirm & Settle'),
+          CoSpendPrimaryButton(
+            label: 'Confirm & Settle',
+            isFullWidth: false,
+            height: 42,
+            onPressed: () => Navigator.of(dialogCtx).pop(true),
           ),
         ],
       ),

@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../../../../core/theme/design_system.dart';
 import '../../../../shared/widgets/app_avatar.dart';
 
 class AvatarPickerSheet extends StatefulWidget {
@@ -105,7 +106,7 @@ class _AvatarPickerSheetState extends State<AvatarPickerSheet> {
       padding: EdgeInsets.fromLTRB(20, 16, 20, 20 + bottomInset),
       decoration: BoxDecoration(
         color: scheme.surface,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+        borderRadius: CoSpendRadii.modalTopRadius,
       ),
       child: SafeArea(
         top: false,
