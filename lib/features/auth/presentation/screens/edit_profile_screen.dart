@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/errors/firebase_error_mapper.dart';
+import '../../../../core/theme/design_system.dart';
 import '../../../../shared/models/app_user.dart';
 import '../../../../shared/widgets/app_avatar.dart';
 import '../../../../shared/widgets/app_snackbar.dart';
@@ -97,7 +98,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
     final session = ref.watch(sessionProvider).value;
     final user = session?.user;
 
@@ -115,6 +116,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     final isSaving = ref.watch(authActionsProvider).isLoading;
 
     return Scaffold(
+      backgroundColor: isDark ? CoSpendColors.darkCanvas : CoSpendColors.canvas,
       appBar: AppBar(
         title: const Text('Edit Profile'),
         actions: [
@@ -126,12 +128,18 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                     height: 18,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
-                : const Text('Save', style: TextStyle(fontWeight: FontWeight.w700)),
+                : const Text(
+                    'Save',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w800,
+                      color: CoSpendColors.jadeGreen,
+                    ),
+                  ),
           ),
         ],
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         child: Form(
           key: _formKey,
           child: Column(
@@ -140,6 +148,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
               // Hero Avatar Section
               Center(
                 child: Stack(
+                  clipBehavior: Clip.none,
                   alignment: Alignment.bottomRight,
                   children: [
                     Container(
@@ -147,9 +156,12 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         border: Border.all(
-                          color: scheme.primary.withValues(alpha: 0.5),
-                          width: 2.5,
+                          color: isDark
+                              ? CoSpendColors.jadeGreen.withValues(alpha: 0.6)
+                              : CoSpendColors.prussianBlue.withValues(alpha: 0.25),
+                          width: 3,
                         ),
+                        boxShadow: CoSpendShadows.softCard,
                       ),
                       child: AppAvatar(
                         name: _nameController.text,
@@ -159,16 +171,19 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                       ),
                     ),
                     Positioned(
-                      right: 2,
-                      bottom: 2,
+                      right: 0,
+                      bottom: 0,
                       child: GestureDetector(
                         onTap: _pickAvatar,
                         child: Container(
-                          padding: const EdgeInsets.all(7),
+                          padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
-                            color: scheme.primary,
+                            color: CoSpendColors.jadeGreen,
                             shape: BoxShape.circle,
-                            border: Border.all(color: scheme.surface, width: 2),
+                            border: Border.all(
+                              color: isDark ? CoSpendColors.darkCard : Colors.white,
+                              width: 2.5,
+                            ),
                             boxShadow: [
                               BoxShadow(
                                 color: Colors.black.withValues(alpha: 0.25),
@@ -177,10 +192,10 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                               ),
                             ],
                           ),
-                          child: Icon(
+                          child: const Icon(
                             Icons.camera_alt_rounded,
                             size: 16,
-                            color: scheme.onPrimary,
+                            color: Colors.white,
                           ),
                         ),
                       ),
@@ -193,138 +208,141 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 child: TextButton.icon(
                   onPressed: _pickAvatar,
                   icon: const Icon(Icons.palette_outlined, size: 16),
-                  label: const Text('Change Avatar'),
+                  label: const Text('Change Avatar / Photo'),
+                  style: TextButton.styleFrom(
+                    visualDensity: VisualDensity.compact,
+                    foregroundColor: isDark ? Colors.white : CoSpendColors.prussianBlue,
+                  ),
                 ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 20),
 
               // BASIC INFORMATION
-              Text(
-                'BASIC INFORMATION',
-                style: theme.textTheme.labelSmall?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.6,
-                  color: scheme.onSurfaceVariant,
+              const SectionLabel('BASIC INFORMATION'),
+              const SizedBox(height: 8),
+              CoSpendCard(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  children: [
+                    // Full Name
+                    TextFormField(
+                      controller: _nameController,
+                      decoration: const InputDecoration(
+                        labelText: 'Full Name *',
+                        hintText: 'Enter your name',
+                        prefixIcon: Icon(Icons.person_outline_rounded),
+                      ),
+                      validator: (val) {
+                        if (val == null || val.trim().isEmpty) {
+                          return 'Please enter your name';
+                        }
+                        if (val.trim().length < 2) {
+                          return 'Name must be at least 2 characters';
+                        }
+                        return null;
+                      },
+                      onChanged: (_) => setState(() {}),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Email (Read-only)
+                    TextFormField(
+                      initialValue: user.email,
+                      readOnly: true,
+                      decoration: InputDecoration(
+                        labelText: 'Email Address',
+                        prefixIcon: const Icon(Icons.email_outlined),
+                        suffixIcon: const Icon(Icons.lock_outline_rounded, size: 18),
+                        filled: true,
+                        fillColor: isDark
+                            ? Colors.black.withValues(alpha: 0.2)
+                            : Colors.grey.withValues(alpha: 0.08),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 20),
 
-              // Full Name
-              TextFormField(
-                controller: _nameController,
-                decoration: const InputDecoration(
-                  labelText: 'Full Name *',
-                  hintText: 'Enter your name',
-                  prefixIcon: Icon(Icons.person_outline_rounded),
-                  border: OutlineInputBorder(),
+              // CONTACT & ROOMMATE DETAILS
+              const SectionLabel('ROOMMATE & PAYMENT DETAILS'),
+              const SizedBox(height: 4),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                child: Text(
+                  'These details help your flatmates contact you and repay your shared expenses directly.',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: isDark ? CoSpendColors.darkTextMuted : CoSpendColors.textMuted,
+                  ),
                 ),
-                validator: (val) {
-                  if (val == null || val.trim().isEmpty) {
-                    return 'Please enter your name';
-                  }
-                  if (val.trim().length < 2) {
-                    return 'Name must be at least 2 characters';
-                  }
-                  return null;
-                },
-                onChanged: (_) => setState(() {}),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 8),
+              CoSpendCard(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  children: [
+                    // Phone Number
+                    TextFormField(
+                      controller: _phoneController,
+                      keyboardType: TextInputType.phone,
+                      decoration: const InputDecoration(
+                        labelText: 'Phone / WhatsApp Number (Optional)',
+                        hintText: 'e.g. +92 300 1234567',
+                        prefixIcon: Icon(Icons.phone_outlined),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
 
-              // Email (Read-only)
-              TextFormField(
-                initialValue: user.email,
-                readOnly: true,
-                decoration: InputDecoration(
-                  labelText: 'Email Address',
-                  prefixIcon: const Icon(Icons.email_outlined),
-                  suffixIcon: const Icon(Icons.lock_outline_rounded, size: 18),
-                  filled: true,
-                  fillColor: scheme.surfaceContainerHighest.withValues(alpha: 0.5),
-                  border: const OutlineInputBorder(),
+                    // Payment Handle / UPI ID
+                    TextFormField(
+                      controller: _upiController,
+                      decoration: const InputDecoration(
+                        labelText: 'UPI ID / Payment Handle (Optional)',
+                        hintText: 'e.g. name@bank or 03001234567',
+                        prefixIcon: Icon(Icons.payment_rounded),
+                        helperText: 'Displayed to flatmates when settling balances',
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Room & Bio Notes
+                    TextFormField(
+                      controller: _bioController,
+                      maxLines: 2,
+                      decoration: const InputDecoration(
+                        labelText: 'Room Number / Note (Optional)',
+                        hintText: 'e.g. Room 204 • Early riser',
+                        prefixIcon: Icon(Icons.meeting_room_outlined),
+                      ),
+                    ),
+                  ],
                 ),
               ),
               const SizedBox(height: 24),
-
-              // CONTACT & ROOMMATE DETAILS
-              Text(
-                'ROOMMATE & PAYMENT DETAILS',
-                style: theme.textTheme.labelSmall?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.6,
-                  color: scheme.onSurfaceVariant,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'These help your flatmates contact you and repay your shared expenses directly.',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: scheme.onSurfaceVariant,
-                ),
-              ),
-              const SizedBox(height: 12),
-
-              // Phone Number
-              TextFormField(
-                controller: _phoneController,
-                keyboardType: TextInputType.phone,
-                decoration: const InputDecoration(
-                  labelText: 'Phone / WhatsApp Number (Optional)',
-                  hintText: 'e.g. +92 300 1234567',
-                  prefixIcon: Icon(Icons.phone_outlined),
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              // Payment Handle / UPI ID
-              TextFormField(
-                controller: _upiController,
-                decoration: const InputDecoration(
-                  labelText: 'UPI ID / Payment Handle (Optional)',
-                  hintText: 'e.g. name@okhdfcbank or 03001234567',
-                  prefixIcon: Icon(Icons.payment_rounded),
-                  border: OutlineInputBorder(),
-                  helperText: 'Displayed to flatmates when settling shared expenses',
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              // Bio / Room
-              TextFormField(
-                controller: _bioController,
-                maxLines: 2,
-                decoration: const InputDecoration(
-                  labelText: 'Room Number / Note (Optional)',
-                  hintText: 'e.g. Room 204 • Vegetarian • Early riser',
-                  prefixIcon: Icon(Icons.info_outline_rounded),
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 32),
 
               // Save Button
               FilledButton(
                 onPressed: isSaving ? null : () => _save(user),
                 style: FilledButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(14),
                   ),
                 ),
                 child: isSaving
                     ? const SizedBox(
-                        width: 22,
-                        height: 22,
+                        width: 20,
+                        height: 20,
                         child: CircularProgressIndicator(
-                          strokeWidth: 2.5,
+                          strokeWidth: 2,
                           color: Colors.white,
                         ),
                       )
                     : const Text(
                         'Save Changes',
                         style: TextStyle(
-                          fontSize: 16,
+                          fontSize: 15,
                           fontWeight: FontWeight.w700,
                         ),
                       ),

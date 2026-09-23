@@ -228,6 +228,24 @@ class MoreScreen extends ConsumerWidget {
                 children: [
                   ListTile(
                     leading: const TintedIcon(
+                      icon: Icons.groups_rounded,
+                      color: CoSpendColors.prussianBlue,
+                      size: 20,
+                    ),
+                    title: const Text(
+                      'Household & Roommates',
+                      style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                    ),
+                    subtitle: Text(
+                      '${household.name} · Roster & permissions',
+                      style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
+                    ),
+                    trailing: const Icon(Icons.chevron_right_rounded, color: Color(0xFF9CA3AF)),
+                    onTap: () => context.push(Routes.householdSettings),
+                  ),
+                  const Divider(height: 1, indent: 56, endIndent: 16, color: Color(0x0F0A2542)),
+                  ListTile(
+                    leading: const TintedIcon(
                       icon: Icons.home_work_rounded,
                       color: CoSpendColors.prussianBlue,
                       size: 20,

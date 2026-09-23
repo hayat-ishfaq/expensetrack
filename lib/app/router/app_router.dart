@@ -9,6 +9,7 @@ import '../../features/auth/presentation/screens/edit_profile_screen.dart';
 import '../../features/auth/presentation/screens/forgot_password_screen.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/onboarding_screen.dart';
+import '../../features/auth/presentation/screens/profile_screen.dart';
 import '../../features/auth/presentation/screens/signup_screen.dart';
 import '../../features/auth/presentation/screens/splash_screen.dart';
 import '../../features/auth/presentation/screens/welcome_screen.dart';
@@ -17,6 +18,7 @@ import '../../features/expenses/domain/expense.dart';
 import '../../features/expenses/presentation/screens/add_expense_screen.dart';
 import '../../features/expenses/presentation/screens/expense_details_screen.dart';
 import '../../features/household/presentation/screens/create_flat_screen.dart';
+import '../../features/household/presentation/screens/household_settings_screen.dart';
 import '../../features/household/presentation/screens/household_setup_screen.dart';
 import '../../features/household/presentation/screens/join_flat_screen.dart';
 import '../../features/shell/presentation/screens/app_shell_screen.dart';
@@ -135,7 +137,25 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         pageBuilder: (context, state) => coSpendPageTransition(
           context: context,
           state: state,
+          child: const ProfileScreen(),
+        ),
+      ),
+      GoRoute(
+        path: Routes.editProfile,
+        name: 'edit-profile',
+        pageBuilder: (context, state) => coSpendPageTransition(
+          context: context,
+          state: state,
           child: const EditProfileScreen(),
+        ),
+      ),
+      GoRoute(
+        path: Routes.householdSettings,
+        name: 'household-settings',
+        pageBuilder: (context, state) => coSpendPageTransition(
+          context: context,
+          state: state,
+          child: const HouseholdSettingsScreen(),
         ),
       ),
       GoRoute(

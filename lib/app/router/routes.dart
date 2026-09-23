@@ -32,4 +32,5 @@ abstract final class Routes {
   static const String monthlySummary = '/summary';
   static const String settlementHistory = '/settlements';
   static const String profile = '/profile';
+  static const String editProfile = '/profile/edit';
 }

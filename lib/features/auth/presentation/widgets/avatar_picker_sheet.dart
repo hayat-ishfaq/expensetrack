@@ -164,10 +164,22 @@ class _AvatarPickerSheetState extends State<AvatarPickerSheet> {
                 ),
               ),
               if (_isProcessingImage)
-                const Center(
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(vertical: 8),
-                    child: CircularProgressIndicator(),
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 10),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                      SizedBox(width: 10),
+                      Text(
+                        'Compressing & optimizing image...',
+                        style: TextStyle(fontSize: 12),
+                      ),
+                    ],
                   ),
                 ),
               const SizedBox(height: 12),
