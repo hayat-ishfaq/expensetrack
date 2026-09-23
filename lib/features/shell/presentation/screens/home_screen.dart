@@ -136,10 +136,13 @@ class HomeScreen extends ConsumerWidget {
                     inviteCode: household.inviteCode,
                     onPickMonth: () => _pickMonth(context, ref),
                     onNotificationTap: () {
-                      ref
-                          .read(lastViewedNotificationProvider.notifier)
-                          .markAllAsRead();
-                      NotificationsSheet.show(context);
+                      NotificationsSheet.show(context).then((_) {
+                        if (context.mounted) {
+                          ref
+                              .read(lastViewedNotificationProvider.notifier)
+                              .markAllAsRead();
+                        }
+                      });
                     },
                     onInviteTap: () =>
                         InviteMembersSheet.show(context, household),
