@@ -1482,18 +1482,20 @@ class _CoSpendSkeletonState extends State<CoSpendSkeleton>
       );
     }
 
-    return AnimatedBuilder(
-      animation: _controller,
-      builder: (context, child) {
-        return Container(
-          height: widget.height,
-          width: widget.width,
-          decoration: BoxDecoration(
-            color: Color.lerp(baseColor, highlightColor, _controller.value),
-            borderRadius: BorderRadius.circular(widget.radius),
-          ),
-        );
-      },
+    return RepaintBoundary(
+      child: AnimatedBuilder(
+        animation: _controller,
+        builder: (context, child) {
+          return Container(
+            height: widget.height,
+            width: widget.width,
+            decoration: BoxDecoration(
+              color: Color.lerp(baseColor, highlightColor, _controller.value),
+              borderRadius: BorderRadius.circular(widget.radius),
+            ),
+          );
+        },
+      ),
     );
   }
 }

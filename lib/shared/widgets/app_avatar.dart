@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 
 class AvatarPreset {
@@ -142,11 +143,34 @@ class AppAvatar extends StatelessWidget {
   final Color? borderColor;
   final VoidCallback? onTap;
 
+  static final Map<String, Uint8List> _base64Cache = {};
+
+  static Uint8List? _decodeBase64(String raw) {
+    final cached = _base64Cache[raw];
+    if (cached != null) return cached;
+
+    try {
+      final commaIndex = raw.indexOf(',');
+      final base64String =
+          commaIndex != -1 ? raw.substring(commaIndex + 1) : raw;
+      final cleanBase64 = base64String.trim().replaceAll(RegExp(r'\s+'), '');
+      final decoded = base64Decode(cleanBase64);
+      if (_base64Cache.length >= 60) {
+        _base64Cache.remove(_base64Cache.keys.first);
+      }
+      _base64Cache[raw] = decoded;
+      return decoded;
+    } catch (_) {
+      return null;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final preset = AppAvatars.findPreset(photoUrl);
+    final cacheDim = (size * 2).round();
 
     Widget child;
 
@@ -174,23 +198,21 @@ class AppAvatar extends StatelessWidget {
     } else if (photoUrl != null &&
         photoUrl!.isNotEmpty &&
         (photoUrl!.startsWith('data:image') || photoUrl!.contains(';base64,'))) {
-      final commaIndex = photoUrl!.indexOf(',');
-      final base64String =
-          commaIndex != -1 ? photoUrl!.substring(commaIndex + 1) : photoUrl!;
-      try {
-        final cleanBase64 = base64String.trim().replaceAll(RegExp(r'\s+'), '');
-        final bytes = base64Decode(cleanBase64);
+      final bytes = _decodeBase64(photoUrl!);
+      if (bytes != null) {
         child = ClipOval(
           child: Image.memory(
             bytes,
             width: size,
             height: size,
+            cacheWidth: cacheDim,
+            cacheHeight: cacheDim,
             fit: BoxFit.cover,
             errorBuilder: (context, error, stackTrace) =>
                 _buildFallback(scheme),
           ),
         );
-      } catch (_) {
+      } else {
         child = _buildFallback(scheme);
       }
     } else if (photoUrl != null &&
@@ -201,6 +223,8 @@ class AppAvatar extends StatelessWidget {
           photoUrl!,
           width: size,
           height: size,
+          cacheWidth: cacheDim,
+          cacheHeight: cacheDim,
           fit: BoxFit.cover,
           errorBuilder: (context, error, stackTrace) => _buildFallback(scheme),
         ),

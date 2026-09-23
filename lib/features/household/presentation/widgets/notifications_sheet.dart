@@ -16,6 +16,21 @@ enum _NotificationType {
   system,
 }
 
+sealed class _NotificationRowEntry {
+  const _NotificationRowEntry();
+}
+
+final class _NotificationHeaderEntry extends _NotificationRowEntry {
+  const _NotificationHeaderEntry(this.title, this.count);
+  final String title;
+  final int count;
+}
+
+final class _NotificationItemEntry extends _NotificationRowEntry {
+  const _NotificationItemEntry(this.notification);
+  final HouseholdNotification notification;
+}
+
 class NotificationsSheet extends ConsumerStatefulWidget {
   const NotificationsSheet({super.key});
 
@@ -213,44 +228,52 @@ class _NotificationsSheetState extends ConsumerState<NotificationsSheet> {
                   }
                 }
 
-                return ListView(
+                final rows = <_NotificationRowEntry>[];
+                if (todayItems.isNotEmpty) {
+                  rows.add(_NotificationHeaderEntry('Today', todayItems.length));
+                  for (final item in todayItems) {
+                    rows.add(_NotificationItemEntry(item));
+                  }
+                }
+                if (yesterdayItems.isNotEmpty) {
+                  rows.add(_NotificationHeaderEntry(
+                      'Yesterday', yesterdayItems.length));
+                  for (final item in yesterdayItems) {
+                    rows.add(_NotificationItemEntry(item));
+                  }
+                }
+                if (earlierItems.isNotEmpty) {
+                  rows.add(_NotificationHeaderEntry(
+                      'Earlier', earlierItems.length));
+                  for (final item in earlierItems) {
+                    rows.add(_NotificationItemEntry(item));
+                  }
+                }
+
+                return ListView.builder(
                   padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
-                  children: [
-                    if (todayItems.isNotEmpty) ...[
-                      _GroupHeader(
-                        title: 'Today',
-                        count: todayItems.length,
-                        isDark: isDark,
-                      ),
-                      const SizedBox(height: 8),
-                      for (final item in todayItems)
-                        _buildNotificationCard(item, lastViewed, isDark),
-                      const SizedBox(height: 16),
-                    ],
-
-                    if (yesterdayItems.isNotEmpty) ...[
-                      _GroupHeader(
-                        title: 'Yesterday',
-                        count: yesterdayItems.length,
-                        isDark: isDark,
-                      ),
-                      const SizedBox(height: 8),
-                      for (final item in yesterdayItems)
-                        _buildNotificationCard(item, lastViewed, isDark),
-                      const SizedBox(height: 16),
-                    ],
-
-                    if (earlierItems.isNotEmpty) ...[
-                      _GroupHeader(
-                        title: 'Earlier',
-                        count: earlierItems.length,
-                        isDark: isDark,
-                      ),
-                      const SizedBox(height: 8),
-                      for (final item in earlierItems)
-                        _buildNotificationCard(item, lastViewed, isDark),
-                    ],
-                  ],
+                  itemCount: rows.length,
+                  itemBuilder: (context, index) {
+                    final row = rows[index];
+                    if (row is _NotificationHeaderEntry) {
+                      return Padding(
+                        padding: EdgeInsets.only(
+                          top: index == 0 ? 0 : 16,
+                          bottom: 8,
+                        ),
+                        child: _GroupHeader(
+                          title: row.title,
+                          count: row.count,
+                          isDark: isDark,
+                        ),
+                      );
+                    }
+                    final item = (row as _NotificationItemEntry).notification;
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: _buildNotificationCard(item, lastViewed, isDark),
+                    );
+                  },
                 );
               },
             ),

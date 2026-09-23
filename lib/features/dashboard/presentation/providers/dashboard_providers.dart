@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../auth/presentation/providers/session_provider.dart';
+import '../../../expenses/domain/expense.dart';
 import '../../../expenses/domain/expense_category.dart';
 import '../../../expenses/presentation/providers/expense_providers.dart';
 import '../../../household/presentation/providers/household_providers.dart';
@@ -25,8 +26,12 @@ final dashboardMonthProvider =
 
 /// Computes monthly financial statistics for the dashboard.
 final dashboardStatsProvider = Provider<DashboardStats>((ref) {
-  final expenses = ref.watch(householdExpensesProvider).value ?? const [];
-  final userId = ref.watch(sessionProvider).value?.user?.id ?? '';
+  final expenses = ref.watch(
+    householdExpensesProvider.select((a) => a.value ?? const <Expense>[]),
+  );
+  final userId = ref.watch(
+    sessionProvider.select((s) => s.value?.user?.id ?? ''),
+  );
   final selectedMonth = ref.watch(dashboardMonthProvider);
 
   return DashboardStats.fromExpenses(

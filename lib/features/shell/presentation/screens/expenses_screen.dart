@@ -28,6 +28,28 @@ enum _TimelineGroup {
   final String label;
 }
 
+sealed class _TimelineRowEntry {
+  const _TimelineRowEntry();
+}
+
+final class _TimelineHeaderEntry extends _TimelineRowEntry {
+  const _TimelineHeaderEntry({
+    required this.group,
+    required this.count,
+    required this.totalPaisa,
+  });
+
+  final _TimelineGroup group;
+  final int count;
+  final int totalPaisa;
+}
+
+final class _TimelineExpenseEntry extends _TimelineRowEntry {
+  const _TimelineExpenseEntry(this.expense);
+
+  final Expense expense;
+}
+
 /// Premium Financial Activity Timeline screen for CoSpend.
 class ExpensesScreen extends ConsumerStatefulWidget {
   const ExpensesScreen({super.key});
@@ -189,6 +211,22 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
             final filteredExpenses =
                 _filterExpenses(allExpenses, memberNameMap);
             final timelineGroups = _groupByTimeline(filteredExpenses);
+
+            final timelineRows = <_TimelineRowEntry>[];
+            for (final entry in timelineGroups.entries) {
+              final group = entry.key;
+              final items = entry.value;
+              final groupTotalPaisa =
+                  items.fold<int>(0, (sum, item) => sum + item.amountPaisa);
+              timelineRows.add(_TimelineHeaderEntry(
+                group: group,
+                count: items.length,
+                totalPaisa: groupTotalPaisa,
+              ));
+              for (final exp in items) {
+                timelineRows.add(_TimelineExpenseEntry(exp));
+              }
+            }
 
             return RefreshIndicator(
               color: CoSpendColors.jadeGreen,
@@ -413,75 +451,62 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                           )
                         : ListView.builder(
                             padding: const EdgeInsets.fromLTRB(16, 12, 16, 90),
-                            itemCount: timelineGroups.keys.length,
-                            itemBuilder: (context, groupIndex) {
-                              final group =
-                                  timelineGroups.keys.elementAt(groupIndex);
-                              final items = timelineGroups[group]!;
-                              final groupTotalPaisa = items.fold<int>(
-                                0,
-                                (sum, item) => sum + item.amountPaisa,
-                              );
+                            itemCount: timelineRows.length,
+                            itemBuilder: (context, index) {
+                              final row = timelineRows[index];
 
-                              return Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  // Timeline Group Header
-                                  Padding(
-                                    padding:
-                                        const EdgeInsets.fromLTRB(4, 10, 4, 8),
-                                    child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Text(
-                                          group.label.toUpperCase(),
-                                          style: TextStyle(
-                                            fontSize: 11.5,
-                                            fontWeight: FontWeight.w800,
-                                            letterSpacing: 0.8,
-                                            color: isDark
-                                                ? CoSpendColors.darkTextMuted
-                                                : CoSpendColors.textMuted,
-                                          ),
+                              if (row is _TimelineHeaderEntry) {
+                                return Padding(
+                                  padding:
+                                      const EdgeInsets.fromLTRB(4, 14, 4, 8),
+                                  child: Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(
+                                        row.group.label.toUpperCase(),
+                                        style: TextStyle(
+                                          fontSize: 11.5,
+                                          fontWeight: FontWeight.w800,
+                                          letterSpacing: 0.8,
+                                          color: isDark
+                                              ? CoSpendColors.darkTextMuted
+                                              : CoSpendColors.textMuted,
                                         ),
-                                        Text(
-                                          '${items.length} · ${Money.format(groupTotalPaisa)}',
-                                          style: TextStyle(
-                                            fontSize: 11.5,
-                                            fontWeight: FontWeight.w700,
-                                            color: isDark
-                                                ? Colors.white.withValues(alpha: 0.7)
-                                                : CoSpendColors.prussianBlue,
-                                          ),
+                                      ),
+                                      Text(
+                                        '${row.count} · ${Money.format(row.totalPaisa)}',
+                                        style: TextStyle(
+                                          fontSize: 11.5,
+                                          fontWeight: FontWeight.w700,
+                                          color: isDark
+                                              ? Colors.white.withValues(alpha: 0.7)
+                                              : CoSpendColors.prussianBlue,
                                         ),
-                                      ],
-                                    ),
+                                      ),
+                                    ],
                                   ),
+                                );
+                              }
 
-                                  // Expense Tiles
-                                  for (final exp in items)
-                                    _TimelineExpenseTile(
-                                      key: ValueKey(exp.id),
-                                      expense: exp,
-                                      payerName: memberNameMap[exp.paidById] ??
-                                          'Flatmate',
-                                      household: household,
-                                      isDark: isDark,
-                                      shouldAnimate:
-                                          !_animatedIds.contains(exp.id),
-                                      onAnimated: () =>
-                                          _animatedIds.add(exp.id),
-                                      onTap: () {
-                                        context.push(
-                                          Routes.expenseDetails
-                                              .replaceAll(':id', exp.id),
-                                          extra: exp,
-                                        );
-                                      },
-                                    ),
-                                  const SizedBox(height: 6),
-                                ],
+                              final exp =
+                                  (row as _TimelineExpenseEntry).expense;
+                              return _TimelineExpenseTile(
+                                key: ValueKey(exp.id),
+                                expense: exp,
+                                payerName: memberNameMap[exp.paidById] ??
+                                    'Flatmate',
+                                household: household,
+                                isDark: isDark,
+                                shouldAnimate: !_animatedIds.contains(exp.id),
+                                onAnimated: () => _animatedIds.add(exp.id),
+                                onTap: () {
+                                  context.push(
+                                    Routes.expenseDetails
+                                        .replaceAll(':id', exp.id),
+                                    extra: exp,
+                                  );
+                                },
                               );
                             },
                           ),

@@ -18,13 +18,11 @@ final householdExpensesProvider = StreamProvider<List<Expense>>((ref) {
   return ref.watch(expenseRepositoryProvider).watchExpenses(householdId);
 });
 
-/// Streams the most recent 5 expenses for the dashboard.
-final recentExpensesProvider = StreamProvider<List<Expense>>((ref) {
-  final householdId = ref.watch(sessionProvider).value?.householdId;
-  if (householdId == null) return Stream.value(const []);
-  return ref
-      .watch(expenseRepositoryProvider)
-      .watchRecentExpenses(householdId, limit: 5);
+/// The most recent 5 expenses for the dashboard.
+/// Re-uses the main household expenses stream to eliminate duplicate Firestore listeners.
+final recentExpensesProvider = Provider<AsyncValue<List<Expense>>>((ref) {
+  final allExpensesAsync = ref.watch(householdExpensesProvider);
+  return allExpensesAsync.whenData((expenses) => expenses.take(5).toList());
 });
 
 /// Controller managing expense operations (create, update, delete).

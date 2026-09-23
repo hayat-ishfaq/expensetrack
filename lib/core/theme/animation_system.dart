@@ -150,18 +150,12 @@ class _CoSpendFadeSlideState extends State<CoSpendFadeSlide>
     if (isReducedMotionEnabled(context)) {
       return widget.child;
     }
-    return AnimatedBuilder(
-      animation: _controller,
-      builder: (context, child) {
-        return Opacity(
-          opacity: _fadeAnimation.value,
-          child: Transform.translate(
-            offset: _slideAnimation.value,
-            child: child,
-          ),
-        );
-      },
-      child: widget.child,
+    return FadeTransition(
+      opacity: _fadeAnimation,
+      child: SlideTransition(
+        position: _slideAnimation,
+        child: widget.child,
+      ),
     );
   }
 }

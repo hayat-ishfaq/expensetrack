@@ -58,7 +58,13 @@ class HomeScreen extends ConsumerWidget {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    final session = ref.watch(sessionProvider).value;
+    final currentUserId =
+        ref.watch(sessionProvider.select((s) => s.value?.user?.id ?? ''));
+    final userName = ref.watch(
+        sessionProvider.select((s) => s.value?.user?.name ?? 'Roommate'));
+    final userPhotoUrl =
+        ref.watch(sessionProvider.select((s) => s.value?.user?.photoUrl));
+
     final householdAsync = ref.watch(currentHouseholdProvider);
     final membersAsync = ref.watch(householdMembersProvider);
     final recentExpensesAsync = ref.watch(recentExpensesProvider);
@@ -67,9 +73,6 @@ class HomeScreen extends ConsumerWidget {
     final categoryBudgets = ref.watch(categoryBudgetsStatusProvider);
     final selectedMonth = ref.watch(dashboardMonthProvider);
     final exceededAlerts = ref.watch(exceededBudgetAlertsProvider);
-
-    final currentUserId = session?.user?.id ?? '';
-    final unreadNotifs = ref.watch(unreadNotificationCountProvider);
 
     // Listen for new flatmate spending notifications and display an in-app banner toast
     ref.listen(householdNotificationsProvider, (previous, next) {
@@ -85,8 +88,6 @@ class HomeScreen extends ConsumerWidget {
         }
       }
     });
-
-    final userName = session?.user?.name ?? 'Roommate';
 
     return Scaffold(
       backgroundColor: isDark ? CoSpendColors.darkCanvas : CoSpendColors.canvas,
@@ -128,11 +129,10 @@ class HomeScreen extends ConsumerWidget {
                   // 1. Top Header
                   _HomeHeader(
                     userName: userName,
-                    photoUrl: session?.user?.photoUrl,
+                    photoUrl: userPhotoUrl,
                     greeting: _greeting(),
                     budgetStatus: budgetStatus,
                     selectedMonth: selectedMonth,
-                    unreadNotifs: unreadNotifs,
                     inviteCode: household.inviteCode,
                     onPickMonth: () => _pickMonth(context, ref),
                     onNotificationTap: () {
@@ -158,50 +158,58 @@ class HomeScreen extends ConsumerWidget {
                   ],
 
                   // 2. Financial Hero Card
-                  CoSpendFadeSlide(
-                    offset: const Offset(0, 0.04),
-                    child: _FinancialHeroCard(
-                      budgetStatus: budgetStatus,
-                      totalBudgetPaisa: household.effectiveTotalBudgetPaisa,
-                      isOwner: isOwner,
-                      onConfigureBudget: () =>
-                          context.push(Routes.categoryBudgets),
+                  RepaintBoundary(
+                    child: CoSpendFadeSlide(
+                      offset: const Offset(0, 0.04),
+                      child: _FinancialHeroCard(
+                        budgetStatus: budgetStatus,
+                        totalBudgetPaisa: household.effectiveTotalBudgetPaisa,
+                        isOwner: isOwner,
+                        onConfigureBudget: () =>
+                            context.push(Routes.categoryBudgets),
+                      ),
                     ),
                   ),
                   const SizedBox(height: 18),
 
                   // 3. Four Financial Metrics
-                  _FourFinancialMetrics(
-                    totalBudgetPaisa: household.effectiveTotalBudgetPaisa,
-                    totalSpendingPaisa: stats.totalSpendingPaisa,
-                    userAllocatedSharePaisa:
-                        household.getMemberTotalBudget(currentUserId),
-                    userSpentPaisa: stats.userPaidPaisa,
-                    isDark: isDark,
+                  RepaintBoundary(
+                    child: _FourFinancialMetrics(
+                      totalBudgetPaisa: household.effectiveTotalBudgetPaisa,
+                      totalSpendingPaisa: stats.totalSpendingPaisa,
+                      userAllocatedSharePaisa:
+                          household.getMemberTotalBudget(currentUserId),
+                      userSpentPaisa: stats.userPaidPaisa,
+                      isDark: isDark,
+                    ),
                   ),
                   const SizedBox(height: 24),
 
                   // 4. Budget Overview (Categories)
-                  _BudgetOverviewSection(
-                    categoryBudgets: categoryBudgets,
-                    isOwner: isOwner,
-                    isDark: isDark,
-                    onManage: () => context.push(Routes.categoryBudgets),
+                  RepaintBoundary(
+                    child: _BudgetOverviewSection(
+                      categoryBudgets: categoryBudgets,
+                      isOwner: isOwner,
+                      isDark: isDark,
+                      onManage: () => context.push(Routes.categoryBudgets),
+                    ),
                   ),
                   const SizedBox(height: 24),
 
                   // 5. Recent Activity
-                  _RecentExpensesSection(
-                    recentExpensesAsync: recentExpensesAsync,
-                    memberNameMap: memberNameMap,
-                    isDark: isDark,
-                    onViewAll: () => context.go(Routes.expenses),
-                    onExpenseTap: (exp) {
-                      context.push(
-                        Routes.expenseDetails.replaceAll(':id', exp.id),
-                        extra: exp,
-                      );
-                    },
+                  RepaintBoundary(
+                    child: _RecentExpensesSection(
+                      recentExpensesAsync: recentExpensesAsync,
+                      memberNameMap: memberNameMap,
+                      isDark: isDark,
+                      onViewAll: () => context.go(Routes.expenses),
+                      onExpenseTap: (exp) {
+                        context.push(
+                          Routes.expenseDetails.replaceAll(':id', exp.id),
+                          extra: exp,
+                        );
+                      },
+                    ),
                   ),
                 ],
               ),
@@ -258,7 +266,6 @@ class _HomeHeader extends StatelessWidget {
     required this.greeting,
     required this.budgetStatus,
     required this.selectedMonth,
-    required this.unreadNotifs,
     required this.inviteCode,
     required this.onPickMonth,
     required this.onNotificationTap,
@@ -271,7 +278,6 @@ class _HomeHeader extends StatelessWidget {
   final String greeting;
   final BudgetStatus? budgetStatus;
   final DateTime selectedMonth;
-  final int unreadNotifs;
   final String inviteCode;
   final VoidCallback onPickMonth;
   final VoidCallback onNotificationTap;
@@ -359,26 +365,33 @@ class _HomeHeader extends StatelessWidget {
               ),
             ),
 
-            // Notification Button with Unread Badge
-            Semantics(
-              label: 'Notifications, $unreadNotifs unread',
-              button: true,
-              child: IconButton(
-                constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
-                icon: Badge(
-                  isLabelVisible: unreadNotifs > 0,
-                  backgroundColor: CoSpendColors.alertRed,
-                  textColor: Colors.white,
-                  label: Text('$unreadNotifs'),
-                  child: Icon(
-                    Icons.notifications_outlined,
-                    color: isDark ? Colors.white : CoSpendColors.prussianBlue,
-                    size: 24,
+            // Notification Button with Unread Badge (isolated rebuild)
+            Consumer(
+              builder: (context, ref, _) {
+                final unreadNotifs = ref.watch(unreadNotificationCountProvider);
+                return Semantics(
+                  label: 'Notifications, $unreadNotifs unread',
+                  button: true,
+                  child: IconButton(
+                    constraints:
+                        const BoxConstraints(minWidth: 48, minHeight: 48),
+                    icon: Badge(
+                      isLabelVisible: unreadNotifs > 0,
+                      backgroundColor: CoSpendColors.alertRed,
+                      textColor: Colors.white,
+                      label: Text('$unreadNotifs'),
+                      child: Icon(
+                        Icons.notifications_outlined,
+                        color:
+                            isDark ? Colors.white : CoSpendColors.prussianBlue,
+                        size: 24,
+                      ),
+                    ),
+                    tooltip: 'Notifications',
+                    onPressed: onNotificationTap,
                   ),
-                ),
-                tooltip: 'Notifications',
-                onPressed: onNotificationTap,
-              ),
+                );
+              },
             ),
 
             // Household Invite Chip
