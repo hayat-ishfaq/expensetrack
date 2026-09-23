@@ -146,6 +146,10 @@ class HomeScreen extends ConsumerWidget {
           final members = membersAsync.value ?? const [];
           final memberNameMap = {for (final m in members) m.id: m.name};
 
+          final currentUserId = session?.user?.id ?? '';
+          final isOwner =
+              household.ownerId.isEmpty || household.ownerId == currentUserId;
+
           return ListView(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 80),
             children: [
@@ -239,13 +243,17 @@ class HomeScreen extends ConsumerWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Set Category Budgets',
+                              isOwner
+                                  ? 'Set Category Budgets'
+                                  : 'Category Budgets',
                               style: theme.textTheme.titleSmall?.copyWith(
                                 fontWeight: FontWeight.w700,
                               ),
                             ),
                             Text(
-                              'Track spending caps for Food, Bills, etc.',
+                              isOwner
+                                  ? 'Track spending caps for Food, Bills, etc.'
+                                  : 'Spending limits set by flat owner.',
                               style: theme.textTheme.bodySmall?.copyWith(
                                 color: scheme.onSurfaceVariant,
                               ),
@@ -259,7 +267,7 @@ class HomeScreen extends ConsumerWidget {
                           visualDensity: VisualDensity.compact,
                           padding: const EdgeInsets.symmetric(horizontal: 12),
                         ),
-                        child: const Text('Set'),
+                        child: Text(isOwner ? 'Set' : 'View'),
                       ),
                     ],
                   ),

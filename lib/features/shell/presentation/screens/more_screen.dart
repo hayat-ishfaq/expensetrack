@@ -211,9 +211,13 @@ class MoreScreen extends ConsumerWidget {
                     leading: const Icon(Icons.pie_chart_rounded),
                     title: const Text('Category Budgets'),
                     subtitle: Text(
-                      household.effectiveTotalBudgetPaisa > 0
-                          ? '${Money.format(household.effectiveTotalBudgetPaisa)} target (${household.categoryBudgetsPaisa.length} categories)'
-                          : 'Set limits for Food, Bills, etc.',
+                      isOwner
+                          ? (household.effectiveTotalBudgetPaisa > 0
+                              ? '${Money.format(household.effectiveTotalBudgetPaisa)} target (${household.categoryBudgetsPaisa.length} categories)'
+                              : 'Set limits for Food, Bills, etc.')
+                          : (household.effectiveTotalBudgetPaisa > 0
+                              ? 'View limits: ${Money.format(household.effectiveTotalBudgetPaisa)} target'
+                              : 'View limits (Managed by flat owner)'),
                     ),
                     trailing: const Icon(Icons.chevron_right_rounded),
                     onTap: () => context.push(Routes.categoryBudgets),

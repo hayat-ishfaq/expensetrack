@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/routes.dart';
 import '../../../../core/utils/money.dart';
+import '../../../auth/presentation/providers/session_provider.dart';
+import '../../../household/presentation/providers/household_providers.dart';
 import '../providers/dashboard_providers.dart';
 
 class BudgetProgressCard extends ConsumerStatefulWidget {
@@ -25,6 +27,12 @@ class _BudgetProgressCardState extends ConsumerState<BudgetProgressCard> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+
+    final household = ref.watch(currentHouseholdProvider).value;
+    final session = ref.watch(sessionProvider).value;
+    final currentUserId = session?.user?.id ?? '';
+    final isOwner = household != null &&
+        (household.ownerId.isEmpty || household.ownerId == currentUserId);
 
     final flatCategoryStatuses = ref.watch(categoryBudgetsStatusProvider);
     final myCategoryStatuses = ref.watch(myCategoryBudgetsStatusProvider);
@@ -108,8 +116,15 @@ class _BudgetProgressCardState extends ConsumerState<BudgetProgressCard> {
                   ),
                   const SizedBox(width: 4),
                   IconButton(
-                    icon: const Icon(Icons.tune_rounded, size: 18),
-                    tooltip: 'Adjust Budgets',
+                    icon: Icon(
+                      isOwner
+                          ? Icons.tune_rounded
+                          : Icons.visibility_outlined,
+                      size: 18,
+                    ),
+                    tooltip: isOwner
+                        ? 'Adjust Budgets'
+                        : 'View Category Budgets (Owner Managed)',
                     visualDensity: VisualDensity.compact,
                     onPressed: () => context.push(Routes.categoryBudgets),
                   ),
@@ -399,13 +414,17 @@ class _BudgetProgressCardState extends ConsumerState<BudgetProgressCard> {
                 child: Row(
                   children: [
                     Icon(
-                      Icons.add_circle_outline_rounded,
+                      isOwner
+                          ? Icons.add_circle_outline_rounded
+                          : Icons.visibility_outlined,
                       size: 16,
                       color: scheme.primary,
                     ),
                     const SizedBox(width: 6),
                     Text(
-                      'Set category budgets (Food, Bills, etc.)',
+                      isOwner
+                          ? 'Set category budgets (Food, Bills, etc.)'
+                          : 'View category budgets & limits',
                       style: theme.textTheme.labelSmall?.copyWith(
                         color: scheme.primary,
                         fontWeight: FontWeight.w700,

@@ -73,12 +73,24 @@ void main() {
       expect(Validators.normalizeInviteCode(' 7k29 '), 'FLAT-7K29');
       expect(Validators.normalizeInviteCode('flat-7k29'), 'FLAT-7K29');
       expect(Validators.normalizeInviteCode('FLAT-7K29'), 'FLAT-7K29');
+      expect(Validators.normalizeInviteCode(' FLAT - 7K29 '), 'FLAT-7K29');
+      expect(Validators.normalizeInviteCode('flat 7k29'), 'FLAT-7K29');
+      expect(
+        Validators.normalizeInviteCode(
+          'Flat Invite Code: FLAT-7K29\n\nJoin my flat on FlatSplit!',
+        ),
+        'FLAT-7K29',
+      );
       expect(Validators.normalizeInviteCode(null), '');
     });
 
     test('validates normalized codes', () {
       expect(Validators.inviteCode('7k29'), isNull);
       expect(Validators.inviteCode('FLAT-7K29'), isNull);
+      expect(
+        Validators.inviteCode('Flat Invite Code: FLAT-7K29\n\nJoin my flat!'),
+        isNull,
+      );
       expect(Validators.inviteCode(''), isNotNull);
       expect(Validators.inviteCode('FLAT-'), isNotNull);
       expect(Validators.inviteCode('FLAT-TOOLONG'), isNotNull);

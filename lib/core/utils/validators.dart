@@ -60,22 +60,60 @@ abstract final class Validators {
   }
 
   static String? inviteCode(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Invite code is required.';
+    }
     final code = normalizeInviteCode(value);
-    if (code.isEmpty) return 'Invite code is required.';
     if (!_invitePattern.hasMatch(code)) {
       return 'Enter a valid invite code (e.g. FLAT-7K29).';
     }
     return null;
   }
 
-  /// Uppercases, trims and adds the `FLAT-` prefix when the user only typed
-  /// the short code (e.g. `7k29` -> `FLAT-7K29`).
+  /// Uppercases, trims, extracts and normalizes the invite code.
+  ///
+  /// Supports:
+  /// - Full shared message: "Flat Invite Code: FLAT-7K29\n\nJoin my flat..." -> "FLAT-7K29"
+  /// - Standard formatted code: "FLAT-7K29", "flat-7k29" -> "FLAT-7K29"
+  /// - Short code / suffix: "7k29", "7K29" -> "FLAT-7K29"
+  /// - Loose whitespace: " FLAT - 7K29 " -> "FLAT-7K29"
   static String normalizeInviteCode(String? value) {
-    var code = (value ?? '').trim().toUpperCase().replaceAll(' ', '');
-    if (code.isNotEmpty && !code.startsWith(AppConstants.invitePrefix)) {
-      code = '${AppConstants.invitePrefix}$code';
+    if (value == null) return '';
+    final trimmed = value.trim();
+    if (trimmed.isEmpty) return '';
+
+    // 1. Search for explicit FLAT-XXXX pattern anywhere in the text (e.g. from shared invite messages)
+    final patternMatch = RegExp(
+      r'FLAT-([A-Z0-9]{4})\b',
+      caseSensitive: false,
+    ).firstMatch(trimmed);
+    if (patternMatch != null) {
+      return 'FLAT-${patternMatch.group(1)!.toUpperCase()}';
     }
-    return code;
+
+    // 2. Search for loose "FLAT XXXX" or "FLAT: XXXX"
+    final loosePrefixMatch = RegExp(
+      r'FLAT[\s:-]+([A-Z0-9]{4})\b',
+      caseSensitive: false,
+    ).firstMatch(trimmed);
+    if (loosePrefixMatch != null) {
+      return 'FLAT-${loosePrefixMatch.group(1)!.toUpperCase()}';
+    }
+
+    // 3. If it starts with FLAT-, preserve the full string with prefix
+    final upper = trimmed.toUpperCase().replaceAll(' ', '');
+    if (upper.startsWith(AppConstants.invitePrefix)) {
+      return upper;
+    }
+
+    // 4. If the string is just a 4-character suffix without FLAT prefix (e.g. "7K29")
+    final cleanAlphaNum =
+        trimmed.toUpperCase().replaceAll(RegExp(r'[^A-Z0-9]'), '');
+    if (cleanAlphaNum.length == 4) {
+      return 'FLAT-$cleanAlphaNum';
+    }
+
+    return '${AppConstants.invitePrefix}$upper';
   }
 
   /// Expense amount: required, numeric, greater than zero, max two decimals.

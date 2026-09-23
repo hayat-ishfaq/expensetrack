@@ -155,6 +155,19 @@ class _CategoryBudgetScreenState extends ConsumerState<CategoryBudgetScreen> {
     final household = ref.read(currentHouseholdProvider).value;
     if (household == null) return;
 
+    final session = ref.read(sessionProvider).value;
+    final currentUserId = session?.user?.id ?? '';
+    final isOwner =
+        household.ownerId.isEmpty || household.ownerId == currentUserId;
+    if (!isOwner) {
+      showAppSnack(
+        context,
+        'Only the flat owner can adjust budgets.',
+        error: true,
+      );
+      return;
+    }
+
     final Map<String, int> categoryBudgetsPaisa = {};
     final Map<String, Map<String, int>> memberCategoryBudgetsPaisa = {};
 
@@ -285,6 +298,39 @@ class _CategoryBudgetScreenState extends ConsumerState<CategoryBudgetScreen> {
       ),
       body: Column(
         children: [
+          if (!isOwner)
+            Container(
+              margin: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              decoration: BoxDecoration(
+                color: scheme.surfaceContainerHighest.withValues(alpha: 0.6),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: scheme.outlineVariant.withValues(alpha: 0.4),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.lock_outline_rounded,
+                    size: 18,
+                    color: scheme.onSurfaceVariant,
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      'View-Only: Only the flat owner can set or adjust overall and category budgets.',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
           // Total Budget Summary Header Card
           Container(
             margin: const EdgeInsets.fromLTRB(16, 8, 16, 12),

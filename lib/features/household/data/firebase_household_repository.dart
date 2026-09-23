@@ -121,17 +121,44 @@ class FirebaseHouseholdRepository implements HouseholdRepository {
         );
       }
 
-      final codeSnapshot =
-          await _firestore.doc('${FirestoreCollections.inviteCodes}/$code')
-              .get();
-      if (!codeSnapshot.exists) {
+      String? householdId;
+      final codeSnapshot = await _firestore
+          .doc('${FirestoreCollections.inviteCodes}/$code')
+          .get();
+      if (codeSnapshot.exists) {
+        householdId = codeSnapshot.data()?['householdId'] as String?;
+      }
+
+      // Fallback: search household collection by inviteCode directly if index doc is missing
+      if (householdId == null || householdId.isEmpty) {
+        final query = await _firestore
+            .collection(FirestoreCollections.households)
+            .where('inviteCode', isEqualTo: code)
+            .limit(1)
+            .get();
+        if (query.docs.isNotEmpty) {
+          householdId = query.docs.first.id;
+          // Self-heal the inviteCodes index document for fast subsequent lookups
+          try {
+            await _firestore
+                .doc('${FirestoreCollections.inviteCodes}/$code')
+                .set({
+              'householdId': householdId,
+              'createdAt': FieldValue.serverTimestamp(),
+            });
+          } catch (_) {
+            // Non-critical if rules restrict direct writing
+          }
+        }
+      }
+
+      if (householdId == null || householdId.isEmpty) {
         throw const HouseholdException(
           "That invite code doesn't match any flat. "
           'Double-check it with whoever shared it.',
         );
       }
 
-      final householdId = codeSnapshot.data()!['householdId'] as String;
       final householdRef = _firestore
           .collection(FirestoreCollections.households)
           .doc(householdId);
@@ -144,23 +171,59 @@ class FirebaseHouseholdRepository implements HouseholdRepository {
 
       final profile = await _currentUserProfile();
       final now = DateTime.now();
+
+      // Check if user is already a member of this household
+      final memberDocRef = householdRef
+          .collection(FirestoreCollections.members)
+          .doc(uid);
+      final memberSnapshot = await memberDocRef.get();
+      final alreadyMember = memberSnapshot.exists;
+
       final member = HouseholdMember(
         id: uid,
-        name: profile['name'] as String? ?? 'Flatmate',
-        email: profile['email'] as String? ?? '',
-        photoUrl: profile['photoUrl'] as String?,
-        role: MemberRole.member,
-        joinedAt: now,
+        name: profile['name'] as String? ??
+            _auth.currentUser?.displayName ??
+            'Flatmate',
+        email: profile['email'] as String? ??
+            _auth.currentUser?.email ??
+            '',
+        photoUrl: profile['photoUrl'] as String? ??
+            _auth.currentUser?.photoURL,
+        role: alreadyMember
+            ? HouseholdMember.fromMap(uid, memberSnapshot.data()!).role
+            : MemberRole.member,
+        joinedAt: alreadyMember
+            ? (memberSnapshot.data()?['joinedAt'] as Timestamp?)?.toDate() ??
+                now
+            : now,
       );
 
       final batch = _firestore.batch();
-      batch.set(
-        householdRef.collection(FirestoreCollections.members).doc(uid),
-        member.toMap(),
-      );
-      batch.update(householdRef, {
-        'memberCount': FieldValue.increment(1),
-      });
+
+      // Clean up previous flat membership if user was in another flat
+      final oldHouseholdId = profile['householdId'] as String?;
+      if (oldHouseholdId != null &&
+          oldHouseholdId.isNotEmpty &&
+          oldHouseholdId != householdId) {
+        try {
+          final oldRef = _firestore
+              .collection(FirestoreCollections.households)
+              .doc(oldHouseholdId);
+          batch.delete(
+            oldRef.collection(FirestoreCollections.members).doc(uid),
+          );
+          batch.update(oldRef, {'memberCount': FieldValue.increment(-1)});
+        } catch (_) {
+          // Ignore if previous flat cleanup cannot be completed
+        }
+      }
+
+      batch.set(memberDocRef, member.toMap());
+      if (!alreadyMember) {
+        batch.update(householdRef, {
+          'memberCount': FieldValue.increment(1),
+        });
+      }
       batch.set(
         _firestore.collection(FirestoreCollections.users).doc(uid),
         {'householdId': householdId},
@@ -227,12 +290,28 @@ class FirebaseHouseholdRepository implements HouseholdRepository {
     }
   }
 
+  Future<void> _assertOwner(String householdId) async {
+    final uid = _uid;
+    final doc = await _firestore
+        .collection(FirestoreCollections.households)
+        .doc(householdId)
+        .get();
+    if (!doc.exists) throw const NotFoundException();
+    final ownerId = doc.data()?['ownerId'] as String?;
+    if (ownerId != null && ownerId.isNotEmpty && ownerId != uid) {
+      throw const HouseholdException(
+        'Only the flat owner can adjust budgets or household settings.',
+      );
+    }
+  }
+
   @override
   Future<void> updateMonthlyBudget({
     required String householdId,
     required int budgetPaisa,
   }) async {
     try {
+      await _assertOwner(householdId);
       await _firestore
           .collection(FirestoreCollections.households)
           .doc(householdId)
@@ -248,6 +327,7 @@ class FirebaseHouseholdRepository implements HouseholdRepository {
     required String name,
   }) async {
     try {
+      await _assertOwner(householdId);
       await _firestore
           .collection(FirestoreCollections.households)
           .doc(householdId)
@@ -264,6 +344,7 @@ class FirebaseHouseholdRepository implements HouseholdRepository {
     Map<String, Map<String, int>> memberCategoryBudgetsPaisa = const {},
   }) async {
     try {
+      await _assertOwner(householdId);
       await _firestore
           .collection(FirestoreCollections.households)
           .doc(householdId)

@@ -39,29 +39,43 @@ service cloud.firestore {
 
     // 3. Households
     match /households/{householdId} {
-      // Members can read their household
+      // Anyone authenticated can read household metadata (needed for join previews & invite verification)
       allow read: if isAuthenticated();
       // Any authenticated user can create a household
       allow create: if isAuthenticated() && request.resource.data.ownerId == request.auth.uid;
-      // Members can update household data (budget, memberCount) or owner can rename
-      allow update: if isMemberOf(householdId) || isOwnerOf(householdId) || isAuthenticated();
+      // Budget adjustments and renaming strictly require the flat owner.
+      // Member count increment / join updates are permitted for members and joining users.
+      allow update: if isOwnerOf(householdId) || (
+        isAuthenticated() &&
+        !request.resource.data.diff(resource.data).affectedKeys().hasAny([
+          'monthlyBudgetPaisa',
+          'categoryBudgetsPaisa',
+          'memberCategoryBudgetsPaisa',
+          'ownerId'
+        ])
+      );
       allow delete: if isOwnerOf(householdId);
 
       // Members subcollection
       match /members/{memberId} {
-        allow read: if isMemberOf(householdId);
+        allow read: if isMemberOf(householdId) || isOwnerOf(householdId);
         // User can add themselves when joining, or owner can manage
-        allow create, update: if isUser(memberId) || isMemberOf(householdId);
+        allow create, update: if isUser(memberId) || isOwnerOf(householdId);
         // User can leave or owner can remove member
         allow delete: if isUser(memberId) || isOwnerOf(householdId);
       }
 
-      // Expenses subcollection: strictly isolated to household members
+      // Expenses subcollection: strictly isolated to household members.
+      // Members can only add expenses with themselves as createdByUserId.
+      // Members can only edit or delete their own expenses (or owner).
       match /expenses/{expenseId} {
         allow read: if isMemberOf(householdId);
-        allow create: if isMemberOf(householdId) && request.resource.data.createdByUserId == request.auth.uid;
-        allow update: if isMemberOf(householdId);
-        allow delete: if isMemberOf(householdId);
+        allow create: if isMemberOf(householdId) &&
+                         request.resource.data.createdByUserId == request.auth.uid;
+        allow update: if isMemberOf(householdId) &&
+                         (resource.data.createdByUserId == request.auth.uid || isOwnerOf(householdId));
+        allow delete: if isMemberOf(householdId) &&
+                         (resource.data.createdByUserId == request.auth.uid || isOwnerOf(householdId));
       }
 
       // Settlements subcollection

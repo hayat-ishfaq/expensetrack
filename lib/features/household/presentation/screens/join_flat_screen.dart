@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../../app/router/routes.dart';
 import '../../../../core/errors/app_exception.dart';
 import '../../../../core/errors/firebase_error_mapper.dart';
 import '../../../../core/utils/validators.dart';
@@ -48,6 +50,11 @@ class _JoinFlatScreenState extends ConsumerState<JoinFlatScreen> {
               : FirebaseErrorMapper.messageFor(error),
           error: true,
         );
+      } else if (!next.isLoading &&
+          !next.hasError &&
+          previous?.isLoading == true) {
+        showAppSnack(context, 'Successfully joined flat!');
+        context.go(Routes.home);
       }
     });
 
