@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'animation_system.dart';
 
 export 'animation_system.dart';
 
@@ -360,7 +361,6 @@ class _BouncingButtonState extends State<BouncingButton>
   void _onTapUp(TapUpDetails _) {
     if (widget.onTap != null) {
       _controller.reverse();
-      widget.onTap!();
     }
   }
 
@@ -372,7 +372,16 @@ class _BouncingButtonState extends State<BouncingButton>
   Widget build(BuildContext context) {
     if (widget.onTap == null) return widget.child;
 
+    if (isReducedMotionEnabled(context)) {
+      return GestureDetector(
+        onTap: widget.onTap,
+        behavior: HitTestBehavior.opaque,
+        child: widget.child,
+      );
+    }
+
     return GestureDetector(
+      onTap: widget.onTap,
       onTapDown: _onTapDown,
       onTapUp: _onTapUp,
       onTapCancel: _onTapCancel,
@@ -525,9 +534,14 @@ class CoSpendButton extends StatelessWidget {
       child = SizedBox(width: double.infinity, child: child);
     }
 
-    return BouncingButton(
-      onTap: isLoading ? null : onPressed,
-      child: child,
+    return Semantics(
+      button: true,
+      label: label,
+      enabled: !isLoading && onPressed != null,
+      child: BouncingButton(
+        onTap: isLoading ? null : onPressed,
+        child: child,
+      ),
     );
   }
 }
@@ -614,6 +628,7 @@ class CoSpendIconButton extends StatelessWidget {
     this.iconSize = 20.0,
     this.color = CoSpendColors.prussianBlue,
     this.tooltip,
+    this.semanticLabel,
   });
 
   final IconData icon;
@@ -622,20 +637,28 @@ class CoSpendIconButton extends StatelessWidget {
   final double iconSize;
   final Color color;
   final String? tooltip;
+  final String? semanticLabel;
 
   @override
   Widget build(BuildContext context) {
-    Widget button = BouncingButton(
-      onTap: onPressed,
-      child: Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.12),
-          shape: BoxShape.circle,
+    final effectiveLabel = semanticLabel ?? tooltip ?? 'Action';
+
+    Widget button = ConstrainedBox(
+      constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+      child: Center(
+        child: BouncingButton(
+          onTap: onPressed,
+          child: Container(
+            width: size,
+            height: size,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.12),
+              shape: BoxShape.circle,
+            ),
+            alignment: Alignment.center,
+            child: Icon(icon, color: color, size: iconSize),
+          ),
         ),
-        alignment: Alignment.center,
-        child: Icon(icon, color: color, size: iconSize),
       ),
     );
 
@@ -643,7 +666,12 @@ class CoSpendIconButton extends StatelessWidget {
       button = Tooltip(message: tooltip!, child: button);
     }
 
-    return button;
+    return Semantics(
+      button: true,
+      label: effectiveLabel,
+      enabled: onPressed != null,
+      child: button,
+    );
   }
 }
 
@@ -787,22 +815,25 @@ class CoSpendAmountField extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               Expanded(
-                child: TextField(
-                  controller: controller,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                  onChanged: onChanged,
-                  style: TextStyle(
-                    fontSize: 34,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: -1.0,
-                    fontFeatures: const [FontFeature.tabularFigures()],
-                    color: isDark ? Colors.white : CoSpendColors.prussianBlue,
-                  ),
-                  decoration: const InputDecoration(
-                    hintText: '0',
-                    border: InputBorder.none,
-                    isDense: true,
-                    contentPadding: EdgeInsets.zero,
+                child: Semantics(
+                  label: 'Expense amount in Pakistani Rupees',
+                  child: TextField(
+                    controller: controller,
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    onChanged: onChanged,
+                    style: TextStyle(
+                      fontSize: 34,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -1.0,
+                      fontFeatures: const [FontFeature.tabularFigures()],
+                      color: isDark ? Colors.white : CoSpendColors.prussianBlue,
+                    ),
+                    decoration: const InputDecoration(
+                      hintText: '0',
+                      border: InputBorder.none,
+                      isDense: true,
+                      contentPadding: EdgeInsets.zero,
+                    ),
                   ),
                 ),
               ),
@@ -845,33 +876,45 @@ class CoSpendChip extends StatelessWidget {
             color: isDark ? CoSpendColors.darkBorder : CoSpendColors.borderLight,
           );
 
-    return BouncingButton(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: CoSpendAnimations.fast,
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-        decoration: BoxDecoration(
-          color: bg,
-          borderRadius: CoSpendRadii.pillRadius,
-          border: border,
-          boxShadow: isSelected && !isDark ? CoSpendShadows.subtle : null,
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (icon != null) ...[
-              Icon(icon, size: 14, color: fg),
-              const SizedBox(width: 6),
-            ],
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                color: fg,
+    return Semantics(
+      button: true,
+      selected: isSelected,
+      label: '$label filter',
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: 48),
+        child: Center(
+          child: BouncingButton(
+            onTap: onTap,
+            child: AnimatedContainer(
+              duration: isReducedMotionEnabled(context)
+                  ? Duration.zero
+                  : CoSpendAnimations.fast,
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              decoration: BoxDecoration(
+                color: bg,
+                borderRadius: CoSpendRadii.pillRadius,
+                border: border,
+                boxShadow: isSelected && !isDark ? CoSpendShadows.subtle : null,
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (icon != null) ...[
+                    Icon(icon, size: 14, color: fg),
+                    const SizedBox(width: 6),
+                  ],
+                  Text(
+                    label,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                      color: fg,
+                    ),
+                  ),
+                ],
               ),
             ),
-          ],
+          ),
         ),
       ),
     );
@@ -1034,31 +1077,41 @@ class CoSpendProgressBar extends StatelessWidget {
         : (percentUsed >= 80.0
             ? CoSpendColors.warningAmber
             : CoSpendColors.jadeGreen);
+    final statusText = isExceeded
+        ? 'Exceeded limit'
+        : (percentUsed >= 80.0 ? 'Approaching limit' : 'On track');
+    final duration = isReducedMotionEnabled(context)
+        ? Duration.zero
+        : CoSpendAnimations.slow;
 
-    return ClipRRect(
-      borderRadius: CoSpendRadii.pillRadius,
-      child: Stack(
-        children: [
-          Container(
-            height: height,
-            color: CoSpendColors.borderLight,
-          ),
-          TweenAnimationBuilder<double>(
-            duration: CoSpendAnimations.slow,
-            curve: CoSpendAnimations.curveEntrance,
-            tween: Tween<double>(begin: 0, end: clampedRatio),
-            builder: (context, value, child) => FractionallySizedBox(
-              widthFactor: value,
-              child: Container(
-                height: height,
-                decoration: BoxDecoration(
-                  color: progressColor,
-                  borderRadius: CoSpendRadii.pillRadius,
+    return Semantics(
+      label: 'Budget progress',
+      value: '${percentUsed.toStringAsFixed(0)}% used, $statusText',
+      child: ClipRRect(
+        borderRadius: CoSpendRadii.pillRadius,
+        child: Stack(
+          children: [
+            Container(
+              height: height,
+              color: CoSpendColors.borderLight,
+            ),
+            TweenAnimationBuilder<double>(
+              duration: duration,
+              curve: CoSpendAnimations.curveEntrance,
+              tween: Tween<double>(begin: 0, end: clampedRatio),
+              builder: (context, value, child) => FractionallySizedBox(
+                widthFactor: value,
+                child: Container(
+                  height: height,
+                  decoration: BoxDecoration(
+                    color: progressColor,
+                    borderRadius: CoSpendRadii.pillRadius,
+                  ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -1251,11 +1304,11 @@ class CoSpendBottomSheetScaffold extends StatelessWidget {
               IconButton(
                 onPressed: () => Navigator.of(context).pop(),
                 icon: const Icon(Icons.close_rounded, size: 20),
+                tooltip: 'Close',
                 color: isDark
                     ? CoSpendColors.darkTextMuted
                     : CoSpendColors.textMuted,
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(),
+                constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
               ),
             ],
           ),
@@ -1417,6 +1470,17 @@ class _CoSpendSkeletonState extends State<CoSpendSkeleton>
     final highlightColor = isDark
         ? CoSpendColors.darkBorder
         : CoSpendColors.white;
+
+    if (isReducedMotionEnabled(context)) {
+      return Container(
+        height: widget.height,
+        width: widget.width,
+        decoration: BoxDecoration(
+          color: baseColor,
+          borderRadius: BorderRadius.circular(widget.radius),
+        ),
+      );
+    }
 
     return AnimatedBuilder(
       animation: _controller,
@@ -1603,42 +1667,50 @@ class CoSpendSegmentedControl<T> extends StatelessWidget {
         children: items.entries.map((entry) {
           final isSelected = entry.key == selected;
           return Expanded(
-            child: GestureDetector(
-              onTap: () => onChanged(entry.key),
-              behavior: HitTestBehavior.opaque,
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                curve: Curves.easeInOut,
-                padding: const EdgeInsets.symmetric(vertical: 9),
-                decoration: BoxDecoration(
-                  color: isSelected
-                      ? (isDark
-                          ? CoSpendColors.prussianBlueLight
-                          : CoSpendColors.prussianBlue)
-                      : Colors.transparent,
-                  borderRadius: CoSpendRadii.pillRadius,
-                  boxShadow: isSelected && !isDark
-                      ? [
-                          BoxShadow(
-                            color: CoSpendColors.prussianBlue
-                                .withValues(alpha: 0.2),
-                            blurRadius: 6,
-                            offset: const Offset(0, 2),
-                          ),
-                        ]
-                      : null,
-                ),
-                alignment: Alignment.center,
-                child: Text(
-                  entry.value,
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+            child: Semantics(
+              button: true,
+              selected: isSelected,
+              label: entry.value,
+              child: GestureDetector(
+                onTap: () => onChanged(entry.key),
+                behavior: HitTestBehavior.opaque,
+                child: AnimatedContainer(
+                  duration: isReducedMotionEnabled(context)
+                      ? Duration.zero
+                      : const Duration(milliseconds: 200),
+                  curve: Curves.easeInOut,
+                  constraints: const BoxConstraints(minHeight: 44),
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  decoration: BoxDecoration(
                     color: isSelected
-                        ? Colors.white
-                        : (isDark
-                            ? CoSpendColors.darkTextMuted
-                            : CoSpendColors.textMuted),
+                        ? (isDark
+                            ? CoSpendColors.prussianBlueLight
+                            : CoSpendColors.prussianBlue)
+                        : Colors.transparent,
+                    borderRadius: CoSpendRadii.pillRadius,
+                    boxShadow: isSelected && !isDark
+                        ? [
+                            BoxShadow(
+                              color: CoSpendColors.prussianBlue
+                                  .withValues(alpha: 0.2),
+                              blurRadius: 6,
+                              offset: const Offset(0, 2),
+                            ),
+                          ]
+                        : null,
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(
+                    entry.value,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                      color: isSelected
+                          ? Colors.white
+                          : (isDark
+                              ? CoSpendColors.darkTextMuted
+                              : CoSpendColors.textMuted),
+                    ),
                   ),
                 ),
               ),
@@ -1757,45 +1829,55 @@ class HeroBudgetCard extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
-            // Animated Progress Bar
-            ClipRRect(
-              borderRadius: CoSpendRadii.pillRadius,
-              child: Stack(
-                children: [
-                  Container(
-                    height: 8,
-                    color: Colors.white.withValues(alpha: 0.15),
-                  ),
-                  TweenAnimationBuilder<double>(
-                    duration: const Duration(milliseconds: 600),
-                    curve: Curves.easeOutCubic,
-                    tween: Tween<double>(begin: 0, end: clampedRatio),
-                    builder: (context, value, child) => FractionallySizedBox(
-                      widthFactor: value,
-                      child: Container(
-                        height: 8,
-                        decoration: BoxDecoration(
-                          color: progressColor,
-                          borderRadius: CoSpendRadii.pillRadius,
+            Semantics(
+              label: 'Budget progress',
+              value: '${percentUsed.toStringAsFixed(0)}% used, $progressText',
+              child: ClipRRect(
+                borderRadius: CoSpendRadii.pillRadius,
+                child: Stack(
+                  children: [
+                    Container(
+                      height: 8,
+                      color: Colors.white.withValues(alpha: 0.15),
+                    ),
+                    TweenAnimationBuilder<double>(
+                      duration: isReducedMotionEnabled(context)
+                          ? Duration.zero
+                          : const Duration(milliseconds: 600),
+                      curve: Curves.easeOutCubic,
+                      tween: Tween<double>(begin: 0, end: clampedRatio),
+                      builder: (context, value, child) => FractionallySizedBox(
+                        widthFactor: value,
+                        child: Container(
+                          height: 8,
+                          decoration: BoxDecoration(
+                            color: progressColor,
+                            borderRadius: CoSpendRadii.pillRadius,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
             const SizedBox(height: 8),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  progressText,
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white.withValues(alpha: 0.85),
+                Expanded(
+                  child: Text(
+                    progressText,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white.withValues(alpha: 0.85),
+                    ),
                   ),
                 ),
+                const SizedBox(width: 8),
                 Text(
                   '${percentUsed.toStringAsFixed(0)}% used',
                   style: TextStyle(

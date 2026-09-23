@@ -1033,35 +1033,40 @@ class _DirectionalTransferCard extends StatelessWidget {
                               ],
                             ),
                           )
-                        : OutlinedButton.icon(
-                            key: const ValueKey('confirm_btn'),
-                            onPressed: _canUserConfirm
-                                ? () => _showConfirmationDialog(context)
-                                : null,
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: CoSpendColors.jadeGreen,
-                              side: BorderSide(
-                                color: _canUserConfirm
-                                    ? CoSpendColors.jadeGreen
-                                    : const Color(0x1F0A2542),
+                        : Semantics(
+                            button: true,
+                            label: 'Confirm settlement of ${Money.format(transfer.amountPaisa)} from $fromName to $toName',
+                            enabled: _canUserConfirm,
+                            child: OutlinedButton.icon(
+                              key: const ValueKey('confirm_btn'),
+                              onPressed: _canUserConfirm
+                                  ? () => _showConfirmationDialog(context)
+                                  : null,
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: CoSpendColors.jadeGreen,
+                                side: BorderSide(
+                                  color: _canUserConfirm
+                                      ? CoSpendColors.jadeGreen
+                                      : const Color(0x1F0A2542),
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 8,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
                               ),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 6,
+                              icon: const Icon(
+                                Icons.done_all_rounded,
+                                size: 14,
                               ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                            ),
-                            icon: const Icon(
-                              Icons.done_all_rounded,
-                              size: 14,
-                            ),
-                            label: const Text(
-                              'Confirm',
-                              style: TextStyle(
-                                fontSize: 11.5,
-                                fontWeight: FontWeight.w700,
+                              label: const Text(
+                                'Confirm',
+                                style: TextStyle(
+                                  fontSize: 11.5,
+                                  fontWeight: FontWeight.w700,
+                                ),
                               ),
                             ),
                           ),

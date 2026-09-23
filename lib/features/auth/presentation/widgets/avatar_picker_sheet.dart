@@ -138,6 +138,8 @@ class _AvatarPickerSheetState extends State<AvatarPickerSheet> {
                     ),
                   ),
                   IconButton(
+                    tooltip: 'Close',
+                    constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
                     onPressed: () => Navigator.of(context).pop(),
                     icon: const Icon(Icons.close_rounded),
                   ),
@@ -188,47 +190,59 @@ class _AvatarPickerSheetState extends State<AvatarPickerSheet> {
               Row(
                 children: [
                   Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: () => _pickImage(ImageSource.gallery),
-                      icon: const Icon(Icons.photo_library_rounded, size: 18),
-                      label: const Text('Gallery'),
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                    child: Semantics(
+                      button: true,
+                      label: 'Upload photo from gallery',
+                      child: OutlinedButton.icon(
+                        onPressed: () => _pickImage(ImageSource.gallery),
+                        icon: const Icon(Icons.photo_library_rounded, size: 18),
+                        label: const Text('Gallery'),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                         ),
                       ),
                     ),
                   ),
                   const SizedBox(width: 8),
                   Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: () => _pickImage(ImageSource.camera),
-                      icon: const Icon(Icons.camera_alt_rounded, size: 18),
-                      label: const Text('Camera'),
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                    child: Semantics(
+                      button: true,
+                      label: 'Take photo with camera',
+                      child: OutlinedButton.icon(
+                        onPressed: () => _pickImage(ImageSource.camera),
+                        icon: const Icon(Icons.camera_alt_rounded, size: 18),
+                        label: const Text('Camera'),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                         ),
                       ),
                     ),
                   ),
                   const SizedBox(width: 8),
-                  ActionChip(
-                    avatar: const Icon(Icons.text_fields_rounded, size: 15),
-                    label: const Text('Initials'),
-                    backgroundColor: _selected == null || _selected!.isEmpty
-                        ? scheme.primaryContainer
-                        : scheme.surfaceContainerHigh,
-                    side: BorderSide(
-                      color: _selected == null || _selected!.isEmpty
-                          ? scheme.primary
-                          : Colors.transparent,
+                  Semantics(
+                    button: true,
+                    label: 'Use initials as avatar',
+                    child: ActionChip(
+                      avatar: const Icon(Icons.text_fields_rounded, size: 15),
+                      label: const Text('Initials'),
+                      backgroundColor: _selected == null || _selected!.isEmpty
+                          ? scheme.primaryContainer
+                          : scheme.surfaceContainerHigh,
+                      side: BorderSide(
+                        color: _selected == null || _selected!.isEmpty
+                            ? scheme.primary
+                            : Colors.transparent,
+                      ),
+                      onPressed: () {
+                        Navigator.of(context).pop('');
+                      },
                     ),
-                    onPressed: () {
-                      Navigator.of(context).pop('');
-                    },
                   ),
                 ],
               ),
@@ -259,10 +273,14 @@ class _AvatarPickerSheetState extends State<AvatarPickerSheet> {
                   final preset = AppAvatars.presets[index];
                   final isSelected = _selected == preset.id;
 
-                  return GestureDetector(
-                    onTap: () {
-                      Navigator.of(context).pop(preset.id);
-                    },
+                  return Semantics(
+                    button: true,
+                    selected: isSelected,
+                    label: '${preset.label} avatar',
+                    child: GestureDetector(
+                      onTap: () {
+                        Navigator.of(context).pop(preset.id);
+                      },
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -309,9 +327,10 @@ class _AvatarPickerSheetState extends State<AvatarPickerSheet> {
                         ),
                       ],
                     ),
-                  );
-                },
-              ),
+                  ),
+                );
+              },
+            ),
               const SizedBox(height: 16),
 
               // Custom Photo URL Toggle

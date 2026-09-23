@@ -34,13 +34,19 @@ class _PasswordFieldState extends State<PasswordField> {
         labelText: widget.label,
         errorText: widget.errorText,
         prefixIcon: const Icon(Icons.lock_outline_rounded),
-        suffixIcon: IconButton(
-          onPressed: () => setState(() => _obscured = !_obscured),
-          tooltip: _obscured ? 'Show password' : 'Hide password',
-          icon: Icon(
-            _obscured
-                ? Icons.visibility_rounded
-                : Icons.visibility_off_rounded,
+        suffixIcon: Semantics(
+          button: true,
+          label: _obscured ? 'Show password' : 'Hide password',
+          child: IconButton(
+            onPressed: () => setState(() => _obscured = !_obscured),
+            tooltip: _obscured ? 'Show password' : 'Hide password',
+            constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+            icon: Icon(
+              _obscured
+                  ? Icons.visibility_rounded
+                  : Icons.visibility_off_rounded,
+              semanticLabel: _obscured ? 'Show password' : 'Hide password',
+            ),
           ),
         ),
       ),

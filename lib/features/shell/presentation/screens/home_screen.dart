@@ -210,32 +210,36 @@ class HomeScreen extends ConsumerWidget {
         ),
       ),
       // 6. Primary Add Expense Action
-      floatingActionButton: BouncingButton(
-        scale: 0.94,
-        onTap: () => context.push(Routes.addExpense),
-        child: Container(
-          height: 48,
-          padding: const EdgeInsets.symmetric(horizontal: 18),
-          decoration: BoxDecoration(
-            color: CoSpendColors.jadeGreen,
-            borderRadius: CoSpendRadii.pillRadius,
-            boxShadow: CoSpendShadows.floating,
-          ),
-          child: const Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.add_rounded, color: Colors.white, size: 20),
-              SizedBox(width: 8),
-              Text(
-                'Add Expense',
-                style: TextStyle(
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white,
-                  fontSize: 14,
-                  letterSpacing: 0.2,
+      floatingActionButton: Semantics(
+        button: true,
+        label: 'Add Expense',
+        child: BouncingButton(
+          scale: 0.94,
+          onTap: () => context.push(Routes.addExpense),
+          child: Container(
+            height: 48,
+            padding: const EdgeInsets.symmetric(horizontal: 18),
+            decoration: BoxDecoration(
+              color: CoSpendColors.jadeGreen,
+              borderRadius: CoSpendRadii.pillRadius,
+              boxShadow: CoSpendShadows.floating,
+            ),
+            child: const Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.add_rounded, color: Colors.white, size: 20),
+                SizedBox(width: 8),
+                Text(
+                  'Add Expense',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                    fontSize: 14,
+                    letterSpacing: 0.2,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -360,6 +364,7 @@ class _HomeHeader extends StatelessWidget {
               label: 'Notifications, $unreadNotifs unread',
               button: true,
               child: IconButton(
+                constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
                 icon: Badge(
                   isLabelVisible: unreadNotifs > 0,
                   backgroundColor: CoSpendColors.alertRed,
@@ -384,6 +389,7 @@ class _HomeHeader extends StatelessWidget {
                 onTap: onInviteTap,
                 borderRadius: CoSpendRadii.pillRadius,
                 child: Container(
+                  constraints: const BoxConstraints(minHeight: 44),
                   padding:
                       const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   decoration: BoxDecoration(
@@ -444,45 +450,49 @@ class _HomeHeader extends StatelessWidget {
             const SizedBox(width: 8),
 
             // Month Picker Pill
-            InkWell(
-              onTap: onPickMonth,
-              borderRadius: CoSpendRadii.pillRadius,
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: isDark
-                      ? CoSpendColors.darkCard
-                      : CoSpendColors.surfaceMuted,
-                  borderRadius: CoSpendRadii.pillRadius,
-                  border: Border.all(
+            Semantics(
+              button: true,
+              label: 'Select month, currently ${DateFormat('MMMM yyyy').format(selectedMonth)}',
+              child: InkWell(
+                onTap: onPickMonth,
+                borderRadius: CoSpendRadii.pillRadius,
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
                     color: isDark
-                        ? CoSpendColors.darkBorder
-                        : CoSpendColors.border,
-                    width: 0.8,
-                  ),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      DateFormat('MMM yyyy').format(selectedMonth),
-                      style: TextStyle(
-                        fontSize: 11.5,
-                        fontWeight: FontWeight.w700,
-                        color:
-                            isDark ? Colors.white : CoSpendColors.prussianBlue,
-                      ),
-                    ),
-                    const SizedBox(width: 3),
-                    Icon(
-                      Icons.keyboard_arrow_down_rounded,
-                      size: 15,
+                        ? CoSpendColors.darkCard
+                        : CoSpendColors.surfaceMuted,
+                    borderRadius: CoSpendRadii.pillRadius,
+                    border: Border.all(
                       color: isDark
-                          ? CoSpendColors.darkTextMuted
-                          : CoSpendColors.textMuted,
+                          ? CoSpendColors.darkBorder
+                          : CoSpendColors.border,
+                      width: 0.8,
                     ),
-                  ],
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        DateFormat('MMM yyyy').format(selectedMonth),
+                        style: TextStyle(
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w700,
+                          color:
+                              isDark ? Colors.white : CoSpendColors.prussianBlue,
+                        ),
+                      ),
+                      const SizedBox(width: 3),
+                      Icon(
+                        Icons.keyboard_arrow_down_rounded,
+                        size: 15,
+                        color: isDark
+                            ? CoSpendColors.darkTextMuted
+                            : CoSpendColors.textMuted,
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),

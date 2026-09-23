@@ -120,21 +120,26 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       appBar: AppBar(
         title: const Text('Edit Profile'),
         actions: [
-          TextButton(
-            onPressed: isSaving ? null : () => _save(user),
-            child: isSaving
-                ? const SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Text(
-                    'Save',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w800,
-                      color: CoSpendColors.jadeGreen,
+          Semantics(
+            button: true,
+            label: isSaving ? 'Saving profile changes' : 'Save profile changes',
+            enabled: !isSaving,
+            child: TextButton(
+              onPressed: isSaving ? null : () => _save(user),
+              child: isSaving
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Text(
+                      'Save',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w800,
+                        color: CoSpendColors.jadeGreen,
+                      ),
                     ),
-                  ),
+            ),
           ),
         ],
       ),
@@ -173,29 +178,33 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                     Positioned(
                       right: 0,
                       bottom: 0,
-                      child: GestureDetector(
-                        onTap: _pickAvatar,
-                        child: Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: CoSpendColors.jadeGreen,
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: isDark ? CoSpendColors.darkCard : Colors.white,
-                              width: 2.5,
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.25),
-                                blurRadius: 4,
-                                offset: const Offset(0, 2),
+                      child: Semantics(
+                        button: true,
+                        label: 'Change profile photo',
+                        child: GestureDetector(
+                          onTap: _pickAvatar,
+                          child: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: CoSpendColors.jadeGreen,
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: isDark ? CoSpendColors.darkCard : Colors.white,
+                                width: 2.5,
                               ),
-                            ],
-                          ),
-                          child: const Icon(
-                            Icons.camera_alt_rounded,
-                            size: 16,
-                            color: Colors.white,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.25),
+                                  blurRadius: 4,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: const Icon(
+                              Icons.camera_alt_rounded,
+                              size: 16,
+                              color: Colors.white,
+                            ),
                           ),
                         ),
                       ),

@@ -453,10 +453,15 @@ class _HouseholdHeroCard extends StatelessWidget {
                 ),
               ),
               if (onRename != null)
-                IconButton(
-                  tooltip: 'Rename Flat',
-                  icon: const Icon(Icons.edit_outlined, size: 18),
-                  onPressed: onRename,
+                Semantics(
+                  button: true,
+                  label: 'Rename Flat ${household.name}',
+                  child: IconButton(
+                    tooltip: 'Rename Flat',
+                    constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+                    icon: const Icon(Icons.edit_outlined, size: 18),
+                    onPressed: onRename,
+                  ),
                 ),
             ],
           ),
@@ -619,10 +624,15 @@ class _InviteCodeCard extends StatelessWidget {
                   ],
                 ),
               ),
-              IconButton.filledTonal(
-                tooltip: 'Copy Code',
-                icon: const Icon(Icons.copy_rounded, size: 18),
-                onPressed: onCopy,
+              Semantics(
+                button: true,
+                label: 'Copy invite code $inviteCode',
+                child: IconButton.filledTonal(
+                  tooltip: 'Copy Code',
+                  constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+                  icon: const Icon(Icons.copy_rounded, size: 18),
+                  onPressed: onCopy,
+                ),
               ),
             ],
           ),

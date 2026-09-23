@@ -622,6 +622,7 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
         backgroundColor: isDark ? CoSpendColors.darkCanvas : CoSpendColors.canvas,
         elevation: 0,
         leading: IconButton(
+          tooltip: 'Back',
           icon: Icon(
             Icons.arrow_back_rounded,
             color: isDark ? Colors.white : CoSpendColors.prussianBlue,
@@ -798,31 +799,34 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
               ),
               const SizedBox(width: 8),
               Expanded(
-                child: TextFormField(
-                  controller: _amountController,
-                  autofocus: true,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                  inputFormatters: [
-                    FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}')),
-                  ],
-                  style: TextStyle(
-                    fontSize: 42,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: -1.2,
-                    color: isDark ? Colors.white : CoSpendColors.prussianBlue,
-                  ),
-                  decoration: InputDecoration(
-                    hintText: '0',
-                    hintStyle: TextStyle(
+                child: Semantics(
+                  label: 'Expense amount in Pakistani Rupees',
+                  child: TextFormField(
+                    controller: _amountController,
+                    autofocus: true,
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    inputFormatters: [
+                      FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}')),
+                    ],
+                    style: TextStyle(
                       fontSize: 42,
                       fontWeight: FontWeight.w800,
-                      color: isDark ? CoSpendColors.darkBorder : const Color(0xFFD1D5DB),
+                      letterSpacing: -1.2,
+                      color: isDark ? Colors.white : CoSpendColors.prussianBlue,
                     ),
-                    border: InputBorder.none,
-                    isDense: true,
-                    contentPadding: EdgeInsets.zero,
+                    decoration: InputDecoration(
+                      hintText: '0',
+                      hintStyle: TextStyle(
+                        fontSize: 42,
+                        fontWeight: FontWeight.w800,
+                        color: isDark ? CoSpendColors.darkBorder : const Color(0xFFD1D5DB),
+                      ),
+                      border: InputBorder.none,
+                      isDense: true,
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                    validator: Validators.amount,
                   ),
-                  validator: Validators.amount,
                 ),
               ),
             ],
@@ -866,6 +870,8 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
           ),
           suffixIcon: _descriptionController.text.isNotEmpty
               ? IconButton(
+                  tooltip: 'Clear description',
+                  constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
                   icon: const Icon(Icons.clear_rounded, size: 18),
                   onPressed: () {
                     HapticFeedback.selectionClick();
@@ -898,65 +904,69 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
       children: [
         // Category Selector Card
         Expanded(
-          child: BouncingButton(
-            scale: 0.97,
-            onTap: _showCategoryPicker,
-            child: Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: isDark ? CoSpendColors.darkCard : Colors.white,
-                borderRadius: CoSpendRadii.cardRadius,
-                border: Border.all(
-                  color: isDark ? CoSpendColors.darkBorder : CoSpendColors.borderLight,
+          child: Semantics(
+            button: true,
+            label: 'Category: $activeCatLabel. Tap to change category',
+            child: BouncingButton(
+              scale: 0.97,
+              onTap: _showCategoryPicker,
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: isDark ? CoSpendColors.darkCard : Colors.white,
+                  borderRadius: CoSpendRadii.cardRadius,
+                  border: Border.all(
+                    color: isDark ? CoSpendColors.darkBorder : CoSpendColors.borderLight,
+                  ),
+                  boxShadow: !isDark ? CoSpendShadows.cardSubtle : null,
                 ),
-                boxShadow: !isDark ? CoSpendShadows.cardSubtle : null,
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 34,
-                    height: 34,
-                    decoration: BoxDecoration(
-                      color: activeCatColor.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(10),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 34,
+                      height: 34,
+                      decoration: BoxDecoration(
+                        color: activeCatColor.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      alignment: Alignment.center,
+                      child: Icon(activeCatIcon, color: activeCatColor, size: 18),
                     ),
-                    alignment: Alignment.center,
-                    child: Icon(activeCatIcon, color: activeCatColor, size: 18),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'CATEGORY',
-                          style: TextStyle(
-                            fontSize: 9.5,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: 0.6,
-                            color: isDark ? CoSpendColors.darkTextMuted : CoSpendColors.textMuted,
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'CATEGORY',
+                            style: TextStyle(
+                              fontSize: 9.5,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 0.6,
+                              color: isDark ? CoSpendColors.darkTextMuted : CoSpendColors.textMuted,
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          activeCatLabel,
-                          style: TextStyle(
-                            fontWeight: FontWeight.w700,
-                            fontSize: 13,
-                            color: isDark ? Colors.white : CoSpendColors.prussianBlue,
+                          const SizedBox(height: 2),
+                          Text(
+                            activeCatLabel,
+                            style: TextStyle(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 13,
+                              color: isDark ? Colors.white : CoSpendColors.prussianBlue,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                  Icon(
-                    Icons.keyboard_arrow_down_rounded,
-                    color: isDark ? CoSpendColors.darkTextMuted : const Color(0xFF9CA3AF),
-                    size: 20,
-                  ),
-                ],
+                    Icon(
+                      Icons.keyboard_arrow_down_rounded,
+                      color: isDark ? CoSpendColors.darkTextMuted : const Color(0xFF9CA3AF),
+                      size: 20,
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -965,65 +975,69 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
 
         // Date Selector Card
         Expanded(
-          child: BouncingButton(
-            scale: 0.97,
-            onTap: _pickDate,
-            child: Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: isDark ? CoSpendColors.darkCard : Colors.white,
-                borderRadius: CoSpendRadii.cardRadius,
-                border: Border.all(
-                  color: isDark ? CoSpendColors.darkBorder : CoSpendColors.borderLight,
+          child: Semantics(
+            button: true,
+            label: 'Expense date: ${DateFormat('dd MMMM yyyy').format(_spentAt)}. Tap to change date',
+            child: BouncingButton(
+              scale: 0.97,
+              onTap: _pickDate,
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: isDark ? CoSpendColors.darkCard : Colors.white,
+                  borderRadius: CoSpendRadii.cardRadius,
+                  border: Border.all(
+                    color: isDark ? CoSpendColors.darkBorder : CoSpendColors.borderLight,
+                  ),
+                  boxShadow: !isDark ? CoSpendShadows.cardSubtle : null,
                 ),
-                boxShadow: !isDark ? CoSpendShadows.cardSubtle : null,
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 34,
-                    height: 34,
-                    decoration: BoxDecoration(
-                      color: CoSpendColors.prussianBlue.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(10),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 34,
+                      height: 34,
+                      decoration: BoxDecoration(
+                        color: CoSpendColors.prussianBlue.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      alignment: Alignment.center,
+                      child: const Icon(Icons.calendar_today_rounded, color: CoSpendColors.prussianBlue, size: 17),
                     ),
-                    alignment: Alignment.center,
-                    child: const Icon(Icons.calendar_today_rounded, color: CoSpendColors.prussianBlue, size: 17),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'DATE',
-                          style: TextStyle(
-                            fontSize: 9.5,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: 0.6,
-                            color: isDark ? CoSpendColors.darkTextMuted : CoSpendColors.textMuted,
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'DATE',
+                            style: TextStyle(
+                              fontSize: 9.5,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 0.6,
+                              color: isDark ? CoSpendColors.darkTextMuted : CoSpendColors.textMuted,
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          DateFormat('dd MMM yyyy').format(_spentAt),
-                          style: TextStyle(
-                            fontWeight: FontWeight.w700,
-                            fontSize: 13,
-                            color: isDark ? Colors.white : CoSpendColors.prussianBlue,
+                          const SizedBox(height: 2),
+                          Text(
+                            DateFormat('dd MMM yyyy').format(_spentAt),
+                            style: TextStyle(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 13,
+                              color: isDark ? Colors.white : CoSpendColors.prussianBlue,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                  Icon(
-                    Icons.keyboard_arrow_down_rounded,
-                    color: isDark ? CoSpendColors.darkTextMuted : const Color(0xFF9CA3AF),
-                    size: 20,
-                  ),
-                ],
+                    Icon(
+                      Icons.keyboard_arrow_down_rounded,
+                      color: isDark ? CoSpendColors.darkTextMuted : const Color(0xFF9CA3AF),
+                      size: 20,
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -1135,10 +1149,13 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
   // ===========================================================================
 
   Widget _buildPaidByCard(bool isDark, HouseholdMember payer, List<HouseholdMember> members) {
-    return BouncingButton(
-      scale: 0.98,
-      onTap: () => _showPayerPicker(members),
-      child: Container(
+    return Semantics(
+      button: true,
+      label: 'Paid by: ${payer.name}. Tap to change payer',
+      child: BouncingButton(
+        scale: 0.98,
+        onTap: () => _showPayerPicker(members),
+        child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
           color: isDark ? CoSpendColors.darkCard : Colors.white,
@@ -1208,8 +1225,9 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
           ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   // ===========================================================================
   // 6. SPLIT HEADER
@@ -1594,12 +1612,16 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
   // ===========================================================================
 
   Widget _buildSaveButton(bool isFormValid, bool isSaving, List<HouseholdMember> members, bool isDark) {
-    return BouncingButton(
-      scale: 0.98,
-      child: SizedBox(
-        width: double.infinity,
-        height: 52,
-        child: ElevatedButton(
+    return Semantics(
+      button: true,
+      label: _isSuccess ? 'Expense added' : 'Save Expense',
+      enabled: isFormValid && !isSaving,
+      child: BouncingButton(
+        scale: 0.98,
+        child: SizedBox(
+          width: double.infinity,
+          height: 52,
+          child: ElevatedButton(
           key: const ValueKey('save_expense_button'),
           style: ElevatedButton.styleFrom(
             backgroundColor: _isSuccess ? CoSpendColors.jadeGreen : CoSpendColors.jadeGreen,
@@ -1654,8 +1676,9 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                     ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 }
 
 // =============================================================================

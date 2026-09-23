@@ -447,36 +447,41 @@ class _CategoryBudgetScreenState extends ConsumerState<CategoryBudgetScreen> {
                 ],
               ),
               child: SafeArea(
-                child: SizedBox(
-                  width: double.infinity,
-                  height: 52,
-                  child: ElevatedButton.icon(
-                    key: const Key('save_budgets_button'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: CoSpendColors.jadeGreen,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
+                child: Semantics(
+                  button: true,
+                  label: isSaving ? 'Saving Budgets...' : 'Save Budgets & Allocations',
+                  enabled: !isSaving,
+                  child: SizedBox(
+                    width: double.infinity,
+                    height: 52,
+                    child: ElevatedButton.icon(
+                      key: const Key('save_budgets_button'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: CoSpendColors.jadeGreen,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        elevation: 2,
                       ),
-                      elevation: 2,
-                    ),
-                    onPressed: isSaving ? null : _saveBudgets,
-                    icon: isSaving
-                        ? const SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          )
-                        : const Icon(Icons.check_circle_rounded, size: 20),
-                    label: Text(
-                      isSaving ? 'Saving Budgets...' : 'Save Budgets & Allocations',
-                      style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: -0.2,
+                      onPressed: isSaving ? null : _saveBudgets,
+                      icon: isSaving
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : const Icon(Icons.check_circle_rounded, size: 20),
+                      label: Text(
+                        isSaving ? 'Saving Budgets...' : 'Save Budgets & Allocations',
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: -0.2,
+                        ),
                       ),
                     ),
                   ),
@@ -957,56 +962,59 @@ class _CategoryBudgetCard extends StatelessWidget {
               if (isOwner)
                 SizedBox(
                   width: 130,
-                  child: TextField(
-                    controller: controller,
-                    keyboardType: TextInputType.number,
-                    inputFormatters: [
-                      FilteringTextInputFormatter.digitsOnly,
-                    ],
-                    textAlign: TextAlign.end,
-                    style: TextStyle(
-                      fontWeight: FontWeight.w800,
-                      fontSize: 15,
-                      color: isDark
-                          ? CoSpendColors.darkTextPrimary
-                          : CoSpendColors.prussianBlue,
-                    ),
-                    decoration: InputDecoration(
-                      prefixText: 'Rs. ',
-                      prefixStyle: TextStyle(
+                  child: Semantics(
+                    label: '${catItem.label} monthly budget in Rupees',
+                    child: TextField(
+                      controller: controller,
+                      keyboardType: TextInputType.number,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.digitsOnly,
+                      ],
+                      textAlign: TextAlign.end,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 15,
                         color: isDark
-                            ? CoSpendColors.darkTextSubtle
-                            : const Color(0xFF6B7280),
-                        fontWeight: FontWeight.w600,
-                        fontSize: 13,
+                            ? CoSpendColors.darkTextPrimary
+                            : CoSpendColors.prussianBlue,
                       ),
-                      hintText: '0',
-                      isDense: true,
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 9,
-                      ),
-                      filled: true,
-                      fillColor: isDark
-                          ? CoSpendColors.darkCardElevated
-                          : const Color(0xFFF7F8FA),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        borderSide: BorderSide(
+                      decoration: InputDecoration(
+                        prefixText: 'Rs. ',
+                        prefixStyle: TextStyle(
                           color: isDark
-                              ? CoSpendColors.darkBorder
-                              : const Color(0x1F0A2542),
+                              ? CoSpendColors.darkTextSubtle
+                              : const Color(0xFF6B7280),
+                          fontWeight: FontWeight.w600,
+                          fontSize: 13,
+                        ),
+                        hintText: '0',
+                        isDense: true,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 9,
+                        ),
+                        filled: true,
+                        fillColor: isDark
+                            ? CoSpendColors.darkCardElevated
+                            : const Color(0xFFF7F8FA),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: BorderSide(
+                            color: isDark
+                                ? CoSpendColors.darkBorder
+                                : const Color(0x1F0A2542),
+                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: const BorderSide(
+                            color: CoSpendColors.jadeGreen,
+                            width: 2,
+                          ),
                         ),
                       ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        borderSide: const BorderSide(
-                          color: CoSpendColors.jadeGreen,
-                          width: 2,
-                        ),
-                      ),
+                      onChanged: onAmountChanged,
                     ),
-                    onChanged: onAmountChanged,
                   ),
                 )
               else
@@ -1046,27 +1054,32 @@ class _CategoryBudgetCard extends StatelessWidget {
           const SizedBox(height: 12),
 
           // Animated Progress Bar
-          ClipRRect(
-            borderRadius: BorderRadius.circular(999),
-            child: Container(
-              height: 6,
-              width: double.infinity,
-              color: isDark
-                  ? Colors.white.withValues(alpha: 0.08)
-                  : const Color(0x140A2542),
-              alignment: Alignment.centerLeft,
-              child: AnimatedFractionallySizedBox(
-                duration: CoSpendAnimations.medium,
-                curve: CoSpendAnimations.curveDefault,
-                widthFactor: progress,
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: health == _BudgetHealthState.exceeded
-                        ? CoSpendColors.alertRed
-                        : (health == _BudgetHealthState.approaching
-                            ? CoSpendColors.warningAmber
-                            : CoSpendColors.jadeGreen),
-                    borderRadius: BorderRadius.circular(999),
+          Semantics(
+            label: '${catItem.label} budget progress: ${(progress * 100).toStringAsFixed(0)}% used, ${health.name}',
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(999),
+              child: Container(
+                height: 6,
+                width: double.infinity,
+                color: isDark
+                    ? Colors.white.withValues(alpha: 0.08)
+                    : const Color(0x140A2542),
+                alignment: Alignment.centerLeft,
+                child: AnimatedFractionallySizedBox(
+                  duration: isReducedMotionEnabled(context)
+                      ? Duration.zero
+                      : CoSpendAnimations.medium,
+                  curve: CoSpendAnimations.curveDefault,
+                  widthFactor: progress,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: health == _BudgetHealthState.exceeded
+                          ? CoSpendColors.alertRed
+                          : (health == _BudgetHealthState.approaching
+                              ? CoSpendColors.warningAmber
+                              : CoSpendColors.jadeGreen),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
                   ),
                 ),
               ),

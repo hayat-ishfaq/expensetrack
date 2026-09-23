@@ -125,7 +125,11 @@ void main() {
 
       // Tap on Sara to exclude her
       final saraFinder = find.text('Sara');
-      await tester.ensureVisible(saraFinder);
+      await tester.scrollUntilVisible(
+        saraFinder,
+        100,
+        scrollable: find.byType(Scrollable).first,
+      );
       await tester.pumpAndSettle();
       await tester.tap(saraFinder);
       await tester.pumpAndSettle();

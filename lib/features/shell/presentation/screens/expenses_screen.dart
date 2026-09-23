@@ -289,6 +289,8 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                           ),
                           suffixIcon: _searchController.text.isNotEmpty
                               ? IconButton(
+                                  tooltip: 'Clear search',
+                                  constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
                                   icon: const Icon(Icons.clear_rounded,
                                       size: 18),
                                   onPressed: () {
@@ -491,32 +493,36 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
         ),
       ),
       // 5. Primary Add Expense Action
-      floatingActionButton: BouncingButton(
-        scale: 0.94,
-        onTap: () => context.push(Routes.addExpense),
-        child: Container(
-          height: 48,
-          padding: const EdgeInsets.symmetric(horizontal: 18),
-          decoration: BoxDecoration(
-            color: CoSpendColors.jadeGreen,
-            borderRadius: CoSpendRadii.pillRadius,
-            boxShadow: CoSpendShadows.floating,
-          ),
-          child: const Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.add_rounded, color: Colors.white, size: 20),
-              SizedBox(width: 8),
-              Text(
-                'Add Expense',
-                style: TextStyle(
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white,
-                  fontSize: 14,
-                  letterSpacing: 0.2,
+      floatingActionButton: Semantics(
+        button: true,
+        label: 'Add Expense',
+        child: BouncingButton(
+          scale: 0.94,
+          onTap: () => context.push(Routes.addExpense),
+          child: Container(
+            height: 48,
+            padding: const EdgeInsets.symmetric(horizontal: 18),
+            decoration: BoxDecoration(
+              color: CoSpendColors.jadeGreen,
+              borderRadius: CoSpendRadii.pillRadius,
+              boxShadow: CoSpendShadows.floating,
+            ),
+            child: const Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.add_rounded, color: Colors.white, size: 20),
+                SizedBox(width: 8),
+                Text(
+                  'Add Expense',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                    fontSize: 14,
+                    letterSpacing: 0.2,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -657,10 +663,13 @@ class _TimelineExpenseTileState extends State<_TimelineExpenseTile> {
 
     final tile = Padding(
       padding: const EdgeInsets.only(bottom: 8),
-      child: BouncingButton(
-        scale: 0.98,
-        onTap: widget.onTap,
-        child: Container(
+      child: Semantics(
+        button: true,
+        label: '${exp.description}, ${Money.format(exp.amountPaisa)}, paid by ${widget.payerName} on ${_formatSpentTime(exp.spentAt)}',
+        child: BouncingButton(
+          scale: 0.98,
+          onTap: widget.onTap,
+          child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           decoration: BoxDecoration(
             color: isDark ? CoSpendColors.darkCard : CoSpendColors.white,
@@ -756,7 +765,8 @@ class _TimelineExpenseTileState extends State<_TimelineExpenseTile> {
           ),
         ),
       ),
-    );
+    ),
+  );
 
     // Only animate entrance for newly inserted items or initial render;
     // do not restart when Firestore emits a normal update!

@@ -24,6 +24,13 @@ abstract final class CoSpendMotion {
   static const Curve subtleSpring = Curves.easeOutBack;
 }
 
+/// Helper function to check if the user has requested reduced motion.
+bool isReducedMotionEnabled(BuildContext context) {
+  final mediaQuery = MediaQuery.maybeOf(context);
+  return (mediaQuery?.disableAnimations ?? false) ||
+      (mediaQuery?.accessibleNavigation ?? false);
+}
+
 // =============================================================================
 // 1. SCREEN TRANSITIONS (GoRouter CustomTransitionPage)
 // =============================================================================
@@ -34,6 +41,16 @@ CustomTransitionPage<T> coSpendPageTransition<T>({
   required GoRouterState state,
   required Widget child,
 }) {
+  if (isReducedMotionEnabled(context)) {
+    return CustomTransitionPage<T>(
+      key: state.pageKey,
+      child: child,
+      transitionDuration: Duration.zero,
+      reverseTransitionDuration: Duration.zero,
+      transitionsBuilder: (context, animation, secondaryAnimation, child) => child,
+    );
+  }
+
   return CustomTransitionPage<T>(
     key: state.pageKey,
     child: child,
@@ -130,6 +147,9 @@ class _CoSpendFadeSlideState extends State<CoSpendFadeSlide>
 
   @override
   Widget build(BuildContext context) {
+    if (isReducedMotionEnabled(context)) {
+      return widget.child;
+    }
     return AnimatedBuilder(
       animation: _controller,
       builder: (context, child) {
@@ -161,6 +181,13 @@ class CoSpendStaggeredList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (isReducedMotionEnabled(context)) {
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: children,
+      );
+    }
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -215,6 +242,9 @@ class _CoSpendAnimatedNumberState
 
   @override
   Widget build(BuildContext context) {
+    if (isReducedMotionEnabled(context)) {
+      return widget.builder(context, widget.value);
+    }
     final animatedValue = _numTween?.evaluate(animation) ?? widget.value;
     return widget.builder(context, animatedValue);
   }
@@ -237,6 +267,9 @@ class CoSpendFadeSwitcher extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (isReducedMotionEnabled(context)) {
+      return child;
+    }
     return AnimatedSwitcher(
       duration: duration,
       switchInCurve: CoSpendMotion.entranceCurve,
@@ -300,22 +333,28 @@ class _CoSpendSuccessCheckmarkState extends State<CoSpendSuccessCheckmark>
 
   @override
   Widget build(BuildContext context) {
+    final checkmark = Container(
+      width: widget.size,
+      height: widget.size,
+      decoration: BoxDecoration(
+        color: widget.color.withValues(alpha: 0.14),
+        shape: BoxShape.circle,
+      ),
+      alignment: Alignment.center,
+      child: Icon(
+        Icons.check_rounded,
+        color: widget.color,
+        size: widget.size * 0.58,
+      ),
+    );
+
+    if (isReducedMotionEnabled(context)) {
+      return checkmark;
+    }
+
     return ScaleTransition(
       scale: _scaleAnimation,
-      child: Container(
-        width: widget.size,
-        height: widget.size,
-        decoration: BoxDecoration(
-          color: widget.color.withValues(alpha: 0.14),
-          shape: BoxShape.circle,
-        ),
-        alignment: Alignment.center,
-        child: Icon(
-          Icons.check_rounded,
-          color: widget.color,
-          size: widget.size * 0.58,
-        ),
-      ),
+      child: checkmark,
     );
   }
 }
@@ -393,6 +432,10 @@ class _CoSpendShakeState extends State<CoSpendShake>
 
   @override
   Widget build(BuildContext context) {
+    if (isReducedMotionEnabled(context)) {
+      return widget.child;
+    }
+
     return AnimatedBuilder(
       animation: _controller,
       builder: (context, child) {
@@ -422,6 +465,10 @@ Widget coSpendListItemTransition(
   Widget child,
   Animation<double> animation,
 ) {
+  if (isReducedMotionEnabled(context)) {
+    return child;
+  }
+
   final curved = CurvedAnimation(
     parent: animation,
     curve: CoSpendMotion.entranceCurve,
