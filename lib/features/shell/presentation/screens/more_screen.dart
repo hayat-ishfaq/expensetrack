@@ -275,6 +275,24 @@ class MoreScreen extends ConsumerWidget {
                   const Divider(height: 1, indent: 56, endIndent: 16, color: Color(0x0F0A2542)),
                   ListTile(
                     leading: const TintedIcon(
+                      icon: Icons.swap_horiz_rounded,
+                      color: CoSpendColors.prussianBlue,
+                      size: 20,
+                    ),
+                    title: const Text(
+                      'Settle Up & Reconciliation',
+                      style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                    ),
+                    subtitle: const Text(
+                      'Who owes whom, optimized transfers',
+                      style: TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
+                    ),
+                    trailing: const Icon(Icons.chevron_right_rounded, color: Color(0xFF9CA3AF)),
+                    onTap: () => context.push(Routes.settlementHistory),
+                  ),
+                  const Divider(height: 1, indent: 56, endIndent: 16, color: Color(0x0F0A2542)),
+                  ListTile(
+                    leading: const TintedIcon(
                       icon: Icons.group_add_rounded,
                       color: CoSpendColors.prussianBlue,
                       size: 20,

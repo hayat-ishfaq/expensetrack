@@ -23,6 +23,7 @@ import '../../features/shell/presentation/screens/app_shell_screen.dart';
 import '../../features/shell/presentation/screens/expenses_screen.dart';
 import '../../features/shell/presentation/screens/home_screen.dart';
 import '../../features/shell/presentation/screens/more_screen.dart';
+import '../../features/shell/presentation/screens/settle_up_screen.dart';
 import 'not_found_screen.dart';
 import 'routes.dart';
 
@@ -140,6 +141,15 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: Routes.settle,
         redirect: (context, state) => Routes.categoryBudgets,
+      ),
+      GoRoute(
+        path: Routes.settlementHistory,
+        name: 'settlements',
+        pageBuilder: (context, state) => coSpendPageTransition(
+          context: context,
+          state: state,
+          child: const SettleUpScreen(),
+        ),
       ),
       GoRoute(
         path: Routes.addExpense,
