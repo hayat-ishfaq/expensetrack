@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/theme/design_system.dart';
 import '../../../../core/utils/money.dart';
 import '../providers/notification_providers.dart';
 
@@ -27,8 +28,7 @@ class NotificationsSheet extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final notificationsAsync = ref.watch(householdNotificationsProvider);
 
     return Container(
@@ -36,7 +36,7 @@ class NotificationsSheet extends ConsumerWidget {
         maxHeight: MediaQuery.of(context).size.height * 0.75,
       ),
       decoration: BoxDecoration(
-        color: scheme.surface,
+        color: isDark ? CoSpendColors.darkCard : CoSpendColors.white,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: Column(
@@ -45,31 +45,27 @@ class NotificationsSheet extends ConsumerWidget {
           Center(
             child: Container(
               margin: const EdgeInsets.only(top: 12, bottom: 8),
-              width: 40,
+              width: 36,
               height: 4,
               decoration: BoxDecoration(
-                color: scheme.outlineVariant.withValues(alpha: 0.5),
+                color: isDark
+                    ? CoSpendColors.darkBorder
+                    : CoSpendColors.border.withValues(alpha: 0.8),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
           ),
 
-          // Header
+          // Header with Jade Green tint circle
           Padding(
-            padding: const EdgeInsets.fromLTRB(20, 8, 20, 14),
+            padding: const EdgeInsets.fromLTRB(20, 8, 16, 14),
             child: Row(
               children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: scheme.primaryContainer,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    Icons.notifications_active_rounded,
-                    size: 20,
-                    color: scheme.onPrimaryContainer,
-                  ),
+                const TintedIcon(
+                  icon: Icons.notifications_active_rounded,
+                  color: CoSpendColors.jadeGreen,
+                  size: 20,
+                  containerSize: 40,
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -78,27 +74,34 @@ class NotificationsSheet extends ConsumerWidget {
                     children: [
                       Text(
                         'Flat Activity & Alerts',
-                        style: theme.textTheme.titleMedium?.copyWith(
+                        style: TextStyle(
                           fontWeight: FontWeight.w800,
+                          fontSize: 16,
+                          letterSpacing: -0.3,
+                          color: isDark ? Colors.white : CoSpendColors.prussianBlue,
                         ),
                       ),
                       Text(
                         'Recent spending updates from roommates',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: scheme.onSurfaceVariant,
+                        style: TextStyle(
+                          color: isDark ? CoSpendColors.darkTextMuted : CoSpendColors.textMuted,
+                          fontSize: 12,
                         ),
                       ),
                     ],
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.close_rounded),
+                  icon: const Icon(Icons.close_rounded, size: 20),
                   onPressed: () => Navigator.pop(context),
                 ),
               ],
             ),
           ),
-          const Divider(height: 1),
+          Divider(
+            height: 1,
+            color: isDark ? CoSpendColors.darkBorder : CoSpendColors.borderLight,
+          ),
 
           // Notification List
           Expanded(
@@ -117,24 +120,37 @@ class NotificationsSheet extends ConsumerWidget {
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(
-                            Icons.notifications_none_rounded,
-                            size: 48,
-                            color: scheme.outlineVariant,
-                          ),
-                          const SizedBox(height: 12),
-                          Text(
-                            'No notifications yet',
-                            style: theme.textTheme.titleSmall?.copyWith(
-                              fontWeight: FontWeight.w700,
+                          Container(
+                            width: 64,
+                            height: 64,
+                            decoration: BoxDecoration(
+                              color: CoSpendColors.prussianBlue.withValues(alpha: 0.08),
+                              shape: BoxShape.circle,
+                            ),
+                            alignment: Alignment.center,
+                            child: const Icon(
+                              Icons.notifications_none_rounded,
+                              size: 32,
+                              color: CoSpendColors.prussianBlue,
                             ),
                           ),
-                          const SizedBox(height: 4),
+                          const SizedBox(height: 16),
                           Text(
-                            'When anyone logs an expense, real-time updates will appear here.',
+                            'All caught up!',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w800,
+                              fontSize: 16,
+                              color: isDark ? Colors.white : CoSpendColors.prussianBlue,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            'When roommates log expenses or budget alerts trigger, you\'ll see them right here.',
                             textAlign: TextAlign.center,
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: scheme.onSurfaceVariant,
+                            style: TextStyle(
+                              color: isDark ? CoSpendColors.darkTextMuted : CoSpendColors.textMuted,
+                              fontSize: 13,
+                              height: 1.4,
                             ),
                           ),
                         ],
@@ -152,27 +168,28 @@ class NotificationsSheet extends ConsumerWidget {
                     return Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: scheme.surfaceContainerLow,
-                        borderRadius: BorderRadius.circular(14),
+                        color: isDark ? CoSpendColors.darkCanvas : CoSpendColors.canvas,
+                        borderRadius: CoSpendRadii.cardRadius,
                         border: Border.all(
-                          color: scheme.outlineVariant.withValues(alpha: 0.3),
+                          color: isDark ? CoSpendColors.darkBorder : CoSpendColors.borderLight,
                         ),
                       ),
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          CircleAvatar(
-                            radius: 18,
-                            backgroundColor: scheme.primary.withValues(alpha: 0.15),
-                            child: Text(
-                              item.payerName.isNotEmpty
-                                  ? item.payerName[0].toUpperCase()
-                                  : '?',
-                              style: TextStyle(
-                                color: scheme.primary,
-                                fontWeight: FontWeight.w700,
-                                fontSize: 13,
-                              ),
+                          Container(
+                            margin: const EdgeInsets.only(top: 2),
+                            width: 32,
+                            height: 32,
+                            decoration: BoxDecoration(
+                              color: CoSpendColors.jadeGreen.withValues(alpha: 0.12),
+                              shape: BoxShape.circle,
+                            ),
+                            alignment: Alignment.center,
+                            child: const Icon(
+                              Icons.receipt_rounded,
+                              size: 16,
+                              color: CoSpendColors.jadeGreen,
                             ),
                           ),
                           const SizedBox(width: 12),
@@ -185,32 +202,51 @@ class NotificationsSheet extends ConsumerWidget {
                                   children: [
                                     Expanded(
                                       child: Text(
-                                        '${item.payerName} spent ${Money.format(item.amountPaisa)}',
-                                        style: const TextStyle(
+                                        item.title,
+                                        style: TextStyle(
                                           fontWeight: FontWeight.w700,
-                                          fontSize: 13,
+                                          fontSize: 13.5,
+                                          color: isDark ? Colors.white : CoSpendColors.prussianBlue,
                                         ),
+                                        overflow: TextOverflow.ellipsis,
                                       ),
                                     ),
                                     Text(
                                       _formatTimeAgo(item.createdAt),
                                       style: TextStyle(
-                                        color: scheme.onSurfaceVariant,
+                                        color: isDark ? CoSpendColors.darkTextMuted : CoSpendColors.textSubtle,
                                         fontSize: 11,
                                       ),
                                     ),
                                   ],
                                 ),
-                                const SizedBox(height: 2),
+                                const SizedBox(height: 3),
                                 Text(
-                                  item.subcategory != null && item.subcategory!.isNotEmpty
-                                      ? '${item.category} • ${item.subcategory}'
-                                      : item.category,
+                                  item.body,
                                   style: TextStyle(
-                                    fontSize: 12,
-                                    color: scheme.onSurfaceVariant,
+                                    fontSize: 12.5,
+                                    color: isDark ? CoSpendColors.darkTextMuted : CoSpendColors.textMuted,
+                                    height: 1.3,
                                   ),
                                 ),
+                                if (item.amountPaisa > 0) ...[
+                                  const SizedBox(height: 6),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: CoSpendColors.jadeGreen.withValues(alpha: 0.1),
+                                      borderRadius: CoSpendRadii.pillRadius,
+                                    ),
+                                    child: Text(
+                                      Money.format(item.amountPaisa),
+                                      style: const TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w800,
+                                        color: CoSpendColors.jadeGreen,
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ],
                             ),
                           ),

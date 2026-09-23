@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/routes.dart';
 import '../../../../core/constants/app_constants.dart';
+import '../../../../core/theme/design_system.dart';
 import '../../../../core/theme/theme_controller.dart';
 import '../../../../core/utils/money.dart';
 import '../../../../core/utils/validators.dart';
@@ -121,134 +122,125 @@ class MoreScreen extends ConsumerWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         children: [
           // Profile Card
-          Card(
-            elevation: 0,
-            color: scheme.surfaceContainerLow,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(18),
-              side: BorderSide(
-                color: scheme.outlineVariant.withValues(alpha: 0.4),
-              ),
-            ),
-            child: InkWell(
-              onTap: () => context.push(Routes.profile),
-              borderRadius: BorderRadius.circular(18),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                child: Row(
-                  children: [
-                    AppAvatar(
-                      name: user?.name ?? '',
-                      photoUrl: user?.photoUrl,
-                      size: 48,
+          CoSpendCard(
+            onTap: () => context.push(Routes.profile),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(2),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: CoSpendColors.prussianBlue.withValues(alpha: 0.18),
+                      width: 2,
                     ),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                  ),
+                  child: AppAvatar(
+                    name: user?.name ?? '',
+                    photoUrl: user?.photoUrl,
+                    size: 46,
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
                         children: [
-                          Row(
-                            children: [
-                              Flexible(
-                                child: Text(
-                                  user?.name ?? 'CoSpend member',
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.w700,
-                                    fontSize: 16,
-                                  ),
-                                  overflow: TextOverflow.ellipsis,
-                                ),
+                          Flexible(
+                            child: Text(
+                              user?.name ?? 'CoSpend member',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w700,
+                                fontSize: 16,
+                                color: CoSpendColors.prussianBlue,
                               ),
-                              if (isOwner) ...[
-                                const SizedBox(width: 8),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                    vertical: 2,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: scheme.secondaryContainer,
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Text(
-                                    'Owner',
-                                    style: theme.textTheme.labelSmall?.copyWith(
-                                      color: scheme.onSecondaryContainer,
-                                      fontWeight: FontWeight.w700,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ],
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            user?.email ?? '',
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: scheme.onSurfaceVariant,
+                              overflow: TextOverflow.ellipsis,
                             ),
-                            overflow: TextOverflow.ellipsis,
                           ),
-                          if (user?.phone != null && user!.phone!.isNotEmpty) ...[
-                            const SizedBox(height: 2),
-                            Text(
-                              '📞 ${user.phone}',
-                              style: theme.textTheme.labelSmall?.copyWith(
-                                color: scheme.primary,
-                                fontWeight: FontWeight.w600,
+                          if (isOwner) ...[
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: CoSpendColors.prussianBlue.withValues(alpha: 0.08),
+                                borderRadius: BorderRadius.circular(999),
+                              ),
+                              child: const Text(
+                                'Owner',
+                                style: TextStyle(
+                                  color: CoSpendColors.prussianBlue,
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 10,
+                                ),
                               ),
                             ),
                           ],
                         ],
                       ),
-                    ),
-                    const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: scheme.surfaceContainerHigh,
-                        shape: BoxShape.circle,
+                      const SizedBox(height: 2),
+                      Text(
+                        user?.email ?? '',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Color(0xFF6B7280),
+                        ),
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      child: Icon(
-                        Icons.edit_outlined,
-                        size: 16,
-                        color: scheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
+                      if (user?.phone != null && user!.phone!.isNotEmpty) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          '📞 ${user.phone}',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: CoSpendColors.jadeGreen,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
                 ),
-              ),
+                const SizedBox(width: 8),
+                const TintedIcon(
+                  icon: Icons.edit_outlined,
+                  size: 16,
+                  color: CoSpendColors.prussianBlue,
+                  containerSize: 32,
+                ),
+              ],
             ),
           ),
           const SizedBox(height: 16),
 
           // Flat & Budget Section
           if (household != null) ...[
-            Text(
-              'FLAT SETTINGS',
-              style: theme.textTheme.labelSmall?.copyWith(
-                fontWeight: FontWeight.w700,
-                letterSpacing: 0.6,
-                color: scheme.onSurfaceVariant,
-              ),
-            ),
+            const SectionLabel('FLAT SETTINGS'),
             const SizedBox(height: 6),
-            Card(
-              elevation: 0,
-              color: scheme.surfaceContainerLow,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(18),
-                side: BorderSide(
-                  color: scheme.outlineVariant.withValues(alpha: 0.4),
-                ),
-              ),
+            CoSpendCard(
+              padding: EdgeInsets.zero,
               child: Column(
                 children: [
                   ListTile(
-                    leading: const Icon(Icons.home_work_rounded),
-                    title: const Text('Flat name'),
-                    subtitle: Text(household.name),
-                    trailing: const Icon(Icons.edit_outlined, size: 18),
+                    leading: const TintedIcon(
+                      icon: Icons.home_work_rounded,
+                      color: CoSpendColors.prussianBlue,
+                      size: 20,
+                    ),
+                    title: const Text(
+                      'Flat name',
+                      style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                    ),
+                    subtitle: Text(
+                      household.name,
+                      style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
+                    ),
+                    trailing: const Icon(Icons.edit_outlined, size: 18, color: Color(0xFF9CA3AF)),
                     onTap: () => _renameFlat(
                       context,
                       ref,
@@ -256,10 +248,17 @@ class MoreScreen extends ConsumerWidget {
                       household.name,
                     ),
                   ),
-                  const Divider(height: 1),
+                  const Divider(height: 1, indent: 56, endIndent: 16, color: Color(0x0F0A2542)),
                   ListTile(
-                    leading: const Icon(Icons.pie_chart_rounded),
-                    title: const Text('Category Budgets'),
+                    leading: const TintedIcon(
+                      icon: Icons.pie_chart_rounded,
+                      color: CoSpendColors.prussianBlue,
+                      size: 20,
+                    ),
+                    title: const Text(
+                      'Category Budgets',
+                      style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                    ),
                     subtitle: Text(
                       isOwner
                           ? (household.effectiveTotalBudgetPaisa > 0
@@ -268,33 +267,62 @@ class MoreScreen extends ConsumerWidget {
                           : (household.effectiveTotalBudgetPaisa > 0
                               ? 'View limits: ${Money.format(household.effectiveTotalBudgetPaisa)} target'
                               : 'View limits (Managed by flat owner)'),
+                      style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
                     ),
-                    trailing: const Icon(Icons.chevron_right_rounded),
+                    trailing: const Icon(Icons.chevron_right_rounded, color: Color(0xFF9CA3AF)),
                     onTap: () => context.push(Routes.categoryBudgets),
                   ),
-                  const Divider(height: 1),
+                  const Divider(height: 1, indent: 56, endIndent: 16, color: Color(0x0F0A2542)),
                   ListTile(
-                    leading: const Icon(Icons.group_add_rounded),
-                    title: const Text('Join another flat'),
-                    subtitle: const Text('Enter an invite code from roommates'),
-                    trailing: const Icon(Icons.chevron_right_rounded),
+                    leading: const TintedIcon(
+                      icon: Icons.group_add_rounded,
+                      color: CoSpendColors.prussianBlue,
+                      size: 20,
+                    ),
+                    title: const Text(
+                      'Join another flat',
+                      style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                    ),
+                    subtitle: const Text(
+                      'Enter an invite code from roommates',
+                      style: TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
+                    ),
+                    trailing: const Icon(Icons.chevron_right_rounded, color: Color(0xFF9CA3AF)),
                     onTap: () => context.push(Routes.joinFlat),
                   ),
-                  const Divider(height: 1),
+                  const Divider(height: 1, indent: 56, endIndent: 16, color: Color(0x0F0A2542)),
                   ListTile(
-                    leading: const Icon(Icons.share_rounded),
-                    title: const Text('Invite flatmates'),
-                    subtitle: Text('Invite code: ${household.inviteCode}'),
-                    trailing: const Icon(Icons.chevron_right_rounded, size: 18),
+                    leading: const TintedIcon(
+                      icon: Icons.share_rounded,
+                      color: CoSpendColors.prussianBlue,
+                      size: 20,
+                    ),
+                    title: const Text(
+                      'Invite flatmates',
+                      style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                    ),
+                    subtitle: Text(
+                      'Invite code: ${household.inviteCode}',
+                      style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
+                    ),
+                    trailing: const Icon(Icons.chevron_right_rounded, size: 18, color: Color(0xFF9CA3AF)),
                     onTap: () =>
                         InviteMembersSheet.show(context, household),
                   ),
-                  const Divider(height: 1),
+                  const Divider(height: 1, indent: 56, endIndent: 16, color: Color(0x0F0A2542)),
                   ListTile(
-                    leading: Icon(Icons.logout_rounded, color: scheme.error),
-                    title: Text(
+                    leading: const TintedIcon(
+                      icon: Icons.logout_rounded,
+                      color: CoSpendColors.alertRed,
+                      size: 20,
+                    ),
+                    title: const Text(
                       'Leave flat',
-                      style: TextStyle(color: scheme.error),
+                      style: TextStyle(
+                        color: CoSpendColors.alertRed,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                      ),
                     ),
                     onTap: () => _leaveFlat(context, ref),
                   ),
@@ -305,82 +333,100 @@ class MoreScreen extends ConsumerWidget {
           ],
 
           // Appearance Section
-          Text(
-            'APPEARANCE',
-            style: theme.textTheme.labelSmall?.copyWith(
-              fontWeight: FontWeight.w700,
-              letterSpacing: 0.6,
-              color: scheme.onSurfaceVariant,
-            ),
-          ),
+          const SectionLabel('APPEARANCE'),
           const SizedBox(height: 6),
-          Card(
-            elevation: 0,
-            color: scheme.surfaceContainerLow,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(18),
-              side: BorderSide(
-                color: scheme.outlineVariant.withValues(alpha: 0.4),
-              ),
-            ),
-            child: RadioGroup<ThemeMode>(
-              groupValue: themeMode,
-              onChanged: (selected) {
-                if (selected != null) {
-                  ref.read(themeModeProvider.notifier).setMode(selected);
-                }
-              },
-              child: Column(
-                children: [
-                  for (final mode in ThemeMode.values)
-                    RadioListTile<ThemeMode>(
-                      value: mode,
-                      title: Text(_themeModeLabel(mode)),
-                      dense: true,
+          CoSpendCard(
+            padding: const EdgeInsets.symmetric(vertical: 4),
+            child: Column(
+              children: [
+                for (int i = 0; i < ThemeMode.values.length; i++) ...[
+                  if (i > 0)
+                    const Divider(height: 1, indent: 16, endIndent: 16, color: Color(0x0F0A2542)),
+                  InkWell(
+                    onTap: () => ref.read(themeModeProvider.notifier).setMode(ThemeMode.values[i]),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      child: Row(
+                        children: [
+                          Text(
+                            _themeModeLabel(ThemeMode.values[i]),
+                            style: TextStyle(
+                              fontWeight: themeMode == ThemeMode.values[i] ? FontWeight.w700 : FontWeight.w500,
+                              fontSize: 14,
+                              color: themeMode == ThemeMode.values[i] ? CoSpendColors.prussianBlue : const Color(0xFF374151),
+                            ),
+                          ),
+                          const Spacer(),
+                          Container(
+                            width: 20,
+                            height: 20,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: themeMode == ThemeMode.values[i] ? CoSpendColors.jadeGreen : const Color(0xFFD1D5DB),
+                                width: 2,
+                              ),
+                            ),
+                            alignment: Alignment.center,
+                            child: themeMode == ThemeMode.values[i]
+                                ? Container(
+                                    width: 10,
+                                    height: 10,
+                                    decoration: const BoxDecoration(
+                                      color: CoSpendColors.jadeGreen,
+                                      shape: BoxShape.circle,
+                                    ),
+                                  )
+                                : null,
+                          ),
+                        ],
+                      ),
                     ),
+                  ),
                 ],
-              ),
+              ],
             ),
           ),
           const SizedBox(height: 16),
 
           // App Tour / Onboarding
-          Card(
-            elevation: 0,
-            color: scheme.surfaceContainerLow,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(18),
-              side: BorderSide(
-                color: scheme.outlineVariant.withValues(alpha: 0.4),
-              ),
-            ),
+          CoSpendCard(
+            padding: EdgeInsets.zero,
             child: ListTile(
-              leading: const Icon(Icons.auto_stories_rounded),
-              title: const Text('App Tour & Features'),
-              subtitle: const Text('Replay animated onboarding introduction'),
-              trailing: const Icon(Icons.chevron_right_rounded),
+              leading: const TintedIcon(
+                icon: Icons.auto_stories_rounded,
+                color: CoSpendColors.prussianBlue,
+                size: 20,
+              ),
+              title: const Text(
+                'App Tour & Features',
+                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+              ),
+              subtitle: const Text(
+                'Replay animated onboarding introduction',
+                style: TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
+              ),
+              trailing: const Icon(Icons.chevron_right_rounded, color: Color(0xFF9CA3AF)),
               onTap: () => context.push(Routes.onboarding),
             ),
           ),
           const SizedBox(height: 12),
 
           // Account Actions
-          Card(
-            elevation: 0,
-            color: scheme.surfaceContainerLow,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(18),
-              side: BorderSide(
-                color: scheme.outlineVariant.withValues(alpha: 0.4),
-              ),
-            ),
+          CoSpendCard(
+            padding: EdgeInsets.zero,
             child: ListTile(
-              leading: Icon(Icons.power_settings_new_rounded, color: scheme.error),
-              title: Text(
+              leading: const TintedIcon(
+                icon: Icons.power_settings_new_rounded,
+                color: CoSpendColors.alertRed,
+                size: 20,
+              ),
+              title: const Text(
                 'Sign out',
                 style: TextStyle(
-                  color: scheme.error,
+                  color: CoSpendColors.alertRed,
                   fontWeight: FontWeight.w600,
+                  fontSize: 14,
                 ),
               ),
               onTap: () => _confirmSignOut(context, ref),

@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../../../../app/router/routes.dart';
 import '../../../../core/errors/app_exception.dart';
 import '../../../../core/errors/firebase_error_mapper.dart';
+import '../../../../core/theme/design_system.dart';
 import '../../../../core/utils/money.dart';
 import '../../../../shared/widgets/app_avatar.dart';
 import '../../../../shared/widgets/app_snackbar.dart';
@@ -86,52 +87,79 @@ class HomeScreen extends ConsumerWidget {
       }
     });
 
-    final userName = session?.user?.name.split(' ').first ?? 'Roommate';
+    final userName = session?.user?.name ?? 'Roommate';
+    final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
       appBar: AppBar(
         titleSpacing: 8,
         leading: Padding(
-          padding: const EdgeInsets.only(left: 12),
+          padding: const EdgeInsets.only(left: 14),
           child: Center(
-            child: AppAvatar(
-              name: session?.user?.name ?? '',
-              photoUrl: session?.user?.photoUrl,
-              size: 38,
-              onTap: () => context.push(Routes.profile),
+            child: Container(
+              padding: const EdgeInsets.all(2),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: CoSpendColors.prussianBlue.withValues(alpha: 0.25),
+                  width: 2,
+                ),
+              ),
+              child: AppAvatar(
+                name: userName,
+                photoUrl: session?.user?.photoUrl,
+                size: 36,
+                onTap: () => context.push(Routes.profile),
+              ),
             ),
           ),
         ),
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
             Text(
               '${_greeting()}, $userName 👋',
-              style: theme.textTheme.titleMedium?.copyWith(
+              style: TextStyle(
                 fontWeight: FontWeight.w800,
+                fontSize: 16,
                 letterSpacing: -0.3,
+                color: isDark ? Colors.white : CoSpendColors.prussianBlue,
               ),
             ),
+            const SizedBox(height: 2),
             InkWell(
               onTap: () => _pickMonth(context, ref),
-              borderRadius: BorderRadius.circular(6),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    DateFormat('MMMM yyyy').format(selectedMonth),
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: scheme.primary,
-                      fontWeight: FontWeight.w700,
+              borderRadius: CoSpendRadii.pillRadius,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: isDark ? CoSpendColors.darkCard : CoSpendColors.surfaceMuted,
+                  borderRadius: CoSpendRadii.pillRadius,
+                  border: Border.all(
+                    color: isDark ? CoSpendColors.darkBorder : CoSpendColors.border,
+                    width: 0.8,
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      DateFormat('MMMM yyyy').format(selectedMonth),
+                      style: const TextStyle(
+                        fontSize: 11,
+                        color: CoSpendColors.jadeGreen,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 4),
-                  Icon(
-                    Icons.arrow_drop_down_rounded,
-                    size: 18,
-                    color: scheme.primary,
-                  ),
-                ],
+                    const SizedBox(width: 2),
+                    const Icon(
+                      Icons.keyboard_arrow_down_rounded,
+                      size: 15,
+                      color: CoSpendColors.jadeGreen,
+                    ),
+                  ],
+                ),
               ),
             ),
           ],
@@ -146,6 +174,7 @@ class HomeScreen extends ConsumerWidget {
                   IconButton(
                     icon: Badge(
                       isLabelVisible: unreadNotifs > 0,
+                      backgroundColor: CoSpendColors.alertRed,
                       label: Text('$unreadNotifs'),
                       child: const Icon(Icons.notifications_outlined),
                     ),
@@ -160,9 +189,9 @@ class HomeScreen extends ConsumerWidget {
                   Padding(
                     padding: const EdgeInsets.only(right: 12),
                     child: ActionChip(
-                      avatar: const Icon(Icons.group_add_rounded, size: 15),
+                      avatar: const Icon(Icons.group_add_rounded, size: 14),
                       label: Text(
-                        'Invite (${household.inviteCode})',
+                        household.inviteCode,
                         style: const TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w700,
@@ -206,58 +235,82 @@ class HomeScreen extends ConsumerWidget {
           return ListView(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 80),
             children: [
-              // Personal Category Budget Alerts
+              // Personal Category Budget Alerts - Refined Alert with Left Stripe
               if (exceededAlerts.isNotEmpty) ...[
                 for (final alert in exceededAlerts)
                   Container(
                     margin: const EdgeInsets.only(bottom: 14),
-                    padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFEF4444).withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(16),
+                      color: isDark ? const Color(0xFF2B1015) : const Color(0xFFFFF5F5),
+                      borderRadius: CoSpendRadii.cardRadius,
                       border: Border.all(
-                        color: const Color(0xFFEF4444).withValues(alpha: 0.4),
+                        color: CoSpendColors.alertRed.withValues(alpha: 0.25),
+                        width: 1,
                       ),
+                      boxShadow: !isDark ? CoSpendShadows.cardSubtle : null,
                     ),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: const BoxDecoration(
-                            color: Color(0xFFEF4444),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.notifications_active_rounded,
-                            color: Colors.white,
-                            size: 18,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                '${alert.label} Budget Exceeded!',
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w800,
-                                  fontSize: 13,
-                                  color: Color(0xFFEF4444),
-                                ),
+                    child: IntrinsicHeight(
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 4,
+                            decoration: const BoxDecoration(
+                              color: CoSpendColors.alertRed,
+                              borderRadius: BorderRadius.horizontal(
+                                left: Radius.circular(CoSpendRadii.card),
                               ),
-                              const SizedBox(height: 2),
-                              Text(
-                                'You spent your whole ${alert.label.toLowerCase()} budget for this month (${Money.format(alert.mySpentPaisa)} spent of ${Money.format(alert.myBudgetPaisa)} limit).',
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ],
+                            ),
                           ),
-                        ),
-                      ],
+                          Expanded(
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    width: 32,
+                                    height: 32,
+                                    decoration: BoxDecoration(
+                                      color: CoSpendColors.alertRed.withValues(alpha: 0.12),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    alignment: Alignment.center,
+                                    child: const Icon(
+                                      Icons.warning_amber_rounded,
+                                      color: CoSpendColors.alertRed,
+                                      size: 17,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          '${alert.label} Budget Exceeded',
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.w800,
+                                            fontSize: 13,
+                                            color: CoSpendColors.alertRed,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          'You spent ${Money.format(alert.mySpentPaisa)} of your ${Money.format(alert.myBudgetPaisa)} quota for this month.',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: isDark ? CoSpendColors.darkTextMuted : CoSpendColors.textMuted,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
               ],
@@ -351,14 +404,7 @@ class HomeScreen extends ConsumerWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    'RECENT EXPENSES',
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 0.6,
-                      color: scheme.onSurfaceVariant,
-                    ),
-                  ),
+                  const SectionLabel('Recent Expenses', padding: EdgeInsets.zero),
                   TextButton(
                     onPressed: () => context.go(Routes.expenses),
                     child: const Text('View all'),
@@ -441,10 +487,28 @@ class HomeScreen extends ConsumerWidget {
           );
         },
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => context.push(Routes.addExpense),
-        icon: const Icon(Icons.add_rounded),
-        label: const Text('Add Expense'),
+      floatingActionButton: Container(
+        margin: const EdgeInsets.only(bottom: 6),
+        decoration: const BoxDecoration(
+          borderRadius: BorderRadius.all(Radius.circular(999)),
+          boxShadow: CoSpendShadows.floating,
+        ),
+        child: FloatingActionButton.extended(
+          onPressed: () => context.push(Routes.addExpense),
+          icon: const Icon(Icons.add_rounded, color: Colors.white, size: 20),
+          label: const Text(
+            'Add Expense',
+            style: TextStyle(
+              fontWeight: FontWeight.w700,
+              color: Colors.white,
+              fontSize: 14,
+              letterSpacing: 0.2,
+            ),
+          ),
+          backgroundColor: CoSpendColors.jadeGreen,
+          elevation: 0,
+          shape: const StadiumBorder(),
+        ),
       ),
     );
   }
@@ -484,8 +548,7 @@ class _RecentExpenseTile extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final household = ref.watch(currentHouseholdProvider).value;
 
     final custom = customCategoryId != null
@@ -493,93 +556,73 @@ class _RecentExpenseTile extends ConsumerWidget {
             .where((c) => c.id == customCategoryId)
             .firstOrNull
         : null;
-    final catColor = custom?.color ?? category.color as Color;
     final catIcon = custom?.icon ?? category.icon as IconData;
     final hasSubcat = subcategory != null && subcategory!.trim().isNotEmpty;
 
-    return Card(
-      margin: const EdgeInsets.only(bottom: 8),
-      elevation: 0,
-      color: scheme.surfaceContainerLow,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(
-          color: scheme.outlineVariant.withValues(alpha: 0.4),
-        ),
-      ),
-      child: InkWell(
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: CoSpendCard(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Row(
-            children: [
-              Container(
-                width: 42,
-                height: 42,
-                decoration: BoxDecoration(
-                  color: catColor.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(catIcon, color: catColor, size: 20),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      description,
-                      style: theme.textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+        padding: const EdgeInsets.all(12),
+        child: Row(
+          children: [
+            TintedIcon(
+              icon: catIcon,
+              color: CoSpendColors.prussianBlue,
+              size: 19,
+              containerSize: 42,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    description,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 14.5,
+                      color: isDark ? Colors.white : CoSpendColors.prussianBlue,
                     ),
-                    const SizedBox(height: 2),
-                    Row(
-                      children: [
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 2),
+                  Row(
+                    children: [
+                      Text(
+                        'Paid by $payerName · ${_relativeDate(spentAt)}',
+                        style: TextStyle(
+                          color: isDark ? CoSpendColors.darkTextMuted : CoSpendColors.textMuted,
+                          fontSize: 11.5,
+                        ),
+                      ),
+                      if (hasSubcat) ...[
                         Text(
-                          'Paid by $payerName · ${_relativeDate(spentAt)}',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: scheme.onSurfaceVariant,
+                          ' · $subcategory',
+                          style: TextStyle(
                             fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: isDark ? CoSpendColors.darkTextMuted : CoSpendColors.textSubtle,
                           ),
                         ),
-                        if (hasSubcat) ...[
-                          const SizedBox(width: 6),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 6, vertical: 1),
-                            decoration: BoxDecoration(
-                              color: catColor.withValues(alpha: 0.12),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Text(
-                              subcategory!,
-                              style: TextStyle(
-                                fontSize: 9.5,
-                                fontWeight: FontWeight.w700,
-                                color: catColor,
-                              ),
-                            ),
-                          ),
-                        ],
                       ],
-                    ),
-                  ],
-                ),
+                    ],
+                  ),
+                ],
               ),
-              const SizedBox(width: 10),
-              Text(
-                Money.format(amountPaisa),
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: -0.3,
-                ),
+            ),
+            const SizedBox(width: 10),
+            Text(
+              Money.format(amountPaisa),
+              style: TextStyle(
+                fontWeight: FontWeight.w800,
+                fontSize: 15.5,
+                letterSpacing: -0.3,
+                color: isDark ? Colors.white : CoSpendColors.prussianBlue,
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

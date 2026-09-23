@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/errors/firebase_error_mapper.dart';
+import '../../../../core/theme/design_system.dart';
 import '../../../../core/utils/money.dart';
 import '../../../../shared/models/household.dart';
 import '../../../../shared/models/household_member.dart';
@@ -304,27 +305,28 @@ class _CategoryBudgetScreenState extends ConsumerState<CategoryBudgetScreen> {
               margin: const EdgeInsets.fromLTRB(16, 8, 16, 4),
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               decoration: BoxDecoration(
-                color: scheme.surfaceContainerHighest.withValues(alpha: 0.6),
+                color: const Color(0xFFF7F8FA),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: scheme.outlineVariant.withValues(alpha: 0.4),
+                  color: const Color(0x1F0A2542),
                 ),
               ),
-              child: Row(
+              child: const Row(
                 children: [
-                  Icon(
-                    Icons.lock_outline_rounded,
-                    size: 18,
-                    color: scheme.onSurfaceVariant,
+                  TintedIcon(
+                    icon: Icons.lock_outline_rounded,
+                    size: 16,
+                    containerSize: 28,
+                    color: CoSpendColors.prussianBlue,
                   ),
-                  const SizedBox(width: 10),
+                  SizedBox(width: 10),
                   Expanded(
                     child: Text(
                       'View-Only: Only the flat owner can set or adjust overall and category budgets.',
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
-                        color: scheme.onSurfaceVariant,
+                        color: CoSpendColors.prussianBlue,
                       ),
                     ),
                   ),
@@ -335,20 +337,18 @@ class _CategoryBudgetScreenState extends ConsumerState<CategoryBudgetScreen> {
           // Total Budget Summary Header Card
           Container(
             margin: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(
-              gradient: LinearGradient(
+              gradient: const LinearGradient(
                 colors: [
-                  scheme.primaryContainer,
-                  scheme.surfaceContainerHigh,
+                  CoSpendColors.prussianBlue,
+                  Color(0xFF133863),
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(
-                color: scheme.outlineVariant.withValues(alpha: 0.3),
-              ),
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: CoSpendShadows.softCard,
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -358,38 +358,41 @@ class _CategoryBudgetScreenState extends ConsumerState<CategoryBudgetScreen> {
                   children: [
                     Text(
                       'TOTAL MONTHLY TARGET',
-                      style: theme.textTheme.labelSmall?.copyWith(
+                      style: TextStyle(
+                        fontSize: 11,
                         fontWeight: FontWeight.w700,
-                        letterSpacing: 0.6,
-                        color: scheme.onSurfaceVariant,
+                        letterSpacing: 0.8,
+                        color: Colors.white.withValues(alpha: 0.75),
                       ),
                     ),
                     Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 8,
-                        vertical: 2,
+                        vertical: 3,
                       ),
                       decoration: BoxDecoration(
-                        color: scheme.primary.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(12),
+                        color: Colors.white.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(999),
                       ),
                       child: Text(
                         '${_controllers.values.where((c) => (int.tryParse(c.text.trim()) ?? 0) > 0).length} categories set',
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w700,
-                          color: scheme.primary,
+                          color: Colors.white,
                         ),
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 10),
                 Text(
                   Money.format(totalBudgetPaisa),
-                  style: theme.textTheme.headlineMedium?.copyWith(
+                  style: const TextStyle(
+                    fontSize: 28,
                     fontWeight: FontWeight.w900,
                     letterSpacing: -0.5,
+                    color: Colors.white,
                   ),
                 ),
                 const SizedBox(height: 6),
@@ -397,8 +400,9 @@ class _CategoryBudgetScreenState extends ConsumerState<CategoryBudgetScreen> {
                   totalBudgetPaisa > 0
                       ? 'Spent this month: ${Money.format(totalSpentPaisa)} (${((totalSpentPaisa / totalBudgetPaisa) * 100).toStringAsFixed(0)}% used)'
                       : 'Set individual category limits below to establish your flat\'s total monthly spending cap.',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: scheme.onSurfaceVariant,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.white.withValues(alpha: 0.8),
                   ),
                 ),
                 if (!isOwner) ...[
@@ -406,19 +410,20 @@ class _CategoryBudgetScreenState extends ConsumerState<CategoryBudgetScreen> {
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: scheme.surface.withValues(alpha: 0.6),
+                      color: Colors.white.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Row(
                       children: [
-                        Icon(Icons.info_outline_rounded,
-                            size: 16, color: scheme.primary),
+                        const Icon(Icons.info_outline_rounded,
+                            size: 16, color: Colors.white),
                         const SizedBox(width: 8),
-                        Expanded(
+                        const Expanded(
                           child: Text(
                             'Budgets are configured by the flat owner. You can view your allocated limits below.',
-                            style: theme.textTheme.labelSmall?.copyWith(
-                              color: scheme.onSurfaceVariant,
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.white,
                             ),
                           ),
                         ),
@@ -461,32 +466,28 @@ class _CategoryBudgetScreenState extends ConsumerState<CategoryBudgetScreen> {
                 return Container(
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
-                    color: scheme.surfaceContainerLow,
-                    borderRadius: BorderRadius.circular(16),
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
                     border: Border.all(
                       color: isOver
-                          ? const Color(0xFFEF4444).withValues(alpha: 0.4)
-                          : catBudgetPaisa > 0
-                              ? scheme.primary.withValues(alpha: 0.3)
-                              : scheme.outlineVariant.withValues(alpha: 0.3),
+                          ? CoSpendColors.alertRed.withValues(alpha: 0.5)
+                          : (catBudgetPaisa > 0
+                              ? CoSpendColors.jadeGreen.withValues(alpha: 0.3)
+                              : const Color(0x140A2542)),
+                      width: isOver ? 1.5 : 1,
                     ),
+                    boxShadow: CoSpendShadows.softCard,
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
                         children: [
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: catItem.color.withValues(alpha: 0.15),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Icon(
-                              catItem.icon,
-                              size: 20,
-                              color: catItem.color,
-                            ),
+                          TintedIcon(
+                            icon: catItem.icon,
+                            color: catItem.color,
+                            size: 20,
+                            containerSize: 38,
                           ),
                           const SizedBox(width: 12),
                           Expanded(
@@ -497,9 +498,10 @@ class _CategoryBudgetScreenState extends ConsumerState<CategoryBudgetScreen> {
                                   children: [
                                     Text(
                                       catItem.label,
-                                      style:
-                                          theme.textTheme.titleSmall?.copyWith(
+                                      style: const TextStyle(
                                         fontWeight: FontWeight.w700,
+                                        fontSize: 14,
+                                        color: CoSpendColors.prussianBlue,
                                       ),
                                     ),
                                     if (catItem.isCustom) ...[
@@ -509,9 +511,9 @@ class _CategoryBudgetScreenState extends ConsumerState<CategoryBudgetScreen> {
                                             horizontal: 6, vertical: 2),
                                         decoration: BoxDecoration(
                                           color: catItem.color
-                                              .withValues(alpha: 0.2),
+                                              .withValues(alpha: 0.15),
                                           borderRadius:
-                                              BorderRadius.circular(6),
+                                              BorderRadius.circular(999),
                                         ),
                                         child: Text(
                                           'CUSTOM',
@@ -524,14 +526,40 @@ class _CategoryBudgetScreenState extends ConsumerState<CategoryBudgetScreen> {
                                         ),
                                       ),
                                     ],
+                                    if (catBudgetPaisa > 0) ...[
+                                      const SizedBox(width: 6),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 6, vertical: 2),
+                                        decoration: BoxDecoration(
+                                          color: isOver
+                                              ? CoSpendColors.alertRed.withValues(alpha: 0.1)
+                                              : CoSpendColors.jadeGreen.withValues(alpha: 0.12),
+                                          borderRadius: BorderRadius.circular(999),
+                                        ),
+                                        child: Text(
+                                          isOver ? 'EXCEEDED' : 'CONFIGURED',
+                                          style: TextStyle(
+                                            fontSize: 9,
+                                            fontWeight: FontWeight.w800,
+                                            color: isOver
+                                                ? CoSpendColors.alertRed
+                                                : CoSpendColors.jadeGreen,
+                                            letterSpacing: 0.5,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ],
                                 ),
+                                const SizedBox(height: 2),
                                 Text(
                                   'Flat spent: ${Money.format(spentPaisa)}',
-                                  style: theme.textTheme.bodySmall?.copyWith(
+                                  style: TextStyle(
+                                    fontSize: 12,
                                     color: isOver
-                                        ? const Color(0xFFEF4444)
-                                        : scheme.onSurfaceVariant,
+                                        ? CoSpendColors.alertRed
+                                        : const Color(0xFF6B7280),
                                     fontWeight: isOver
                                         ? FontWeight.w700
                                         : FontWeight.w500,
@@ -540,43 +568,74 @@ class _CategoryBudgetScreenState extends ConsumerState<CategoryBudgetScreen> {
                               ],
                             ),
                           ),
-                          SizedBox(
-                            width: 140,
-                            child: TextField(
-                              controller: controller,
-                              enabled: isOwner,
-                              keyboardType: TextInputType.number,
-                              inputFormatters: [
-                                FilteringTextInputFormatter.digitsOnly,
+                          if (isOwner)
+                            SizedBox(
+                              width: 135,
+                              child: TextField(
+                                controller: controller,
+                                keyboardType: TextInputType.number,
+                                inputFormatters: [
+                                  FilteringTextInputFormatter.digitsOnly,
+                                ],
+                                textAlign: TextAlign.end,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 15,
+                                  color: CoSpendColors.prussianBlue,
+                                ),
+                                decoration: InputDecoration(
+                                  prefixText: 'Rs. ',
+                                  prefixStyle: const TextStyle(
+                                    color: Color(0xFF6B7280),
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 13,
+                                  ),
+                                  hintText: '0',
+                                  isDense: true,
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                    vertical: 8,
+                                  ),
+                                  filled: true,
+                                  fillColor: const Color(0xFFF7F8FA),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                    borderSide: const BorderSide(color: Color(0x1F0A2542)),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                    borderSide: const BorderSide(color: CoSpendColors.jadeGreen, width: 2),
+                                  ),
+                                ),
+                                onChanged: (_) => setState(() {}),
+                              ),
+                            )
+                          else
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                Text(
+                                  catBudgetRupees > 0
+                                      ? Money.format(catBudgetPaisa)
+                                      : 'Not set',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 15,
+                                    color: catBudgetRupees > 0
+                                        ? CoSpendColors.prussianBlue
+                                        : const Color(0xFF9CA3AF),
+                                  ),
+                                ),
+                                if (catBudgetRupees > 0)
+                                  const Text(
+                                    'monthly limit',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      color: Color(0xFF6B7280),
+                                    ),
+                                  ),
                               ],
-                              textAlign: TextAlign.end,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w700,
-                                fontSize: 15,
-                              ),
-                              decoration: InputDecoration(
-                                prefixText: 'Rs. ',
-                                prefixStyle: TextStyle(
-                                  color: scheme.onSurfaceVariant,
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 14,
-                                ),
-                                hintText: '0',
-                                isDense: true,
-                                contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 10,
-                                  vertical: 10,
-                                ),
-                                filled: true,
-                                fillColor: scheme.surfaceContainerHigh,
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                  borderSide: BorderSide.none,
-                                ),
-                              ),
-                              onChanged: (_) => setState(() {}),
                             ),
-                          ),
                         ],
                       ),
 
@@ -754,45 +813,63 @@ class _CategoryBudgetScreenState extends ConsumerState<CategoryBudgetScreen> {
                                       ],
                                     ),
                                   ),
-                                  SizedBox(
-                                    width: 110,
-                                    child: TextField(
-                                      controller: mCtrl,
-                                      enabled: isOwner,
-                                      keyboardType: TextInputType.number,
-                                      inputFormatters: [
-                                        FilteringTextInputFormatter.digitsOnly,
-                                      ],
-                                      textAlign: TextAlign.end,
-                                      style: const TextStyle(
+                                  if (isOwner)
+                                    SizedBox(
+                                      width: 110,
+                                      child: TextField(
+                                        controller: mCtrl,
+                                        keyboardType: TextInputType.number,
+                                        inputFormatters: [
+                                          FilteringTextInputFormatter.digitsOnly,
+                                        ],
+                                        textAlign: TextAlign.end,
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 13,
+                                          color: CoSpendColors.prussianBlue,
+                                        ),
+                                        decoration: InputDecoration(
+                                          prefixText: 'Rs. ',
+                                          prefixStyle: const TextStyle(
+                                            color: Color(0xFF6B7280),
+                                            fontSize: 12,
+                                          ),
+                                          hintText: '0',
+                                          isDense: true,
+                                          contentPadding:
+                                              const EdgeInsets.symmetric(
+                                            horizontal: 8,
+                                            vertical: 8,
+                                          ),
+                                          filled: true,
+                                          fillColor: const Color(0xFFF7F8FA),
+                                          border: OutlineInputBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(8),
+                                            borderSide: const BorderSide(color: Color(0x1F0A2542)),
+                                          ),
+                                          focusedBorder: OutlineInputBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(8),
+                                            borderSide: const BorderSide(color: CoSpendColors.jadeGreen, width: 2),
+                                          ),
+                                        ),
+                                        onChanged: (_) => setState(() {}),
+                                      ),
+                                    )
+                                  else
+                                    Text(
+                                      mBudgetRupees > 0
+                                          ? Money.format(mBudgetPaisa)
+                                          : 'Not set',
+                                      style: TextStyle(
                                         fontWeight: FontWeight.w600,
                                         fontSize: 13,
+                                        color: mBudgetRupees > 0
+                                            ? CoSpendColors.prussianBlue
+                                            : const Color(0xFF9CA3AF),
                                       ),
-                                      decoration: InputDecoration(
-                                        prefixText: 'Rs. ',
-                                        prefixStyle: TextStyle(
-                                          color: scheme.onSurfaceVariant,
-                                          fontSize: 12,
-                                        ),
-                                        hintText: '0',
-                                        isDense: true,
-                                        contentPadding:
-                                            const EdgeInsets.symmetric(
-                                          horizontal: 8,
-                                          vertical: 8,
-                                        ),
-                                        filled: true,
-                                        fillColor:
-                                            scheme.surfaceContainerHighest,
-                                        border: OutlineInputBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(8),
-                                          borderSide: BorderSide.none,
-                                        ),
-                                      ),
-                                      onChanged: (_) => setState(() {}),
                                     ),
-                                  ),
                                 ],
                               ),
                             );
@@ -811,11 +888,11 @@ class _CategoryBudgetScreenState extends ConsumerState<CategoryBudgetScreen> {
           ? Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: scheme.surface,
+                color: Colors.white,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.08),
-                    blurRadius: 10,
+                    color: CoSpendColors.prussianBlue.withValues(alpha: 0.08),
+                    blurRadius: 14,
                     offset: const Offset(0, -4),
                   ),
                 ],
@@ -824,7 +901,13 @@ class _CategoryBudgetScreenState extends ConsumerState<CategoryBudgetScreen> {
                 child: SizedBox(
                   width: double.infinity,
                   height: 50,
-                  child: FilledButton.icon(
+                  child: ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: CoSpendColors.jadeGreen,
+                      foregroundColor: Colors.white,
+                      shape: const StadiumBorder(),
+                      elevation: 2,
+                    ),
                     onPressed: isSaving ? null : _saveBudgets,
                     icon: isSaving
                         ? const SizedBox(
@@ -865,24 +948,28 @@ class _QuickChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(6),
+      borderRadius: BorderRadius.circular(999),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
         decoration: BoxDecoration(
           color: isDanger
-              ? const Color(0xFFEF4444).withValues(alpha: 0.12)
-              : scheme.surfaceContainerHighest,
-          borderRadius: BorderRadius.circular(6),
+              ? CoSpendColors.alertRed.withValues(alpha: 0.1)
+              : const Color(0xFFF7F8FA),
+          border: Border.all(
+            color: isDanger
+                ? CoSpendColors.alertRed.withValues(alpha: 0.3)
+                : const Color(0x1F0A2542),
+          ),
+          borderRadius: BorderRadius.circular(999),
         ),
         child: Text(
           label,
           style: TextStyle(
             fontSize: 11,
             fontWeight: FontWeight.w700,
-            color: isDanger ? const Color(0xFFEF4444) : scheme.onSurfaceVariant,
+            color: isDanger ? CoSpendColors.alertRed : CoSpendColors.prussianBlue,
           ),
         ),
       ),

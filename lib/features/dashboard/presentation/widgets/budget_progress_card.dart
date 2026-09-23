@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/routes.dart';
+import '../../../../core/theme/design_system.dart';
 import '../../../../core/utils/money.dart';
 import '../../../auth/presentation/providers/session_provider.dart';
 import '../../../household/presentation/providers/household_providers.dart';
@@ -23,11 +24,14 @@ class BudgetProgressCard extends ConsumerStatefulWidget {
 class _BudgetProgressCardState extends ConsumerState<BudgetProgressCard> {
   bool _showMyQuotas = false;
 
+  Color _progressColorFor(double pct, bool isExceeded) {
+    if (isExceeded || pct >= 100.0) return CoSpendColors.alertRed;
+    if (pct >= 80.0) return CoSpendColors.warningAmber;
+    return CoSpendColors.jadeGreen;
+  }
+
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-
     final household = ref.watch(currentHouseholdProvider).value;
     final session = ref.watch(sessionProvider).value;
     final currentUserId = session?.user?.id ?? '';
@@ -42,32 +46,35 @@ class _BudgetProgressCardState extends ConsumerState<BudgetProgressCard> {
     final isExceeded = budgetStatus.isExceeded;
     final isApproaching = budgetStatus.isApproaching;
 
-    final barColor = isExceeded
-        ? const Color(0xFFEF4444)
-        : isApproaching
-            ? const Color(0xFFF59E0B)
-            : const Color(0xFF10B981);
+    final barColor = _progressColorFor(budgetStatus.percentage, isExceeded);
 
     final statusTag = isExceeded
-        ? 'Budget exceeded'
+        ? 'Exceeded'
         : isApproaching
             ? 'Approaching limit'
             : 'On track';
 
-    final tagBg = barColor.withValues(alpha: 0.15);
-
     final hasMyQuotas = myCategoryStatuses.isNotEmpty;
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: scheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: isExceeded
-              ? const Color(0xFFEF4444).withValues(alpha: 0.4)
-              : scheme.outlineVariant.withValues(alpha: 0.4),
+        borderRadius: CoSpendRadii.cardRadius,
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFF0A2542),
+            Color(0xFF133863),
+          ],
         ),
+        boxShadow: [
+          BoxShadow(
+            color: CoSpendColors.prussianBlue.withValues(alpha: 0.35),
+            blurRadius: 18,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -79,20 +86,27 @@ class _BudgetProgressCardState extends ConsumerState<BudgetProgressCard> {
               Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.all(6),
+                    width: 32,
+                    height: 32,
                     decoration: BoxDecoration(
-                      color: barColor.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(8),
+                      color: Colors.white.withValues(alpha: 0.12),
+                      shape: BoxShape.circle,
                     ),
-                    child: Icon(Icons.savings_rounded, size: 16, color: barColor),
+                    alignment: Alignment.center,
+                    child: const Icon(
+                      Icons.account_balance_wallet_rounded,
+                      size: 16,
+                      color: CoSpendColors.jadeGreen,
+                    ),
                   ),
                   const SizedBox(width: 8),
-                  Text(
+                  const Text(
                     'HOUSEHOLD BUDGET',
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 0.6,
-                      color: scheme.onSurfaceVariant,
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.8,
+                      color: Color(0xFF93C5FD),
                     ),
                   ),
                 ],
@@ -100,10 +114,14 @@ class _BudgetProgressCardState extends ConsumerState<BudgetProgressCard> {
               Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
                     decoration: BoxDecoration(
-                      color: tagBg,
-                      borderRadius: BorderRadius.circular(20),
+                      color: barColor.withValues(alpha: 0.2),
+                      borderRadius: CoSpendRadii.pillRadius,
+                      border: Border.all(
+                        color: barColor.withValues(alpha: 0.4),
+                        width: 1,
+                      ),
                     ),
                     child: Text(
                       statusTag,
@@ -117,10 +135,9 @@ class _BudgetProgressCardState extends ConsumerState<BudgetProgressCard> {
                   const SizedBox(width: 4),
                   IconButton(
                     icon: Icon(
-                      isOwner
-                          ? Icons.tune_rounded
-                          : Icons.visibility_outlined,
+                      isOwner ? Icons.tune_rounded : Icons.visibility_outlined,
                       size: 18,
+                      color: Colors.white.withValues(alpha: 0.85),
                     ),
                     tooltip: isOwner
                         ? 'Adjust Budgets'
@@ -132,7 +149,7 @@ class _BudgetProgressCardState extends ConsumerState<BudgetProgressCard> {
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 14),
 
           // Total spending vs budget amounts
           Row(
@@ -141,36 +158,59 @@ class _BudgetProgressCardState extends ConsumerState<BudgetProgressCard> {
             children: [
               Text(
                 Money.format(budgetStatus.spentPaisa),
-                style: theme.textTheme.titleMedium?.copyWith(
+                style: const TextStyle(
+                  fontSize: 24,
                   fontWeight: FontWeight.w800,
+                  color: Colors.white,
+                  letterSpacing: -0.5,
                 ),
               ),
               Text(
                 ' / ${Money.format(budgetStatus.budgetPaisa)}',
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: scheme.onSurfaceVariant,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.white.withValues(alpha: 0.7),
                 ),
               ),
               const Spacer(),
               Text(
                 '${budgetStatus.percentage.toStringAsFixed(0)}% used',
-                style: theme.textTheme.labelLarge?.copyWith(
+                style: TextStyle(
+                  fontSize: 13,
                   fontWeight: FontWeight.w700,
                   color: barColor,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 12),
 
-          // Total Progress Bar
+          // Animated Progress Bar
           ClipRRect(
-            borderRadius: BorderRadius.circular(6),
-            child: LinearProgressIndicator(
-              value: pct / 100.0,
-              minHeight: 8,
-              backgroundColor: scheme.surfaceContainerHighest,
-              valueColor: AlwaysStoppedAnimation<Color>(barColor),
+            borderRadius: CoSpendRadii.pillRadius,
+            child: Stack(
+              children: [
+                Container(
+                  height: 8,
+                  color: Colors.white.withValues(alpha: 0.15),
+                ),
+                TweenAnimationBuilder<double>(
+                  duration: const Duration(milliseconds: 600),
+                  curve: Curves.easeOutCubic,
+                  tween: Tween<double>(begin: 0, end: pct / 100.0),
+                  builder: (context, value, child) => FractionallySizedBox(
+                    widthFactor: value,
+                    child: Container(
+                      height: 8,
+                      decoration: BoxDecoration(
+                        color: barColor,
+                        borderRadius: CoSpendRadii.pillRadius,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
           const SizedBox(height: 8),
@@ -180,8 +220,9 @@ class _BudgetProgressCardState extends ConsumerState<BudgetProgressCard> {
             isExceeded
                 ? 'Over budget by ${Money.format(-budgetStatus.remainingPaisa)}'
                 : 'Remaining: ${Money.format(budgetStatus.remainingPaisa)}',
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: isExceeded ? const Color(0xFFEF4444) : scheme.onSurfaceVariant,
+            style: TextStyle(
+              fontSize: 12,
+              color: isExceeded ? CoSpendColors.alertRed : Colors.white.withValues(alpha: 0.8),
               fontWeight: isExceeded ? FontWeight.w700 : FontWeight.w500,
             ),
           ),
@@ -191,71 +232,69 @@ class _BudgetProgressCardState extends ConsumerState<BudgetProgressCard> {
             const SizedBox(height: 16),
             Divider(
               height: 1,
-              color: scheme.outlineVariant.withValues(alpha: 0.3),
+              color: Colors.white.withValues(alpha: 0.15),
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 12),
 
             // Toggle Tabs: Flat Totals vs My Quotas
             Row(
               children: [
-                InkWell(
+                GestureDetector(
                   onTap: () => setState(() => _showMyQuotas = false),
-                  borderRadius: BorderRadius.circular(8),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
                     decoration: BoxDecoration(
                       color: !_showMyQuotas
-                          ? scheme.primary.withValues(alpha: 0.12)
+                          ? Colors.white.withValues(alpha: 0.2)
                           : Colors.transparent,
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: CoSpendRadii.pillRadius,
                     ),
                     child: Text(
                       'Flat Totals (${flatCategoryStatuses.length})',
                       style: TextStyle(
-                        fontSize: 11,
+                        fontSize: 11.5,
                         fontWeight: FontWeight.w700,
                         color: !_showMyQuotas
-                            ? scheme.primary
-                            : scheme.onSurfaceVariant,
+                            ? Colors.white
+                            : Colors.white.withValues(alpha: 0.6),
                       ),
                     ),
                   ),
                 ),
                 if (hasMyQuotas) ...[
                   const SizedBox(width: 8),
-                  InkWell(
+                  GestureDetector(
                     onTap: () => setState(() => _showMyQuotas = true),
-                    borderRadius: BorderRadius.circular(8),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
                       decoration: BoxDecoration(
                         color: _showMyQuotas
-                            ? scheme.primary.withValues(alpha: 0.12)
+                            ? Colors.white.withValues(alpha: 0.2)
                             : Colors.transparent,
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: CoSpendRadii.pillRadius,
                       ),
                       child: Text(
                         'My Quotas (${myCategoryStatuses.length})',
                         style: TextStyle(
-                          fontSize: 11,
+                          fontSize: 11.5,
                           fontWeight: FontWeight.w700,
                           color: _showMyQuotas
-                              ? scheme.primary
-                              : scheme.onSurfaceVariant,
+                              ? Colors.white
+                              : Colors.white.withValues(alpha: 0.6),
                         ),
                       ),
                     ),
                   ),
                 ],
                 const Spacer(),
-                InkWell(
+                GestureDetector(
                   onTap: () => context.push(Routes.categoryBudgets),
-                  child: Text(
-                    'Edit',
+                  child: const Text(
+                    'Details →',
                     style: TextStyle(
                       fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: scheme.primary,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF93C5FD),
                     ),
                   ),
                 ),
@@ -264,14 +303,10 @@ class _BudgetProgressCardState extends ConsumerState<BudgetProgressCard> {
             const SizedBox(height: 12),
 
             if (!_showMyQuotas) ...[
-              // Flat-wide category breakdown
+              // Flat-wide category breakdown using single-hue progress system
               ...flatCategoryStatuses.map((catStatus) {
                 final catPct = catStatus.percentage.clamp(0.0, 100.0);
-                final catColor = catStatus.isExceeded
-                    ? const Color(0xFFEF4444)
-                    : catStatus.isApproaching
-                        ? const Color(0xFFF59E0B)
-                        : catStatus.color;
+                final rowColor = _progressColorFor(catStatus.percentage, catStatus.isExceeded);
 
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 10),
@@ -282,44 +317,60 @@ class _BudgetProgressCardState extends ConsumerState<BudgetProgressCard> {
                         children: [
                           Icon(
                             catStatus.icon,
-                            size: 15,
-                            color: catStatus.color,
+                            size: 14,
+                            color: Colors.white.withValues(alpha: 0.85),
                           ),
                           const SizedBox(width: 6),
                           Expanded(
                             child: Text(
                               catStatus.label,
-                              style: theme.textTheme.bodySmall?.copyWith(
+                              style: const TextStyle(
+                                fontSize: 13,
                                 fontWeight: FontWeight.w600,
+                                color: Colors.white,
                               ),
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
                           Text(
                             '${Money.format(catStatus.spentPaisa)} / ${Money.format(catStatus.budgetPaisa)}',
-                            style: theme.textTheme.labelSmall?.copyWith(
-                              color: scheme.onSurfaceVariant,
-                              fontWeight: FontWeight.w600,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.white.withValues(alpha: 0.75),
+                              fontWeight: FontWeight.w500,
                             ),
                           ),
                           const SizedBox(width: 8),
                           Text(
                             '${catStatus.percentage.toStringAsFixed(0)}%',
-                            style: theme.textTheme.labelSmall?.copyWith(
+                            style: TextStyle(
+                              fontSize: 12,
                               fontWeight: FontWeight.w800,
-                              color: catColor,
+                              color: rowColor,
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 5),
                       ClipRRect(
-                        borderRadius: BorderRadius.circular(4),
-                        child: LinearProgressIndicator(
-                          value: catPct / 100.0,
-                          minHeight: 5,
-                          backgroundColor: scheme.surfaceContainerHighest,
-                          valueColor: AlwaysStoppedAnimation<Color>(catColor),
+                        borderRadius: CoSpendRadii.pillRadius,
+                        child: Stack(
+                          children: [
+                            Container(
+                              height: 5,
+                              color: Colors.white.withValues(alpha: 0.12),
+                            ),
+                            FractionallySizedBox(
+                              widthFactor: catPct / 100.0,
+                              child: Container(
+                                height: 5,
+                                decoration: BoxDecoration(
+                                  color: rowColor,
+                                  borderRadius: CoSpendRadii.pillRadius,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],
@@ -327,15 +378,11 @@ class _BudgetProgressCardState extends ConsumerState<BudgetProgressCard> {
                 );
               }),
             ] else ...[
-              // Current user's individual quotas
+              // Current user's individual quotas using single-hue progress system
               ...myCategoryStatuses.map((myStatus) {
                 final myPct = myStatus.myPercentage.clamp(0.0, 100.0);
                 final isOver = myStatus.isExceeded;
-                final myColor = isOver
-                    ? const Color(0xFFEF4444)
-                    : myStatus.isApproaching
-                        ? const Color(0xFFF59E0B)
-                        : myStatus.color;
+                final rowColor = _progressColorFor(myStatus.myPercentage, isOver);
 
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 10),
@@ -346,56 +393,70 @@ class _BudgetProgressCardState extends ConsumerState<BudgetProgressCard> {
                         children: [
                           Icon(
                             myStatus.icon,
-                            size: 15,
-                            color: myStatus.color,
+                            size: 14,
+                            color: Colors.white.withValues(alpha: 0.85),
                           ),
                           const SizedBox(width: 6),
                           Expanded(
                             child: Text(
                               myStatus.label,
-                              style: theme.textTheme.bodySmall?.copyWith(
+                              style: const TextStyle(
+                                fontSize: 13,
                                 fontWeight: FontWeight.w600,
+                                color: Colors.white,
                               ),
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
                           Text(
                             '${Money.format(myStatus.mySpentPaisa)} / ${Money.format(myStatus.myBudgetPaisa)}',
-                            style: theme.textTheme.labelSmall?.copyWith(
-                              color: isOver
-                                  ? const Color(0xFFEF4444)
-                                  : scheme.onSurfaceVariant,
-                              fontWeight: FontWeight.w700,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: isOver ? CoSpendColors.alertRed : Colors.white.withValues(alpha: 0.75),
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
                           const SizedBox(width: 8),
                           Text(
                             '${myStatus.myPercentage.toStringAsFixed(0)}%',
-                            style: theme.textTheme.labelSmall?.copyWith(
+                            style: TextStyle(
+                              fontSize: 12,
                               fontWeight: FontWeight.w800,
-                              color: myColor,
+                              color: rowColor,
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 5),
                       ClipRRect(
-                        borderRadius: BorderRadius.circular(4),
-                        child: LinearProgressIndicator(
-                          value: myPct / 100.0,
-                          minHeight: 5,
-                          backgroundColor: scheme.surfaceContainerHighest,
-                          valueColor: AlwaysStoppedAnimation<Color>(myColor),
+                        borderRadius: CoSpendRadii.pillRadius,
+                        child: Stack(
+                          children: [
+                            Container(
+                              height: 5,
+                              color: Colors.white.withValues(alpha: 0.12),
+                            ),
+                            FractionallySizedBox(
+                              widthFactor: myPct / 100.0,
+                              child: Container(
+                                height: 5,
+                                decoration: BoxDecoration(
+                                  color: rowColor,
+                                  borderRadius: CoSpendRadii.pillRadius,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                       if (isOver) ...[
-                        const SizedBox(height: 2),
+                        const SizedBox(height: 3),
                         Text(
-                          'You spent your full ${myStatus.label} budget (Over by ${Money.format(-myStatus.myRemainingPaisa)})',
+                          'You spent your full ${myStatus.label} quota (Over by ${Money.format(-myStatus.myRemainingPaisa)})',
                           style: const TextStyle(
-                            fontSize: 10,
+                            fontSize: 10.5,
                             fontWeight: FontWeight.w700,
-                            color: Color(0xFFEF4444),
+                            color: CoSpendColors.alertRed,
                           ),
                         ),
                       ],
@@ -406,35 +467,37 @@ class _BudgetProgressCardState extends ConsumerState<BudgetProgressCard> {
             ],
           ] else ...[
             const SizedBox(height: 12),
-            InkWell(
+            GestureDetector(
               onTap: () => context.push(Routes.categoryBudgets),
-              borderRadius: BorderRadius.circular(8),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.08),
+                  borderRadius: CoSpendRadii.pillRadius,
+                ),
                 child: Row(
                   children: [
                     Icon(
-                      isOwner
-                          ? Icons.add_circle_outline_rounded
-                          : Icons.visibility_outlined,
-                      size: 16,
-                      color: scheme.primary,
+                      isOwner ? Icons.add_circle_outline_rounded : Icons.visibility_outlined,
+                      size: 15,
+                      color: const Color(0xFF93C5FD),
                     ),
-                    const SizedBox(width: 6),
+                    const SizedBox(width: 8),
                     Text(
                       isOwner
                           ? 'Set category budgets (Food, Bills, etc.)'
                           : 'View category budgets & limits',
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        color: scheme.primary,
+                      style: const TextStyle(
+                        fontSize: 12,
                         fontWeight: FontWeight.w700,
+                        color: Color(0xFF93C5FD),
                       ),
                     ),
                     const Spacer(),
-                    Icon(
+                    const Icon(
                       Icons.chevron_right_rounded,
                       size: 16,
-                      color: scheme.primary,
+                      color: Color(0xFF93C5FD),
                     ),
                   ],
                 ),
