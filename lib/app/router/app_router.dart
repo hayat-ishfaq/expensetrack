@@ -21,7 +21,6 @@ import '../../features/shell/presentation/screens/app_shell_screen.dart';
 import '../../features/shell/presentation/screens/expenses_screen.dart';
 import '../../features/shell/presentation/screens/home_screen.dart';
 import '../../features/shell/presentation/screens/more_screen.dart';
-import '../../features/shell/presentation/screens/settle_up_screen.dart';
 import 'not_found_screen.dart';
 import 'routes.dart';
 
@@ -96,9 +95,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const JoinFlatScreen(),
       ),
       GoRoute(
-        path: Routes.categoryBudgets,
-        name: 'category-budgets',
-        builder: (context, state) => const CategoryBudgetScreen(),
+        path: Routes.settle,
+        redirect: (context, state) => Routes.categoryBudgets,
       ),
       GoRoute(
         path: Routes.addExpense,
@@ -145,9 +143,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: Routes.settle,
-                name: 'settle',
-                builder: (context, state) => const SettleUpScreen(),
+                path: Routes.categoryBudgets,
+                name: 'category-budgets',
+                builder: (context, state) => const CategoryBudgetScreen(),
               ),
             ],
           ),

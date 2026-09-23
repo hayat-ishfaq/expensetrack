@@ -7,6 +7,7 @@ import '../../../../app/router/routes.dart';
 import '../../../../core/errors/app_exception.dart';
 import '../../../../core/errors/firebase_error_mapper.dart';
 import '../../../../core/utils/money.dart';
+import '../../../../shared/widgets/app_snackbar.dart';
 import '../../../../shared/widgets/empty_state.dart';
 import '../../../../shared/widgets/error_view.dart';
 import '../../../../shared/widgets/skeleton_box.dart';
@@ -18,7 +19,9 @@ import '../../../dashboard/presentation/widgets/financial_card.dart';
 import '../../../dashboard/presentation/widgets/spending_chart.dart';
 import '../../../expenses/presentation/providers/expense_providers.dart';
 import '../../../household/presentation/providers/household_providers.dart';
+import '../../../household/presentation/providers/notification_providers.dart';
 import '../../../household/presentation/widgets/invite_members_sheet.dart';
+import '../../../household/presentation/widgets/notifications_sheet.dart';
 
 /// The core Fintech Dashboard for the household.
 class HomeScreen extends ConsumerWidget {
@@ -64,6 +67,24 @@ class HomeScreen extends ConsumerWidget {
     final selectedMonth = ref.watch(dashboardMonthProvider);
     final exceededAlerts = ref.watch(exceededBudgetAlertsProvider);
 
+    final currentUserId = session?.user?.id ?? '';
+    final unreadNotifs = ref.watch(unreadNotificationCountProvider);
+
+    // Listen for new flatmate spending notifications and display an in-app banner toast
+    ref.listen(householdNotificationsProvider, (previous, next) {
+      if (next.value != null && previous?.value != null) {
+        final previousIds = previous!.value!.map((n) => n.id).toSet();
+        for (final item in next.value!) {
+          if (!previousIds.contains(item.id) && item.payerId != currentUserId) {
+            showAppSnack(
+              context,
+              '🔔 ${item.title}: ${item.body}',
+            );
+          }
+        }
+      }
+    });
+
     final userName = session?.user?.name.split(' ').first ?? 'Roommate';
 
     return Scaffold(
@@ -105,8 +126,26 @@ class HomeScreen extends ConsumerWidget {
         ),
         actions: [
           householdAsync.maybeWhen(
-            data: (household) => household != null
-                ? Padding(
+            data: (household) {
+              if (household == null) return const SizedBox.shrink();
+              return Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    icon: Badge(
+                      isLabelVisible: unreadNotifs > 0,
+                      label: Text('$unreadNotifs'),
+                      child: const Icon(Icons.notifications_outlined),
+                    ),
+                    tooltip: 'Activity & Alerts',
+                    onPressed: () {
+                      ref
+                          .read(lastViewedNotificationProvider.notifier)
+                          .markAllAsRead();
+                      NotificationsSheet.show(context);
+                    },
+                  ),
+                  Padding(
                     padding: const EdgeInsets.only(right: 12),
                     child: ActionChip(
                       avatar: const Icon(Icons.group_add_rounded, size: 15),
@@ -120,8 +159,10 @@ class HomeScreen extends ConsumerWidget {
                       onPressed: () =>
                           InviteMembersSheet.show(context, household),
                     ),
-                  )
-                : const SizedBox.shrink(),
+                  ),
+                ],
+              );
+            },
             orElse: () => const SizedBox.shrink(),
           ),
         ],
@@ -209,8 +250,14 @@ class HomeScreen extends ConsumerWidget {
                   ),
               ],
 
-              // 4 Financial Summary Cards
-              FinancialSummaryCards(stats: stats),
+              // 4 Financial Summary Cards: Total Flat Budget, Total Spendings, Your Share, Spent By You
+              FinancialSummaryCards(
+                totalBudgetPaisa: household.effectiveTotalBudgetPaisa,
+                totalSpendingPaisa: stats.totalSpendingPaisa,
+                userAllocatedSharePaisa:
+                    household.getMemberTotalBudget(currentUserId),
+                userSpentPaisa: stats.userPaidPaisa,
+              ),
               const SizedBox(height: 16),
 
               // Monthly Budget Card

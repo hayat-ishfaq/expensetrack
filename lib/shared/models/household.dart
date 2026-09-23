@@ -75,6 +75,21 @@ class Household {
     return memberCategoryBudgetsPaisa[categoryId]?[userId] ?? 0;
   }
 
+  /// Returns total allocated budget for a member across all categories (in paisa).
+  /// If member-specific quotas are set, sums them. If no member quotas are set,
+  /// returns their equal share of the effective total budget.
+  int getMemberTotalBudget(String userId) {
+    int total = 0;
+    for (final catBudget in memberCategoryBudgetsPaisa.values) {
+      total += catBudget[userId] ?? 0;
+    }
+    if (total > 0) return total;
+    if (memberCount > 0 && effectiveTotalBudgetPaisa > 0) {
+      return (effectiveTotalBudgetPaisa / memberCount).round();
+    }
+    return 0;
+  }
+
   /// Returns all available subcategories for [categoryId], combining default
   /// suggestions, custom category subcategories, and any added household subcategories.
   List<String> getSubcategories(String categoryId) {

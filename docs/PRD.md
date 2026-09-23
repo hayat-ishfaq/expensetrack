@@ -2,7 +2,7 @@
 
 **Product Name**: FlatSplit  
 **Platform**: Android & iOS (Flutter)  
-**Version**: 1.2.0  
+**Version**: 1.3.0  
 **Target Audience**: Flatmates, roommates, co-living groups, students, and shared households  
 **Document Owner**: Engineering & Product Team  
 **Status**: Active / In Production  
@@ -84,13 +84,29 @@ To be the most intuitive, beautiful, and effortless co-living financial operatin
 - **FR-CAT-2**: Sub-Category Management: Inline addition of new subcategories on the fly during expense entry or category configuration.
 - **FR-CAT-3**: System Categories: Defaults include Food, Utilities, Rent, Household, Transportation, Entertainment, Health, and Miscellaneous.
 
-### 5.5 Role-Based Budget Management
+### 5.5 Financial Dashboard (4-Card Architecture)
+- **FR-DASH-1**: Total Allocated Budget Card: Displays the flat's monthly combined budget limit across all categories with percentage used and remaining amount.
+- **FR-DASH-2**: Total Spendings Card: Displays aggregate spending by all roommates in the current billing cycle.
+- **FR-DASH-3**: Your Total Allocated Share Card: Displays the authenticated user's personal spending quota across categories (or fallback equal share).
+- **FR-DASH-4**: Total Spending by You Card: Displays the authenticated user's cumulative out-of-pocket expenditure.
+- **FR-DASH-5**: Settle-Up / Owes Removal: Removes confusing cross-debt matrices and "owes/lent" numbers from the primary home summary, focusing strictly on budget targets and actual spending.
+
+### 5.6 Dedicated Budgets Navigation Tab
+- **FR-TAB-1**: Primary Navigation: Replaces the bottom navigation tab "Settle Up" with a dedicated **"Budgets"** tab (`CategoryBudgetScreen`).
+- **FR-TAB-2**: Quick Access: Allows roommates to instantly monitor category breakdown, remaining limits, and member quotas with one tap.
+
+### 5.7 Real-Time Spending Notifications
+- **FR-NOTIF-1**: Atomic Transaction Event Creation: Whenever a member records an expense, an event document is atomically written to `/households/{householdId}/notifications`.
+- **FR-NOTIF-2**: In-App Real-Time Toast Banner: Roommates actively using the app receive an instant toast banner alert (`🔔 New Expense: [Payer] paid Rs. X for [Category]`).
+- **FR-NOTIF-3**: Activity Notification Bell: Unread badge counter in the Home AppBar opening a dedicated Activity sheet with relative timestamps ("2m ago", "1h ago") and payer details.
+
+### 5.8 Role-Based Budget Management
 - **FR-BUD-1**: Owner-Only Budget Configuration: Only the household creator/owner can adjust the overall flat monthly budget and individual category budgets.
 - **FR-BUD-2**: View-Only Member Mode: Members can inspect all budgets, limits, and progress bars, but all editing controls, save actions, and quick chips are locked.
 - **FR-BUD-3**: Member Category Quotas: Owner can allocate category targets per roommate (e.g. Food budget divided equally or custom per member).
 - **FR-BUD-4**: Exceeded Alerts: High-visibility dashboard warning cards triggered when an individual member or the flat exceeds a category budget limit.
 
-### 5.6 Settlement & Debt Minimization
+### 5.9 Settlement & Debt Minimization
 - **FR-SETTLE-1**: Greedy Bipartite Debt Simplification: Computes net balances ($Credits - Debts$) and generates the minimum number of transactions ($N - 1$ max) required to balance the flat.
 - **FR-SETTLE-2**: One-Tap Settlement: Mark a transfer as paid to clear debts with persistent settlement transaction records.
 - **FR-SETTLE-3**: Settlement History: Audit log of past recorded settlements.

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../../core/errors/firebase_error_mapper.dart';
 import '../../../../core/utils/money.dart';
@@ -201,7 +200,9 @@ class _CategoryBudgetScreenState extends ConsumerState<CategoryBudgetScreen> {
 
       if (!mounted) return;
       showAppSnack(context, 'Category and individual budgets updated successfully');
-      context.pop();
+      if (Navigator.of(context).canPop()) {
+        Navigator.of(context).pop();
+      }
     } catch (e) {
       if (!mounted) return;
       showAppSnack(context, FirebaseErrorMapper.messageFor(e));

@@ -31,9 +31,9 @@ class AppShellScreen extends StatelessWidget {
             label: 'Expenses',
           ),
           NavigationDestination(
-            icon: Icon(Icons.swap_horiz_outlined),
-            selectedIcon: Icon(Icons.swap_horiz_rounded),
-            label: 'Settle Up',
+            icon: Icon(Icons.pie_chart_outline_rounded),
+            selectedIcon: Icon(Icons.pie_chart_rounded),
+            label: 'Budgets',
           ),
           NavigationDestination(
             icon: Icon(Icons.more_horiz_outlined),

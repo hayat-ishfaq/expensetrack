@@ -83,6 +83,13 @@ service cloud.firestore {
         allow read: if isMemberOf(householdId);
         allow create, update, delete: if isMemberOf(householdId);
       }
+
+      // Notifications subcollection for real-time flat spending activity
+      match /notifications/{notificationId} {
+        allow read: if isMemberOf(householdId);
+        allow create: if isMemberOf(householdId);
+        allow delete: if isOwnerOf(householdId);
+      }
     }
   }
 }

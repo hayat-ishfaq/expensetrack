@@ -1,7 +1,7 @@
 # FlatSplit — Project Development Progress
 
 **Project**: FlatSplit (Flutter Co-Living Expense & Budget Manager)  
-**Current Version**: `1.2.0`  
+**Current Version**: `1.3.0`  
 **Last Updated**: September 23, 2026  
 **Status**: 🟢 Production Ready / Stable Release Build  
 
@@ -9,6 +9,8 @@
 
 ## 1. Executive Summary
 FlatSplit has completed all core architecture, feature development, role-based authorization, custom category design systems, and APK release milestones. The application is fully verified with 100% test passage (89/89 unit & widget tests) and zero static analysis warnings.
+
+In version 1.3.0, the financial home screen was completely revamped with a streamlined 4-card budget dashboard (Total Budget, Total Spendings, Your Quota, Spent by You), removing confusing settlement/debt figures from the landing page. Settle-up bottom tab was transitioned to a dedicated "Budgets" tab (`CategoryBudgetScreen`), and a real-time spending notification feed with in-app banner toasts was integrated.
 
 ---
 
@@ -24,6 +26,7 @@ FlatSplit has completed all core architecture, feature development, role-based a
 | **Phase 6: Custom Categories** | Custom icons, color engines, on-the-fly subcategories, tree-shake safety | ✅ Completed | Sep 2026 |
 | **Phase 7: Role-Based Budgets** | Owner-only budget controls, member view-only mode, exceeded alerts | ✅ Completed | Sep 2026 |
 | **Phase 8: Invite & Join Resilience** | Smart WhatsApp invite extraction, self-healing Firestore index, release APK | ✅ Completed | Sep 2026 |
+| **Phase 9: Budget Dashboard & Notifications** | 4-Card Home Dashboard, Settle-Up Streamlining, Budgets Tab, Real-time Alerts | ✅ Completed | Sep 2026 |
 
 ---
 
@@ -74,11 +77,25 @@ FlatSplit has completed all core architecture, feature development, role-based a
 - [x] **Owner Mode**: Full edit rights, quick chips (`+1k`, `+5k`, `+10k`, `✕`), bottom save bar.
 - [x] **Member Mode**: Strictly view-only with lock notification banner; all edit fields disabled.
 - [x] Exceeded budget warning cards triggered on personal or flat limit breaches.
+- [x] Dedicated **Budgets** bottom navigation tab (`CategoryBudgetScreen`).
+
+### 💳 4-Card Streamlined Financial Dashboard
+- [x] **Total Allocated Budget**: Flat-wide spending target across all categories with percentage used indicator.
+- [x] **Total Spendings**: Cumulative spending by all flat members.
+- [x] **Your Total Allocated Share**: Current user's individual spending quota computed across categories.
+- [x] **Total Spending by You**: User's actual personal expenditure in the flat.
+- [x] Removed split-up, settle-up, and owes debt cards from home screen to eliminate confusion.
+
+### 🔔 Real-Time Spending Notifications
+- [x] Device-to-device Firestore transaction notification events (`/households/{householdId}/notifications`).
+- [x] In-app real-time banner toast displayed to flatmates whenever another roommate logs an expense.
+- [x] Dynamic unread notification counter badge in the home AppBar.
+- [x] Interactive Activity / Notification history bottom sheet with relative timestamps ("2m ago", "1h ago").
 
 ### 🤝 Debt Minimization & Settlement
 - [x] Mathematical net balance calculations ($\sum \text{Credits} - \sum \text{Debts} \equiv 0$).
 - [x] Greedy bipartite debt minimization algorithm producing at most $N - 1$ transfers.
-- [x] Settle Up screen with visual debit/credit indicators.
+- [x] Settle Up screen with visual debit/credit indicators (available via settlement routes).
 - [x] One-tap settlement recording that persists settlement documents in Firestore.
 
 ---

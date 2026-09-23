@@ -24,6 +24,8 @@ class FirebaseExpenseRepository implements ExpenseRepository {
         householdId: expense.householdId,
         description: expense.description,
         category: expense.category,
+        customCategoryId: expense.customCategoryId,
+        subcategory: expense.subcategory,
         amountPaisa: expense.amountPaisa,
         paidById: expense.paidById,
         splitAmongIds: expense.splitAmongIds,
@@ -33,7 +35,45 @@ class FirebaseExpenseRepository implements ExpenseRepository {
         createdAt: expense.createdAt,
         splitType: expense.splitType,
       );
-      await docRef.set(newExpense.toMap());
+
+      final batch = _firestore.batch();
+      batch.set(docRef, newExpense.toMap());
+
+      // Broadcast notification document for flatmates
+      final notifRef = _firestore
+          .collection(FirestoreCollections.households)
+          .doc(expense.householdId)
+          .collection('notifications')
+          .doc();
+
+      final userDoc = await _firestore
+          .collection(FirestoreCollections.users)
+          .doc(expense.paidById)
+          .get();
+      final payerName = userDoc.data()?['name'] as String? ?? 'A roommate';
+
+      final categoryLabel = expense.customCategoryId != null
+          ? 'Custom'
+          : expense.category.label;
+
+      final amountRupees = (expense.amountPaisa / 100).toStringAsFixed(0);
+      final subcatText = expense.subcategory != null && expense.subcategory!.isNotEmpty
+          ? ' (${expense.subcategory})'
+          : '';
+
+      batch.set(notifRef, {
+        'householdId': expense.householdId,
+        'title': '$payerName spent Rs. $amountRupees',
+        'body': 'Rs. $amountRupees on $categoryLabel$subcatText',
+        'amountPaisa': expense.amountPaisa,
+        'category': categoryLabel,
+        'subcategory': expense.subcategory,
+        'payerName': payerName,
+        'payerId': expense.paidById,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+
+      await batch.commit();
       return newExpense;
     } catch (error) {
       throw toAppException(error);

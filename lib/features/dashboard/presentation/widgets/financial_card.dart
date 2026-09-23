@@ -1,47 +1,42 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/utils/money.dart';
-import '../../domain/dashboard_stats.dart';
 
+/// Clean 2x2 financial summary cards showcasing:
+/// 1. Total Allocated Flat Budget
+/// 2. Total Flat Spending
+/// 3. User's Allocated Budget Share
+/// 4. Total Spending by User
 class FinancialSummaryCards extends StatelessWidget {
   const FinancialSummaryCards({
     super.key,
-    required this.stats,
+    required this.totalBudgetPaisa,
+    required this.totalSpendingPaisa,
+    required this.userAllocatedSharePaisa,
+    required this.userSpentPaisa,
   });
 
-  final DashboardStats stats;
+  final int totalBudgetPaisa;
+  final int totalSpendingPaisa;
+  final int userAllocatedSharePaisa;
+  final int userSpentPaisa;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
 
-    // Balance visual style
-    final balancePaisa = stats.userBalancePaisa;
-    final isCredit = balancePaisa > 0;
-    final isDebt = balancePaisa < 0;
+    final isFlatOver = totalBudgetPaisa > 0 && totalSpendingPaisa > totalBudgetPaisa;
+    final flatPct = totalBudgetPaisa > 0
+        ? (totalSpendingPaisa / totalBudgetPaisa * 100).round()
+        : 0;
 
-    final balanceBgColor = isCredit
-        ? const Color(0xFF10B981).withValues(alpha: 0.12)
-        : isDebt
-            ? const Color(0xFFEF4444).withValues(alpha: 0.12)
-            : scheme.surfaceContainerHighest;
-
-    final balanceTextColor = isCredit
-        ? const Color(0xFF059669)
-        : isDebt
-            ? const Color(0xFFDC2626)
-            : scheme.onSurfaceVariant;
-
-    final balanceLabel = isCredit
-        ? 'You should receive'
-        : isDebt
-            ? 'You owe'
-            : 'Settled up';
+    final isUserOver = userAllocatedSharePaisa > 0 && userSpentPaisa > userAllocatedSharePaisa;
+    final userRemainingPaisa = userAllocatedSharePaisa - userSpentPaisa;
 
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0.0, end: 1.0),
-      duration: const Duration(milliseconds: 550),
+      duration: const Duration(milliseconds: 500),
       curve: Curves.easeOutCubic,
       builder: (context, val, child) {
         return Transform.translate(
@@ -54,111 +49,85 @@ class FinancialSummaryCards extends StatelessWidget {
       },
       child: Column(
         children: [
-          // Top 2 Cards: Total Spending & Your Balance (Hero metrics)
+          // Row 1: Flat Budget & Flat Spending
           Row(
-          children: [
-            Expanded(
-              child: _MetricCard(
-                label: 'TOTAL SPENDING',
-                amount: Money.format(stats.totalSpendingPaisa),
-                icon: Icons.account_balance_wallet_rounded,
-                iconColor: scheme.primary,
-                bgColor: scheme.surfaceContainerLow,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: balanceBgColor,
-                  borderRadius: BorderRadius.circular(18),
-                  border: Border.all(
-                    color: balanceTextColor.withValues(alpha: 0.3),
-                    width: 1.5,
-                  ),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'YOUR BALANCE',
-                          style: theme.textTheme.labelSmall?.copyWith(
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 0.5,
-                            color: balanceTextColor,
-                          ),
-                        ),
-                        Icon(
-                          isCredit
-                              ? Icons.arrow_downward_rounded
-                              : isDebt
-                                  ? Icons.arrow_upward_rounded
-                                  : Icons.check_circle_rounded,
-                          size: 16,
-                          color: balanceTextColor,
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-                    Text(
-                      Money.formatSigned(balancePaisa),
-                      style: theme.textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w800,
-                        color: balanceTextColor,
-                        letterSpacing: -0.5,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      balanceLabel,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: balanceTextColor.withValues(alpha: 0.8),
-                        fontWeight: FontWeight.w600,
-                        fontSize: 11,
-                      ),
-                    ),
-                  ],
+            children: [
+              Expanded(
+                child: _MetricCard(
+                  label: 'TOTAL BUDGET',
+                  amount: totalBudgetPaisa > 0
+                      ? Money.format(totalBudgetPaisa)
+                      : 'Not set',
+                  icon: Icons.savings_rounded,
+                  iconColor: scheme.primary,
+                  bgColor: scheme.surfaceContainerLow,
+                  subtext: totalBudgetPaisa > 0
+                      ? 'Household limit'
+                      : 'Set monthly target',
                 ),
               ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _MetricCard(
+                  label: 'TOTAL SPENDINGS',
+                  amount: Money.format(totalSpendingPaisa),
+                  icon: Icons.account_balance_wallet_rounded,
+                  iconColor: isFlatOver
+                      ? const Color(0xFFEF4444)
+                      : const Color(0xFF3B82F6),
+                  bgColor: isFlatOver
+                      ? const Color(0xFFEF4444).withValues(alpha: 0.08)
+                      : scheme.surfaceContainerLow,
+                  subtext: totalBudgetPaisa > 0
+                      ? '$flatPct% of flat budget used'
+                      : 'Across all flatmates',
+                  isWarning: isFlatOver,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
 
-        // Bottom 2 Cards: Your Share & You Paid
-        Row(
-          children: [
-            Expanded(
-              child: _MetricCard(
-                label: 'YOUR SHARE',
-                amount: Money.format(stats.userSharePaisa),
-                icon: Icons.pie_chart_outline_rounded,
-                iconColor: const Color(0xFFF59E0B),
-                bgColor: scheme.surfaceContainerLow,
-                subtext: 'Your contribution',
+          // Row 2: Your Allocated Share & Total Spent by You
+          Row(
+            children: [
+              Expanded(
+                child: _MetricCard(
+                  label: 'YOUR SHARE',
+                  amount: userAllocatedSharePaisa > 0
+                      ? Money.format(userAllocatedSharePaisa)
+                      : 'Unset',
+                  icon: Icons.pie_chart_outline_rounded,
+                  iconColor: const Color(0xFF8B5CF6),
+                  bgColor: scheme.surfaceContainerLow,
+                  subtext: 'Your allocated quota',
+                ),
               ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _MetricCard(
-                label: 'YOU PAID',
-                amount: Money.format(stats.userPaidPaisa),
-                icon: Icons.payments_outlined,
-                iconColor: const Color(0xFF3B82F6),
-                bgColor: scheme.surfaceContainerLow,
-                subtext: 'Paid from your pocket',
+              const SizedBox(width: 12),
+              Expanded(
+                child: _MetricCard(
+                  label: 'SPENT BY YOU',
+                  amount: Money.format(userSpentPaisa),
+                  icon: Icons.person_rounded,
+                  iconColor: isUserOver
+                      ? const Color(0xFFEF4444)
+                      : const Color(0xFF10B981),
+                  bgColor: isUserOver
+                      ? const Color(0xFFEF4444).withValues(alpha: 0.08)
+                      : scheme.surfaceContainerLow,
+                  subtext: userAllocatedSharePaisa > 0
+                      ? (isUserOver
+                          ? 'Over by ${Money.format(-userRemainingPaisa)}'
+                          : '${Money.format(userRemainingPaisa)} remaining')
+                      : 'Your total spending',
+                  isWarning: isUserOver,
+                ),
               ),
-            ),
-          ],
-        ),
-      ],
-    ),);
+            ],
+          ),
+        ],
+      ),
+    );
   }
 }
 
@@ -170,6 +139,7 @@ class _MetricCard extends StatelessWidget {
     required this.iconColor,
     required this.bgColor,
     this.subtext,
+    this.isWarning = false,
   });
 
   final String label;
@@ -178,6 +148,7 @@ class _MetricCard extends StatelessWidget {
   final Color iconColor;
   final Color bgColor;
   final String? subtext;
+  final bool isWarning;
 
   @override
   Widget build(BuildContext context) {
@@ -185,12 +156,15 @@ class _MetricCard extends StatelessWidget {
     final scheme = theme.colorScheme;
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(15),
       decoration: BoxDecoration(
         color: bgColor,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(
-          color: scheme.outlineVariant.withValues(alpha: 0.4),
+          color: isWarning
+              ? const Color(0xFFEF4444).withValues(alpha: 0.35)
+              : scheme.outlineVariant.withValues(alpha: 0.4),
+          width: isWarning ? 1.5 : 1.0,
         ),
       ),
       child: Column(
@@ -204,29 +178,37 @@ class _MetricCard extends StatelessWidget {
                 style: theme.textTheme.labelSmall?.copyWith(
                   fontWeight: FontWeight.w700,
                   letterSpacing: 0.5,
-                  color: scheme.onSurfaceVariant,
+                  color: isWarning
+                      ? const Color(0xFFEF4444)
+                      : scheme.onSurfaceVariant,
+                  fontSize: 10.5,
                 ),
               ),
               Icon(icon, size: 16, color: iconColor),
             ],
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 8),
           Text(
             amount,
-            style: theme.textTheme.titleLarge?.copyWith(
+            style: theme.textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.w800,
-              letterSpacing: -0.5,
+              fontSize: 17,
+              letterSpacing: -0.4,
+              color: isWarning ? const Color(0xFFEF4444) : null,
             ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
           if (subtext != null) ...[
-            const SizedBox(height: 4),
+            const SizedBox(height: 3),
             Text(
               subtext!,
               style: theme.textTheme.bodySmall?.copyWith(
-                color: scheme.onSurfaceVariant,
+                color: isWarning
+                    ? const Color(0xFFEF4444)
+                    : scheme.onSurfaceVariant,
                 fontSize: 11,
+                fontWeight: isWarning ? FontWeight.w600 : FontWeight.normal,
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
