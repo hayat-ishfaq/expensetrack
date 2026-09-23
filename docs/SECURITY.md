@@ -132,7 +132,7 @@ service cloud.firestore {
 
       // Members subcollection
       match /members/{memberId} {
-        allow read: if isMemberOf(householdId) || isOwnerOf(householdId);
+        allow read: if isUser(memberId) || isMemberOf(householdId) || isOwnerOf(householdId);
         // User can add themselves when joining, or owner can manage
         allow create, update: if isUser(memberId) || isOwnerOf(householdId);
         // User can leave or owner can remove member

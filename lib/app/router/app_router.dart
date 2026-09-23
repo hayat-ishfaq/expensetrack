@@ -163,10 +163,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         ],
       ),
     ],
-    redirect: (context, state) => _redirect(
-      state,
-      ref.read(sessionProvider).value,
-    ),
+    redirect: (context, state) =>
+        _redirect(state, ref.read(sessionProvider).value),
     errorBuilder: (context, state) =>
         NotFoundScreen(location: state.uri.toString()),
   );
