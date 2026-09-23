@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 
 class AvatarPreset {
@@ -170,6 +171,27 @@ class AppAvatar extends StatelessWidget {
           ),
         ),
       );
+    } else if (photoUrl != null &&
+        photoUrl!.isNotEmpty &&
+        photoUrl!.startsWith('data:image')) {
+      final commaIndex = photoUrl!.indexOf(',');
+      final base64String =
+          commaIndex != -1 ? photoUrl!.substring(commaIndex + 1) : photoUrl!;
+      try {
+        final bytes = base64Decode(base64String);
+        child = ClipOval(
+          child: Image.memory(
+            bytes,
+            width: size,
+            height: size,
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) =>
+                _buildFallback(scheme),
+          ),
+        );
+      } catch (_) {
+        child = _buildFallback(scheme);
+      }
     } else if (photoUrl != null &&
         photoUrl!.isNotEmpty &&
         photoUrl!.startsWith('http')) {

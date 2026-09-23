@@ -49,6 +49,7 @@ In version 1.4.0, a complete **Edit Profile** feature was integrated with a 16-p
 - [x] 3-step animated onboarding carousel introducing core value propositions.
 - [x] Persistent session controller with automatic redirection.
 - [x] **Edit Profile Screen**: Update display name, phone/WhatsApp number, payment handle (UPI/EasyPaisa/JazzCash), and room notes.
+- [x] **Gallery & Album Photo Picker**: Pick custom photos directly from phone gallery, albums, or camera, stored as lightweight base64 data URIs.
 - [x] **Avatar Studio**: 16 curated illustrated avatar badges with vibrant gradients, custom photo URL support, and dynamic monogram initials.
 - [x] **Cross-Household Sync**: Updates sync seamlessly across Firebase Auth, `users/{uid}`, and active household member profiles.
 

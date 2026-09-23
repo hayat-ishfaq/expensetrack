@@ -62,10 +62,11 @@ To be the most intuitive, beautiful, and effortless co-living financial operatin
 - **FR-AUTH-3**: Persistent session with biometric/auto-login state.
 - **FR-AUTH-4**: User Profile Management: Name, verified email, contact phone/WhatsApp number, UPI ID/payment handle, and room note/bio.
 - **FR-AUTH-5**: Avatar Studio & Profile Customization:
-  - 16 curated high-aesthetic persona avatar badges (Techie, Chef, Music, Coffee, Nature, Cat, Zen, etc.) with dual-tone gradient backdrops for zero-latency cross-device rendering.
-  - Custom image/photo URL support (Google profile, Gravatar, Discord, Unsplash).
-  - Dynamic initials monogram with deterministic hue generation.
-  - Automatic cross-household member synchronization: updates sync simultaneously across Firebase Auth, `users/{uid}`, and `households/{householdId}/members/{uid}` so flatmates immediately see new avatars and contact details.
+  - **Gallery & Device Albums**: Users can pick custom profile pictures directly from their phone gallery, albums, or camera. Photos are automatically scaled and encoded as lightweight base64 data URIs for instant, zero-latency cross-device synchronization without external storage bucket dependency.
+  - **Curated Avatar Library**: 16 high-aesthetic persona avatar badges (Techie, Chef, Music, Coffee, Nature, Cat, Zen, etc.) with dual-tone gradient backdrops.
+  - **Custom Image URL Support**: Compatible with public photo links (Google, Gravatar, Discord, Unsplash).
+  - **Dynamic Monogram Initials**: Deterministic dual-tone gradient avatar generated from user initials.
+  - **Cross-Household Sync**: Updates sync simultaneously across Firebase Auth, `users/{uid}`, and `households/{householdId}/members/{uid}` so flatmates immediately see new avatars and contact details.
 
 ### 5.2 Household Management & Onboarding
 - **FR-HOUSE-1**: Household Creation: Allows user to create a new flat and automatically assigns them `Owner` role.

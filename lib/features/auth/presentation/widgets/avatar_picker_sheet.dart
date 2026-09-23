@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../../../../shared/widgets/app_avatar.dart';
 
@@ -36,6 +38,41 @@ class _AvatarPickerSheetState extends State<AvatarPickerSheet> {
   late String? _selected;
   late TextEditingController _urlController;
   bool _showCustomUrl = false;
+  bool _isProcessingImage = false;
+
+  Future<void> _pickImage(ImageSource source) async {
+    try {
+      final picker = ImagePicker();
+      final picked = await picker.pickImage(
+        source: source,
+        maxWidth: 320,
+        maxHeight: 320,
+        imageQuality: 70,
+      );
+      if (picked != null) {
+        setState(() {
+          _isProcessingImage = true;
+        });
+        final bytes = await picked.readAsBytes();
+        final base64String = base64Encode(bytes);
+        setState(() {
+          _selected = 'data:image/jpeg;base64,$base64String';
+          _showCustomUrl = false;
+          _urlController.clear();
+          _isProcessingImage = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _isProcessingImage = false;
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to load image: $e')),
+        );
+      }
+    }
+  }
 
   @override
   void initState() {
@@ -122,29 +159,66 @@ class _AvatarPickerSheetState extends State<AvatarPickerSheet> {
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
-
-              // Reset to Initials chip
-              Center(
-                child: ActionChip(
-                  avatar: const Icon(Icons.text_fields_rounded, size: 16),
-                  label: const Text('Use My Initials'),
-                  backgroundColor: _selected == null || _selected!.isEmpty
-                      ? scheme.primaryContainer
-                      : scheme.surfaceContainerHigh,
-                  side: BorderSide(
-                    color: _selected == null || _selected!.isEmpty
-                        ? scheme.primary
-                        : Colors.transparent,
+              if (_isProcessingImage)
+                const Center(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(vertical: 8),
+                    child: CircularProgressIndicator(),
                   ),
-                  onPressed: () {
-                    setState(() {
-                      _selected = null;
-                      _urlController.clear();
-                      _showCustomUrl = false;
-                    });
-                  },
                 ),
+              const SizedBox(height: 12),
+
+              // Upload from Device Section
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () => _pickImage(ImageSource.gallery),
+                      icon: const Icon(Icons.photo_library_rounded, size: 18),
+                      label: const Text('Gallery'),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () => _pickImage(ImageSource.camera),
+                      icon: const Icon(Icons.camera_alt_rounded, size: 18),
+                      label: const Text('Camera'),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  ActionChip(
+                    avatar: const Icon(Icons.text_fields_rounded, size: 15),
+                    label: const Text('Initials'),
+                    backgroundColor: _selected == null || _selected!.isEmpty
+                        ? scheme.primaryContainer
+                        : scheme.surfaceContainerHigh,
+                    side: BorderSide(
+                      color: _selected == null || _selected!.isEmpty
+                          ? scheme.primary
+                          : Colors.transparent,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _selected = null;
+                        _urlController.clear();
+                        _showCustomUrl = false;
+                      });
+                    },
+                  ),
+                ],
               ),
               const SizedBox(height: 16),
 
