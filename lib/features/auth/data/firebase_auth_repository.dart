@@ -148,4 +148,62 @@ class FirebaseAuthRepository implements AuthRepository {
       .snapshots()
       .map((snapshot) =>
           snapshot.exists ? AppUser.fromMap(uid, snapshot.data()!) : null);
+
+  @override
+  Future<void> updateProfile({
+    required String uid,
+    required String name,
+    String? photoUrl,
+    String? phone,
+    String? upiId,
+    String? bio,
+    String? householdId,
+  }) async {
+    try {
+      final trimmedName = name.trim();
+      final user = _auth.currentUser;
+      if (user != null) {
+        try {
+          await user.updateDisplayName(trimmedName);
+          if (photoUrl != null) {
+            await user.updatePhotoURL(photoUrl);
+          }
+        } catch (_) {}
+      }
+
+      final userUpdates = <String, dynamic>{
+        'name': trimmedName,
+        'photoUrl': photoUrl,
+        'phone': phone?.trim(),
+        'upiId': upiId?.trim(),
+        'bio': bio?.trim(),
+      };
+
+      await _firestore
+          .collection(FirestoreCollections.users)
+          .doc(uid)
+          .update(userUpdates);
+
+      if (householdId != null && householdId.isNotEmpty) {
+        try {
+          final memberUpdates = <String, dynamic>{
+            'name': trimmedName,
+            'photoUrl': photoUrl,
+            if (phone != null) 'phone': phone.trim(),
+            if (upiId != null) 'upiId': upiId.trim(),
+          };
+          await _firestore
+              .collection(FirestoreCollections.households)
+              .doc(householdId)
+              .collection(FirestoreCollections.members)
+              .doc(uid)
+              .update(memberUpdates);
+        } catch (_) {
+          // Member document update failure is non-fatal if user left or doc doesn't exist
+        }
+      }
+    } catch (error) {
+      throw toAppException(error);
+    }
+  }
 }

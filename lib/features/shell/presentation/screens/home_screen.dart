@@ -7,6 +7,7 @@ import '../../../../app/router/routes.dart';
 import '../../../../core/errors/app_exception.dart';
 import '../../../../core/errors/firebase_error_mapper.dart';
 import '../../../../core/utils/money.dart';
+import '../../../../shared/widgets/app_avatar.dart';
 import '../../../../shared/widgets/app_snackbar.dart';
 import '../../../../shared/widgets/empty_state.dart';
 import '../../../../shared/widgets/error_view.dart';
@@ -89,7 +90,18 @@ class HomeScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        titleSpacing: 16,
+        titleSpacing: 8,
+        leading: Padding(
+          padding: const EdgeInsets.only(left: 12),
+          child: Center(
+            child: AppAvatar(
+              name: session?.user?.name ?? '',
+              photoUrl: session?.user?.photoUrl,
+              size: 38,
+              onTap: () => context.push(Routes.profile),
+            ),
+          ),
+        ),
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

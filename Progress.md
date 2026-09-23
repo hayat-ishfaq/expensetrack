@@ -1,16 +1,16 @@
 # FlatSplit — Project Development Progress
 
 **Project**: FlatSplit (Flutter Co-Living Expense & Budget Manager)  
-**Current Version**: `1.3.0`  
+**Current Version**: `1.4.0`  
 **Last Updated**: September 23, 2026  
 **Status**: 🟢 Production Ready / Stable Release Build  
 
 ---
 
 ## 1. Executive Summary
-FlatSplit has completed all core architecture, feature development, role-based authorization, custom category design systems, and APK release milestones. The application is fully verified with 100% test passage (89/89 unit & widget tests) and zero static analysis warnings.
+FlatSplit has completed all core architecture, feature development, role-based authorization, custom category design systems, and APK release milestones. The application is fully verified with 100% test passage (92/92 unit & widget tests) and zero static analysis warnings.
 
-In version 1.3.0, the financial home screen was completely revamped with a streamlined 4-card budget dashboard (Total Budget, Total Spendings, Your Quota, Spent by You), removing confusing settlement/debt figures from the landing page. Settle-up bottom tab was transitioned to a dedicated "Budgets" tab (`CategoryBudgetScreen`), and a real-time spending notification feed with in-app banner toasts was integrated.
+In version 1.4.0, a complete **Edit Profile** feature was integrated with a 16-preset Avatar Studio, custom photo URLs, and fields for full name, contact phone/WhatsApp number, payment handle (UPI / EasyPaisa / JazzCash), and room notes. Profile updates sync in real time across Firebase Auth, Firestore user profiles, and active household member rosters.
 
 ---
 
@@ -27,14 +27,15 @@ In version 1.3.0, the financial home screen was completely revamped with a strea
 | **Phase 7: Role-Based Budgets** | Owner-only budget controls, member view-only mode, exceeded alerts | ✅ Completed | Sep 2026 |
 | **Phase 8: Invite & Join Resilience** | Smart WhatsApp invite extraction, self-healing Firestore index, release APK | ✅ Completed | Sep 2026 |
 | **Phase 9: Budget Dashboard & Notifications** | 4-Card Home Dashboard, Settle-Up Streamlining, Budgets Tab, Real-time Alerts | ✅ Completed | Sep 2026 |
+| **Phase 10: Profile & Avatar Studio** | Edit Profile screen, 16-preset avatar studio, phone/UPI handles, member sync | ✅ Completed | Sep 2026 |
 
 ---
 
 ## 3. Current Build & Quality Metrics
 
 - **Static Analysis**: `flutter analyze` $\to$ **0 issues found** (100% clean).
-- **Automated Tests**: `flutter test` $\to$ **89 / 89 tests passing** (100% pass rate).
-- **Release APK**: Built and generated at `FlatSplit-release.apk` (57.2 MB / 60,014,100 bytes).
+- **Automated Tests**: `flutter test` $\to$ **92 / 92 tests passing** (100% pass rate).
+- **Release APK**: Built and generated at `FlatSplit-release.apk`.
 - **Icon Font Tree Shaking**: Resolved via constant `CustomCategory.knownIcons` table (zero dynamic runtime crashes).
 - **Database Rules**: Updated in `firestore.rules` enforcing owner-only budget adjustments and member expense isolation.
 
@@ -42,11 +43,14 @@ In version 1.3.0, the financial home screen was completely revamped with a strea
 
 ## 4. Completed Feature Matrix
 
-### 🔐 Authentication & Onboarding
+### 🔐 Authentication, Profile & Customization
 - [x] Email & password sign-up and login with Firebase Auth.
 - [x] Password reset with email verification tokens.
 - [x] 3-step animated onboarding carousel introducing core value propositions.
 - [x] Persistent session controller with automatic redirection.
+- [x] **Edit Profile Screen**: Update display name, phone/WhatsApp number, payment handle (UPI/EasyPaisa/JazzCash), and room notes.
+- [x] **Avatar Studio**: 16 curated illustrated avatar badges with vibrant gradients, custom photo URL support, and dynamic monogram initials.
+- [x] **Cross-Household Sync**: Updates sync seamlessly across Firebase Auth, `users/{uid}`, and active household member profiles.
 
 ### 🏠 Household Management
 - [x] Create flat with automated owner provisioning.

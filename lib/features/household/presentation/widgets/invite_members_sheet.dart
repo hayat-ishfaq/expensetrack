@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../shared/models/household.dart';
+import '../../../../shared/widgets/app_avatar.dart';
 import '../../../../shared/widgets/app_snackbar.dart';
 import '../providers/household_providers.dart';
 
@@ -225,19 +226,10 @@ class InviteMembersSheet extends ConsumerWidget {
                 return ListTile(
                   dense: true,
                   contentPadding: EdgeInsets.zero,
-                  leading: CircleAvatar(
-                    radius: 16,
-                    backgroundColor: scheme.primary.withValues(alpha: 0.15),
-                    child: Text(
-                      member.name.isNotEmpty
-                          ? member.name[0].toUpperCase()
-                          : '?',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w800,
-                        fontSize: 13,
-                        color: scheme.primary,
-                      ),
-                    ),
+                  leading: AppAvatar(
+                    name: member.name,
+                    photoUrl: member.photoUrl,
+                    size: 34,
                   ),
                   title: Text(
                     member.name,

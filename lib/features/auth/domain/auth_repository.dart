@@ -25,4 +25,15 @@ abstract interface class AuthRepository {
 
   /// Streams the `users/{uid}` document; emits null when it does not exist.
   Stream<AppUser?> watchCurrentUser(String uid);
+
+  /// Updates user profile details, syncing Auth, users/{uid}, and household members.
+  Future<void> updateProfile({
+    required String uid,
+    required String name,
+    String? photoUrl,
+    String? phone,
+    String? upiId,
+    String? bio,
+    String? householdId,
+  });
 }

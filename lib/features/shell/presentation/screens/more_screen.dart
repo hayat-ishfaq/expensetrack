@@ -7,6 +7,7 @@ import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/theme_controller.dart';
 import '../../../../core/utils/money.dart';
 import '../../../../core/utils/validators.dart';
+import '../../../../shared/widgets/app_avatar.dart';
 import '../../../../shared/widgets/app_snackbar.dart';
 import '../../../../shared/widgets/confirm_dialog.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
@@ -129,45 +130,94 @@ class MoreScreen extends ConsumerWidget {
                 color: scheme.outlineVariant.withValues(alpha: 0.4),
               ),
             ),
-            child: ListTile(
-              leading: CircleAvatar(
-                radius: 22,
-                backgroundColor: scheme.primaryContainer,
-                child: Text(
-                  user?.name.isNotEmpty == true
-                      ? user!.name[0].toUpperCase()
-                      : '?',
-                  style: TextStyle(
-                    color: scheme.onPrimaryContainer,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 16,
-                  ),
+            child: InkWell(
+              onTap: () => context.push(Routes.profile),
+              borderRadius: BorderRadius.circular(18),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                child: Row(
+                  children: [
+                    AppAvatar(
+                      name: user?.name ?? '',
+                      photoUrl: user?.photoUrl,
+                      size: 48,
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  user?.name ?? 'FlatSplit member',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 16,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              if (isOwner) ...[
+                                const SizedBox(width: 8),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 2,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: scheme.secondaryContainer,
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Text(
+                                    'Owner',
+                                    style: theme.textTheme.labelSmall?.copyWith(
+                                      color: scheme.onSecondaryContainer,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            user?.email ?? '',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: scheme.onSurfaceVariant,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          if (user?.phone != null && user!.phone!.isNotEmpty) ...[
+                            const SizedBox(height: 2),
+                            Text(
+                              '📞 ${user.phone}',
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                color: scheme.primary,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: scheme.surfaceContainerHigh,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.edit_outlined,
+                        size: 16,
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              title: Text(
-                user?.name ?? 'FlatSplit member',
-                style: const TextStyle(fontWeight: FontWeight.w700),
-              ),
-              subtitle: Text(user?.email ?? ''),
-              trailing: isOwner
-                  ? Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 3,
-                      ),
-                      decoration: BoxDecoration(
-                        color: scheme.secondaryContainer,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        'Owner',
-                        style: theme.textTheme.labelSmall?.copyWith(
-                          color: scheme.onSecondaryContainer,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    )
-                  : null,
             ),
           ),
           const SizedBox(height: 16),

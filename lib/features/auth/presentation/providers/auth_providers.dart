@@ -71,6 +71,29 @@ class AuthActions extends AsyncNotifier<void> {
       await _repository.signOut();
     });
   }
+
+  Future<void> updateProfile({
+    required String uid,
+    required String name,
+    String? photoUrl,
+    String? phone,
+    String? upiId,
+    String? bio,
+    String? householdId,
+  }) async {
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(() async {
+      await _repository.updateProfile(
+        uid: uid,
+        name: name,
+        photoUrl: photoUrl,
+        phone: phone,
+        upiId: upiId,
+        bio: bio,
+        householdId: householdId,
+      );
+    });
+  }
 }
 
 final authActionsProvider =

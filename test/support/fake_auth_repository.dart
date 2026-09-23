@@ -54,4 +54,25 @@ class FakeAuthRepository implements AuthRepository {
 
   @override
   Future<void> signOut() async {}
+
+  @override
+  Future<void> updateProfile({
+    required String uid,
+    required String name,
+    String? photoUrl,
+    String? phone,
+    String? upiId,
+    String? bio,
+    String? householdId,
+  }) async {
+    if (appUser != null && appUser!.id == uid) {
+      appUser = appUser!.copyWith(
+        name: name,
+        photoUrl: photoUrl,
+        phone: phone,
+        upiId: upiId,
+        bio: bio,
+      );
+    }
+  }
 }

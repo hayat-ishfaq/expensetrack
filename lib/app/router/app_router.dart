@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../features/auth/domain/session_state.dart';
 import '../../features/auth/presentation/providers/session_provider.dart';
+import '../../features/auth/presentation/screens/edit_profile_screen.dart';
 import '../../features/auth/presentation/screens/forgot_password_screen.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/onboarding_screen.dart';
@@ -93,6 +94,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: Routes.joinFlat,
         name: 'join-flat',
         builder: (context, state) => const JoinFlatScreen(),
+      ),
+      GoRoute(
+        path: Routes.profile,
+        name: 'profile',
+        builder: (context, state) => const EditProfileScreen(),
       ),
       GoRoute(
         path: Routes.settle,
