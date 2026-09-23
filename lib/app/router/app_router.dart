@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/theme/design_system.dart';
 import '../../features/auth/domain/session_state.dart';
 import '../../features/auth/presentation/providers/session_provider.dart';
 import '../../features/auth/presentation/screens/edit_profile_screen.dart';
@@ -58,47 +59,83 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: Routes.onboarding,
         name: 'onboarding',
-        builder: (context, state) => const OnboardingScreen(),
+        pageBuilder: (context, state) => coSpendPageTransition(
+          context: context,
+          state: state,
+          child: const OnboardingScreen(),
+        ),
       ),
       GoRoute(
         path: Routes.welcome,
         name: 'welcome',
-        builder: (context, state) => const WelcomeScreen(),
+        pageBuilder: (context, state) => coSpendPageTransition(
+          context: context,
+          state: state,
+          child: const WelcomeScreen(),
+        ),
       ),
       GoRoute(
         path: Routes.login,
         name: 'login',
-        builder: (context, state) => const LoginScreen(),
+        pageBuilder: (context, state) => coSpendPageTransition(
+          context: context,
+          state: state,
+          child: const LoginScreen(),
+        ),
       ),
       GoRoute(
         path: Routes.signup,
         name: 'signup',
-        builder: (context, state) => const SignUpScreen(),
+        pageBuilder: (context, state) => coSpendPageTransition(
+          context: context,
+          state: state,
+          child: const SignUpScreen(),
+        ),
       ),
       GoRoute(
         path: Routes.forgotPassword,
         name: 'forgot-password',
-        builder: (context, state) => const ForgotPasswordScreen(),
+        pageBuilder: (context, state) => coSpendPageTransition(
+          context: context,
+          state: state,
+          child: const ForgotPasswordScreen(),
+        ),
       ),
       GoRoute(
         path: Routes.householdSetup,
         name: 'household-setup',
-        builder: (context, state) => const HouseholdSetupScreen(),
+        pageBuilder: (context, state) => coSpendPageTransition(
+          context: context,
+          state: state,
+          child: const HouseholdSetupScreen(),
+        ),
       ),
       GoRoute(
         path: Routes.createFlat,
         name: 'create-flat',
-        builder: (context, state) => const CreateFlatScreen(),
+        pageBuilder: (context, state) => coSpendPageTransition(
+          context: context,
+          state: state,
+          child: const CreateFlatScreen(),
+        ),
       ),
       GoRoute(
         path: Routes.joinFlat,
         name: 'join-flat',
-        builder: (context, state) => const JoinFlatScreen(),
+        pageBuilder: (context, state) => coSpendPageTransition(
+          context: context,
+          state: state,
+          child: const JoinFlatScreen(),
+        ),
       ),
       GoRoute(
         path: Routes.profile,
         name: 'profile',
-        builder: (context, state) => const EditProfileScreen(),
+        pageBuilder: (context, state) => coSpendPageTransition(
+          context: context,
+          state: state,
+          child: const EditProfileScreen(),
+        ),
       ),
       GoRoute(
         path: Routes.settle,
@@ -107,20 +144,31 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: Routes.addExpense,
         name: 'add-expense',
-        builder: (context, state) => const AddExpenseScreen(),
+        pageBuilder: (context, state) => coSpendPageTransition(
+          context: context,
+          state: state,
+          child: const AddExpenseScreen(),
+        ),
       ),
       GoRoute(
         path: Routes.expenseDetails,
         name: 'expense-details',
-        builder: (context, state) {
+        pageBuilder: (context, state) {
           final expense = state.extra;
+          Widget child;
           if (expense is Expense) {
-            return ExpenseDetailsScreen(expense: expense);
+            child = ExpenseDetailsScreen(expense: expense);
+          } else {
+            final id = state.pathParameters['id'] ?? '';
+            child = Scaffold(
+              appBar: AppBar(title: const Text('Expense Details')),
+              body: Center(child: Text('Expense #$id')),
+            );
           }
-          final id = state.pathParameters['id'] ?? '';
-          return Scaffold(
-            appBar: AppBar(title: const Text('Expense Details')),
-            body: Center(child: Text('Expense #$id')),
+          return coSpendPageTransition(
+            context: context,
+            state: state,
+            child: child,
           );
         },
       ),
