@@ -34,17 +34,22 @@ class AuthScaffold extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: scheme.primaryContainer,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Icon(
-                        Icons.receipt_long_rounded,
-                        size: 22,
-                        color: scheme.onPrimaryContainer,
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(10),
+                      child: Image.asset(
+                        'assets/images/app_logo.png',
+                        width: 40,
+                        height: 40,
+                        errorBuilder: (_, _, _) => Container(
+                          width: 40,
+                          height: 40,
+                          color: scheme.primary,
+                          child: const Icon(
+                            Icons.wallet_rounded,
+                            size: 22,
+                            color: Colors.white,
+                          ),
+                        ),
                       ),
                     ),
                     const SizedBox(width: 10),

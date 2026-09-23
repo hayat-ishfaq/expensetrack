@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/routes.dart';
+import '../../../../core/constants/app_constants.dart';
 import '../../../../core/errors/app_exception.dart';
 import '../../../../core/errors/firebase_error_mapper.dart';
 import '../../../../core/utils/validators.dart';
@@ -82,7 +83,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
 
     return AuthScaffold(
       title: 'Create your account',
-      subtitle: 'A free FlatSplit account, ready in seconds.',
+      subtitle: 'A free ${AppConstants.appName} account, ready in seconds.',
       footer: Center(
         child: TextButton(
           onPressed: () => context.go(Routes.login),

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../app/router/routes.dart';
+import '../../../../core/constants/app_constants.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -20,32 +21,32 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   final List<OnboardingSlideData> _slides = const [
     OnboardingSlideData(
-      badge: 'FAIR SPLITS',
-      badgeColor: Color(0xFF6366F1),
-      title: 'Split Shared Expenses\nWithout the Drama',
+      badge: 'FAIR EXPENSES',
+      badgeColor: Color(0xFF00BC57),
+      title: 'Track Shared Expenses\nWithout the Drama',
       description:
-          'Log flat groceries, utilities, and dining in seconds. FlatSplit splits bills equally or with custom amounts without paisa drift.',
+          'Log flat groceries, utilities, and dining in seconds. CoSpend keeps shared expenses organized with exact paisa accuracy.',
       mockupType: MockupType.splits,
     ),
     OnboardingSlideData(
       badge: 'SMART BUDGETS',
-      badgeColor: Color(0xFF10B981),
+      badgeColor: Color(0xFF0A2542),
       title: 'Category Limits &\nIndividual Quotas',
       description:
-          'Set overall spending caps for Food, Electricity, and Rent. Divide budgets among flatmates with automatic alerts when limits are spent.',
+          'Set monthly spending caps for Food, Electricity, and Rent. Divide budgets among flatmates with automatic alerts when limits are reached.',
       mockupType: MockupType.budgets,
     ),
     OnboardingSlideData(
-      badge: 'MINIMAL TRANSFERS',
-      badgeColor: Color(0xFFF59E0B),
-      title: 'Settle Debts in\na Single Tap',
+      badge: 'REAL-TIME ALERTS',
+      badgeColor: Color(0xFF00BC57),
+      title: 'Stay in Sync with\nLive Notifications',
       description:
-          'Our settlement algorithm eliminates reciprocal IOUs to compute the fewest possible bank or cash transfers between roommates.',
+          'Whenever any roommate spends on something, everyone receives an instant alert and activity update in the flat feed.',
       mockupType: MockupType.settlement,
     ),
     OnboardingSlideData(
       badge: 'ROOMMATE SYNC',
-      badgeColor: Color(0xFF3B82F6),
+      badgeColor: Color(0xFF0A2542),
       title: 'One Shared Ledger\nFor All Flatmates',
       description:
           'Share your flat invite code with one tap. Everyone stays on the exact same page with live cloud sync and zero confusion.',
@@ -117,7 +118,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       ),
                       const SizedBox(width: 10),
                       Text(
-                        'FlatSplit',
+                        AppConstants.appName,
                         style: theme.textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.w900,
                           letterSpacing: -0.5,

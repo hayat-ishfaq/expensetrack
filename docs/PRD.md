@@ -1,8 +1,8 @@
-# FlatSplit — Product Requirements Document (PRD)
+# CoSpend — Product Requirements Document (PRD)
 
-**Product Name**: FlatSplit  
+**Product Name**: CoSpend (formerly FlatSplit)  
 **Platform**: Android & iOS (Flutter)  
-**Version**: 1.3.0  
+**Version**: 1.4.0  
 **Target Audience**: Flatmates, roommates, co-living groups, students, and shared households  
 **Document Owner**: Engineering & Product Team  
 **Status**: Active / In Production  
@@ -10,9 +10,9 @@
 ---
 
 ## 1. Executive Summary
-**FlatSplit** is a modern, high-performance mobile application designed to simplify shared living expenses. Unlike generic bill-splitting applications that focus exclusively on one-off dinner receipts or complex corporate balance sheets, FlatSplit is tailored for **household day-to-day operations**: shared groceries, utilities, rent, recurring household supplies, and monthly category-specific spending caps.
+**CoSpend** is a modern, high-performance mobile application designed to simplify shared living expenses. Unlike generic bill-splitting applications that focus exclusively on one-off dinner receipts or complex corporate balance sheets, CoSpend is tailored for **household day-to-day operations**: shared groceries, utilities, rent, recurring household supplies, and monthly category-specific spending caps.
 
-With automated debt minimization, role-based budget management, instant invite links, custom category icon/color engines, and zero-loss offline-first caching, FlatSplit eliminates roommate money friction and provides full financial transparency.
+With automated debt minimization, role-based budget management, instant invite links, custom category icon/color engines, and zero-loss offline-first caching, CoSpend eliminates roommate money friction and provides full financial transparency.
 
 ---
 
@@ -133,7 +133,13 @@ To be the most intuitive, beautiful, and effortless co-living financial operatin
 
 ### 6.3 Usability & Aesthetics
 - **Dark/Light Theme**: Automatic system detection with manual override.
-- **Curated Visual Palette**: Emerald green primary (`#059669`), deep slate background (`#0F172A`), vibrant category accents, micro-animations, and glassmorphic cards.
+- **Curated CoSpend Palette**:
+  - *Jade Green* (`#00BC57` / `hsla(148, 100%, 37%, 1)`): Primary brand accent, progress fill, budget remainder, and CTAs.
+  - *Prussian Blue* (`#0A2542` / `hsla(211, 74%, 15%, 1)`): Deep navy contrast headers, dark mode foundation canvas, and card borders.
+  - *Crisp White & Soft Slate* (`#FFFFFF` / `#F8FAFC`): Clean, uncluttered light mode canvas eliminating visual noise.
+- **Brand Identity & Iconography**:
+  - Official high-resolution CoSpend emblem (`assets/images/app_logo.png`).
+  - Production-ready Android mipmap launcher icons generated across all densities (`mdpi`, `hdpi`, `xhdpi`, `xxhdpi`, `xxxhdpi`).
 - **Zero Non-Constant Icon Crashes**: Pre-indexed `IconData` maps to guarantee stability in Android AOT release builds.
 
 ---

@@ -28,7 +28,7 @@ class SplashScreen extends ConsumerWidget {
       return Scaffold(
         body: SafeArea(
           child: ErrorView(
-            title: "Can't connect to FlatSplit",
+            title: "Can't connect to ${AppConstants.appName}",
             message: message,
             onRetry: () => ref.invalidate(sessionProvider),
           ),

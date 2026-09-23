@@ -72,11 +72,9 @@ class FinancialSummaryCards extends StatelessWidget {
                   label: 'TOTAL SPENDINGS',
                   amount: Money.format(totalSpendingPaisa),
                   icon: Icons.account_balance_wallet_rounded,
-                  iconColor: isFlatOver
-                      ? const Color(0xFFEF4444)
-                      : const Color(0xFF3B82F6),
+                  iconColor: isFlatOver ? scheme.error : scheme.secondary,
                   bgColor: isFlatOver
-                      ? const Color(0xFFEF4444).withValues(alpha: 0.08)
+                      ? scheme.error.withValues(alpha: 0.08)
                       : scheme.surfaceContainerLow,
                   subtext: totalBudgetPaisa > 0
                       ? '$flatPct% of flat budget used'
@@ -98,7 +96,7 @@ class FinancialSummaryCards extends StatelessWidget {
                       ? Money.format(userAllocatedSharePaisa)
                       : 'Unset',
                   icon: Icons.pie_chart_outline_rounded,
-                  iconColor: const Color(0xFF8B5CF6),
+                  iconColor: scheme.secondary,
                   bgColor: scheme.surfaceContainerLow,
                   subtext: 'Your allocated quota',
                 ),
@@ -109,11 +107,9 @@ class FinancialSummaryCards extends StatelessWidget {
                   label: 'SPENT BY YOU',
                   amount: Money.format(userSpentPaisa),
                   icon: Icons.person_rounded,
-                  iconColor: isUserOver
-                      ? const Color(0xFFEF4444)
-                      : const Color(0xFF10B981),
+                  iconColor: isUserOver ? scheme.error : scheme.primary,
                   bgColor: isUserOver
-                      ? const Color(0xFFEF4444).withValues(alpha: 0.08)
+                      ? scheme.error.withValues(alpha: 0.08)
                       : scheme.surfaceContainerLow,
                   subtext: userAllocatedSharePaisa > 0
                       ? (isUserOver

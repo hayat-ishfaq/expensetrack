@@ -2,8 +2,8 @@
 ///
 /// The product name lives here so "FlatSplit" can be renamed in one place.
 abstract final class AppConstants {
-  static const String appName = 'FlatSplit';
-  static const String tagline = 'Shared expenses, simplified.';
+  static const String appName = 'CoSpend';
+  static const String tagline = 'Co-living budgets, perfectly tracked.';
 
   /// ISO currency code used for new households.
   static const String defaultCurrency = 'PKR';

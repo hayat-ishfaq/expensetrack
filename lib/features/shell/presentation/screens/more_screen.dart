@@ -151,7 +151,7 @@ class MoreScreen extends ConsumerWidget {
                             children: [
                               Flexible(
                                 child: Text(
-                                  user?.name ?? 'FlatSplit member',
+                                  user?.name ?? 'CoSpend member',
                                   style: const TextStyle(
                                     fontWeight: FontWeight.w700,
                                     fontSize: 16,

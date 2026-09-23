@@ -7,8 +7,8 @@ import '../core/theme/theme_controller.dart';
 import 'router/app_router.dart';
 
 /// Root widget: theming + navigation.
-class FlatSplitApp extends ConsumerWidget {
-  const FlatSplitApp({super.key});
+class CoSpendApp extends ConsumerWidget {
+  const CoSpendApp({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -28,3 +28,6 @@ class FlatSplitApp extends ConsumerWidget {
     );
   }
 }
+
+/// Backwards compatibility alias for tests and existing references.
+typedef FlatSplitApp = CoSpendApp;

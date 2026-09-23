@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/constants/app_constants.dart';
 import '../../../../shared/models/household.dart';
 import '../../../../shared/widgets/app_avatar.dart';
 import '../../../../shared/widgets/app_snackbar.dart';
@@ -28,9 +29,9 @@ class InviteMembersSheet extends ConsumerWidget {
   }
 
   String _buildShareMessage() {
-    return 'Hey! Join our flat "${household.name}" on FlatSplit to manage our shared household expenses and category budgets.\n\n'
+    return 'Hey! Join our flat "${household.name}" on ${AppConstants.appName} to manage our shared household expenses and category budgets.\n\n'
         'Flat Invite Code: ${household.inviteCode}\n\n'
-        'Install FlatSplit, open Settings -> "Join another flat", and enter this code!';
+        'Install ${AppConstants.appName}, open Settings -> "Join another flat", and enter this code!';
   }
 
   Future<void> _copyCode(BuildContext context) async {

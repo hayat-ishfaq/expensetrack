@@ -14,12 +14,12 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [authRepositoryProvider.overrideWithValue(fakeAuth)],
-        child: const FlatSplitApp(),
+        child: const CoSpendApp(),
       ),
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('FlatSplit'), findsOneWidget);
+    expect(find.text('CoSpend'), findsOneWidget);
     expect(find.text('Skip'), findsOneWidget);
     expect(find.text('Next'), findsOneWidget);
   });

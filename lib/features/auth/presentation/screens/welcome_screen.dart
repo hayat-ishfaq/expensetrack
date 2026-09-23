@@ -47,46 +47,45 @@ class WelcomeScreen extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: scheme.primaryContainer,
-                        borderRadius: BorderRadius.circular(13),
-                      ),
-                      child: Icon(
-                        Icons.receipt_long_rounded,
-                        size: 24,
-                        color: scheme.onPrimaryContainer,
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Image.asset(
+                        'assets/images/app_logo.png',
+                        width: 44,
+                        height: 44,
+                        errorBuilder: (_, _, _) => Container(
+                          width: 44,
+                          height: 44,
+                          color: scheme.primary,
+                          child: const Icon(Icons.wallet_rounded, color: Colors.white),
+                        ),
                       ),
                     ),
                     const SizedBox(width: 12),
                     Text(
                       AppConstants.appName,
                       style: theme.textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w700,
+                        fontWeight: FontWeight.w800,
                         letterSpacing: -0.5,
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 56),
+                const SizedBox(height: 48),
                 Text(
-                  'Shared expenses,\nsimplified.',
+                  'Co-living budgets,\nshared simply.',
                   style: theme.textTheme.headlineLarge?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    height: 1.12,
-                    letterSpacing: -1.4,
+                    fontWeight: FontWeight.w800,
+                    height: 1.15,
+                    letterSpacing: -1.2,
                   ),
                 ),
                 const SizedBox(height: 14),
                 Text(
-                  'Create a flat, invite your roommates, and let '
-                  '${AppConstants.appName} keep track of who owes what — '
-                  'down to the last rupee.',
+                  'Track shared household expenses, set category budgets, and keep flatmates in sync with ${AppConstants.appName}.',
                   style: theme.textTheme.bodyLarge?.copyWith(
                     color: scheme.onSurfaceVariant,
-                    height: 1.55,
+                    height: 1.5,
                   ),
                 ),
                 const SizedBox(height: 40),

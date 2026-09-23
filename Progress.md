@@ -1,6 +1,6 @@
-# FlatSplit — Project Development Progress
+# CoSpend — Project Development Progress
 
-**Project**: FlatSplit (Flutter Co-Living Expense & Budget Manager)  
+**Project**: CoSpend (formerly FlatSplit — Flutter Co-Living Expense & Budget Manager)  
 **Current Version**: `1.4.0`  
 **Last Updated**: September 23, 2026  
 **Status**: 🟢 Production Ready / Stable Release Build  
@@ -8,9 +8,12 @@
 ---
 
 ## 1. Executive Summary
-FlatSplit has completed all core architecture, feature development, role-based authorization, custom category design systems, and APK release milestones. The application is fully verified with 100% test passage (92/92 unit & widget tests) and zero static analysis warnings.
+**CoSpend** (formerly FlatSplit) has completed all core architecture, feature development, role-based authorization, custom category design systems, official branding overhaul, and APK release milestones. The application is fully verified with 100% test passage (92/92 unit & widget tests) and zero static analysis warnings.
 
-In version 1.4.0, a complete **Edit Profile** feature was integrated with a 16-preset Avatar Studio, custom photo URLs, and fields for full name, contact phone/WhatsApp number, payment handle (UPI / EasyPaisa / JazzCash), and room notes. Profile updates sync in real time across Firebase Auth, Firestore user profiles, and active household member rosters.
+In version 1.4.0, the app underwent an extensive rebranding to **CoSpend**:
+1. Integration of the official high-resolution logo (`assets/images/app_logo.png`) across splash, welcome, auth, and generated Android launcher mipmaps across all 5 screen densities (`mdpi`, `hdpi`, `xhdpi`, `xxhdpi`, `xxxhdpi`).
+2. Premium, modern, uncluttered color theme based on **Jade Green** (`#00BC57`), **Prussian Blue** (`#0A2542`), and **Crisp White / Soft Slate** (`#FFFFFF` / `#F8FAFC`).
+3. Complete **Edit Profile** feature with camera/gallery photo picker, a 16-preset Avatar Studio, and fields for full name, phone/WhatsApp, payment handle (UPI / EasyPaisa / JazzCash), and room notes.
 
 ---
 
@@ -22,12 +25,13 @@ In version 1.4.0, a complete **Edit Profile** feature was integrated with a 16-p
 | **Phase 2: Household Architecture** | Flat creation, unique invite codes (`FLAT-XXXX`), member tracking | ✅ Completed | Sep 2026 |
 | **Phase 3: Core Expense Engine** | Integer paisa ledger, Equal/Unequal/Percentage split calculators | ✅ Completed | Sep 2026 |
 | **Phase 4: Debt Settlement** | Greedy bipartite debt minimization, one-tap settlement, balance cards | ✅ Completed | Sep 2026 |
-| **Phase 5: UI & Design Polish** | Emerald glassmorphic theme, Google Fonts (`Outfit`/`Inter`), launcher icon | ✅ Completed | Sep 2026 |
+| **Phase 5: UI & Design Polish** | Custom card architecture, Google Fonts (`Outfit`/`Inter`), launcher icon | ✅ Completed | Sep 2026 |
 | **Phase 6: Custom Categories** | Custom icons, color engines, on-the-fly subcategories, tree-shake safety | ✅ Completed | Sep 2026 |
 | **Phase 7: Role-Based Budgets** | Owner-only budget controls, member view-only mode, exceeded alerts | ✅ Completed | Sep 2026 |
 | **Phase 8: Invite & Join Resilience** | Smart WhatsApp invite extraction, self-healing Firestore index, release APK | ✅ Completed | Sep 2026 |
 | **Phase 9: Budget Dashboard & Notifications** | 4-Card Home Dashboard, Settle-Up Streamlining, Budgets Tab, Real-time Alerts | ✅ Completed | Sep 2026 |
 | **Phase 10: Profile & Avatar Studio** | Edit Profile screen, 16-preset avatar studio, phone/UPI handles, member sync | ✅ Completed | Sep 2026 |
+| **Phase 11: CoSpend Rebrand & Theme** | Official CoSpend branding, logo mipmaps, Jade Green & Prussian Blue palette, release APK | ✅ Completed | Sep 2026 |
 
 ---
 
