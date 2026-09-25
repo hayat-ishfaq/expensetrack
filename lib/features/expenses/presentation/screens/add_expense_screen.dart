@@ -19,7 +19,7 @@ import '../../domain/expense.dart';
 import '../../domain/expense_category.dart';
 import '../../domain/split_modes.dart';
 import '../providers/expense_providers.dart';
-import '../widgets/create_category_sheet.dart';
+
 
 class AddExpenseScreen extends ConsumerStatefulWidget {
   const AddExpenseScreen({super.key});
@@ -188,266 +188,6 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
     }
   }
 
-  void _showCategoryPicker() {
-    final household = ref.read(currentHouseholdProvider).value;
-    final customCategories = household?.customCategories ?? const [];
-
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (context) {
-        return DraggableScrollableSheet(
-          initialChildSize: 0.65,
-          minChildSize: 0.45,
-          maxChildSize: 0.9,
-          expand: false,
-          builder: (context, scrollController) {
-            return Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Center(
-                    child: Container(
-                      width: 36,
-                      height: 4,
-                      decoration: BoxDecoration(
-                        color: Colors.grey.withValues(alpha: 0.3),
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Select Category',
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              fontWeight: FontWeight.w700,
-                            ),
-                      ),
-                      FilledButton.tonalIcon(
-                        onPressed: () async {
-                          Navigator.of(context).pop();
-                          final created =
-                              await CreateCategorySheet.show(context);
-                          if (created != null && mounted) {
-                            setState(() {
-                              _selectedCustomCategory = created;
-                              _category = ExpenseCategory.other;
-                              _selectedSubcategory = null;
-                            });
-                          }
-                        },
-                        icon: const Icon(Icons.add_rounded, size: 16),
-                        label: const Text('Custom'),
-                        style: FilledButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 8),
-                          textStyle: const TextStyle(
-                              fontSize: 12, fontWeight: FontWeight.w700),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  Expanded(
-                    child: ListView(
-                      controller: scrollController,
-                      children: [
-                        if (customCategories.isNotEmpty) ...[
-                          Text(
-                            'HOUSEHOLD CUSTOM CATEGORIES',
-                            style: Theme.of(context)
-                                .textTheme
-                                .labelSmall
-                                ?.copyWith(
-                                  fontWeight: FontWeight.w700,
-                                  letterSpacing: 1.1,
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .onSurfaceVariant,
-                                ),
-                          ),
-                          const SizedBox(height: 10),
-                          GridView.builder(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            gridDelegate:
-                                const SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 3,
-                              mainAxisSpacing: 12,
-                              crossAxisSpacing: 12,
-                              childAspectRatio: 1.05,
-                            ),
-                            itemCount: customCategories.length,
-                            itemBuilder: (context, index) {
-                              final cat = customCategories[index];
-                              final isSelected =
-                                  _selectedCustomCategory?.id == cat.id;
-                              return InkWell(
-                                onTap: () {
-                                  setState(() {
-                                    _selectedCustomCategory = cat;
-                                    _category = ExpenseCategory.other;
-                                    _selectedSubcategory = null;
-                                  });
-                                  Navigator.of(context).pop();
-                                },
-                                borderRadius: BorderRadius.circular(16),
-                                child: Container(
-                                  decoration: BoxDecoration(
-                                    color: isSelected
-                                        ? cat.color.withValues(alpha: 0.15)
-                                        : Theme.of(context)
-                                            .colorScheme
-                                            .surfaceContainerHighest,
-                                    border: Border.all(
-                                      color: isSelected
-                                          ? cat.color
-                                          : Colors.transparent,
-                                      width: 2,
-                                    ),
-                                    borderRadius: BorderRadius.circular(16),
-                                  ),
-                                  child: Column(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.center,
-                                    children: [
-                                      Container(
-                                        padding: const EdgeInsets.all(10),
-                                        decoration: BoxDecoration(
-                                          color: cat.color
-                                              .withValues(alpha: 0.15),
-                                          shape: BoxShape.circle,
-                                        ),
-                                        child: Icon(cat.icon,
-                                            color: cat.color, size: 24),
-                                      ),
-                                      const SizedBox(height: 6),
-                                      Text(
-                                        cat.label,
-                                        textAlign: TextAlign.center,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .labelMedium
-                                            ?.copyWith(
-                                              fontWeight: isSelected
-                                                  ? FontWeight.w700
-                                                  : FontWeight.w500,
-                                            ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-                          const SizedBox(height: 18),
-                        ],
-                        Text(
-                          'STANDARD CATEGORIES',
-                          style:
-                              Theme.of(context).textTheme.labelSmall?.copyWith(
-                                    fontWeight: FontWeight.w700,
-                                    letterSpacing: 1.1,
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .onSurfaceVariant,
-                                  ),
-                        ),
-                        const SizedBox(height: 10),
-                        GridView.builder(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          gridDelegate:
-                              const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 3,
-                            mainAxisSpacing: 12,
-                            crossAxisSpacing: 12,
-                            childAspectRatio: 1.05,
-                          ),
-                          itemCount: ExpenseCategory.values.length,
-                          itemBuilder: (context, index) {
-                            final cat = ExpenseCategory.values[index];
-                            final isSelected = _selectedCustomCategory ==
-                                    null &&
-                                cat == _category;
-                            return InkWell(
-                              onTap: () {
-                                setState(() {
-                                  _category = cat;
-                                  _selectedCustomCategory = null;
-                                  _selectedSubcategory = null;
-                                });
-                                Navigator.of(context).pop();
-                              },
-                              borderRadius: BorderRadius.circular(16),
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  color: isSelected
-                                      ? cat.color.withValues(alpha: 0.15)
-                                      : Theme.of(context)
-                                          .colorScheme
-                                          .surfaceContainerHighest,
-                                  border: Border.all(
-                                    color: isSelected
-                                        ? cat.color
-                                        : Colors.transparent,
-                                    width: 2,
-                                  ),
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Container(
-                                      padding: const EdgeInsets.all(10),
-                                      decoration: BoxDecoration(
-                                        color:
-                                            cat.color.withValues(alpha: 0.15),
-                                        shape: BoxShape.circle,
-                                      ),
-                                      child: Icon(cat.icon,
-                                          color: cat.color, size: 24),
-                                    ),
-                                    const SizedBox(height: 6),
-                                    Text(
-                                      cat.label,
-                                      textAlign: TextAlign.center,
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .labelMedium
-                                          ?.copyWith(
-                                            fontWeight: isSelected
-                                                ? FontWeight.w700
-                                                : FontWeight.w500,
-                                          ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
-
   void _showPayerPicker(List<HouseholdMember> members) {
     showModalBottomSheet<void>(
       context: context,
@@ -476,8 +216,7 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                 for (final member in members)
                   ListTile(
                     leading: CircleAvatar(
-                      backgroundColor:
-                          theme.colorScheme.primaryContainer,
+                      backgroundColor: theme.colorScheme.primaryContainer,
                       child: Text(
                         member.name.isNotEmpty
                             ? member.name[0].toUpperCase()
@@ -601,17 +340,45 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
     }
   }
 
+  bool _isToday(DateTime date) {
+    final now = DateTime.now();
+    return date.year == now.year &&
+        date.month == now.month &&
+        date.day == now.day;
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
     final membersAsync = ref.watch(householdMembersProvider);
     final isSaving = ref.watch(expenseActionsProvider).isLoading;
 
     return Scaffold(
+      backgroundColor: isDark ? CoSpendColors.darkCanvas : CoSpendColors.canvas,
       appBar: AppBar(
-        title: const Text('Add Expense'),
-        centerTitle: false,
+        backgroundColor: isDark ? CoSpendColors.darkCanvas : CoSpendColors.canvas,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        centerTitle: true,
+        leading: IconButton(
+          icon: Icon(
+            Icons.arrow_back_ios_rounded,
+            size: 18,
+            color: isDark ? Colors.white : CoSpendColors.prussianBlue,
+          ),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        title: Text(
+          'ADD EXPENSE',
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 1.8,
+            color: isDark ? Colors.white : CoSpendColors.prussianBlue,
+          ),
+        ),
       ),
       body: membersAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -630,226 +397,306 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
           );
 
           final splitValidationError = _validateSplits(members);
-          final isFormValid =
-              _amountPaisa > 0 &&
+          final isFormValid = _amountPaisa > 0 &&
               _descriptionController.text.trim().isNotEmpty &&
               splitValidationError == null;
 
           return Form(
             key: _formKey,
             child: ListView(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
               children: [
-                // Top Amount Card
-                CoSpendCard(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                // ── AMOUNT ──────────────────────────────────────────────────
+                Text(
+                  'AMOUNT',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.8,
+                    color: isDark
+                        ? CoSpendColors.darkTextMuted
+                        : CoSpendColors.textMuted,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                  decoration: BoxDecoration(
+                    color:
+                        isDark ? CoSpendColors.darkCard : CoSpendColors.white,
+                    borderRadius: CoSpendRadii.cardRadius,
+                    border: Border.all(
+                      color: isDark
+                          ? CoSpendColors.darkBorder
+                          : CoSpendColors.borderLight,
+                      width: 0.8,
+                    ),
+                    boxShadow: isDark ? null : CoSpendShadows.card,
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      const SectionLabel('HOW MUCH WAS SPENT?'),
-                      const SizedBox(height: 10),
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Text(
-                            'Rs. ',
-                            style: theme.textTheme.headlineMedium?.copyWith(
-                              fontWeight: FontWeight.w800,
-                              color: CoSpendColors.prussianBlue,
-                            ),
+                      Text(
+                        'Rs. ',
+                        style: TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.w800,
+                          color: isDark
+                              ? Colors.white
+                              : CoSpendColors.prussianBlue,
+                        ),
+                      ),
+                      Expanded(
+                        child: TextFormField(
+                          controller: _amountController,
+                          keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true),
+                          inputFormatters: [
+                            FilteringTextInputFormatter.allow(
+                                RegExp(r'^\d*\.?\d{0,2}')),
+                          ],
+                          style: TextStyle(
+                            fontSize: 32,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: -0.5,
+                            color: isDark
+                                ? Colors.white
+                                : CoSpendColors.prussianBlue,
                           ),
-                          Expanded(
-                            child: TextFormField(
-                              controller: _amountController,
-                              keyboardType:
-                                  const TextInputType.numberWithOptions(
-                                decimal: true,
-                              ),
-                              inputFormatters: [
-                                FilteringTextInputFormatter.allow(
-                                  RegExp(r'^\d*\.?\d{0,2}'),
-                                ),
-                              ],
-                              style: theme.textTheme.headlineLarge?.copyWith(
-                                fontWeight: FontWeight.w800,
-                                letterSpacing: -0.5,
-                                color: CoSpendColors.prussianBlue,
-                              ),
-                              decoration: const InputDecoration(
-                                hintText: '0',
-                                border: InputBorder.none,
-                                isDense: true,
-                                contentPadding: EdgeInsets.zero,
-                              ),
-                              validator: Validators.amount,
-                              onChanged: (_) => setState(() {}),
+                          decoration: InputDecoration(
+                            hintText: '0',
+                            hintStyle: TextStyle(
+                              color: isDark
+                                  ? CoSpendColors.darkTextMuted
+                                  : const Color(0xFFCBD5E1),
                             ),
+                            border: InputBorder.none,
+                            isDense: true,
+                            contentPadding: EdgeInsets.zero,
                           ),
-                        ],
+                          validator: Validators.amount,
+                          onChanged: (_) => setState(() {}),
+                        ),
                       ),
                     ],
                   ),
                 ),
                 const SizedBox(height: 16),
 
-                // Description Field
+                // ── WHAT WAS IT FOR? ─────────────────────────────────────────
+                Text(
+                  'WHAT WAS IT FOR?',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.8,
+                    color: isDark
+                        ? CoSpendColors.darkTextMuted
+                        : CoSpendColors.textMuted,
+                  ),
+                ),
+                const SizedBox(height: 8),
                 TextFormField(
                   controller: _descriptionController,
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w500,
+                    color:
+                        isDark ? Colors.white : CoSpendColors.prussianBlue,
+                  ),
                   decoration: InputDecoration(
-                    labelText: 'Description',
-                    hintText: 'e.g. Chicken + Drinks, Rice, Rent',
-                    prefixIcon: const Icon(Icons.edit_note_rounded, color: CoSpendColors.prussianBlue),
+                    hintText: 'e.g. Grocery shopping at Nature\'s Basket',
+                    hintStyle: TextStyle(
+                      color: isDark
+                          ? CoSpendColors.darkTextMuted
+                          : CoSpendColors.textSubtle,
+                      fontSize: 14,
+                    ),
                     filled: true,
-                    fillColor: Colors.white,
+                    fillColor:
+                        isDark ? CoSpendColors.darkCard : CoSpendColors.white,
+                    contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 14),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: Color(0x1F0A2542)),
+                      borderSide: BorderSide(
+                        color: isDark
+                            ? CoSpendColors.darkBorder
+                            : const Color(0x1F0A2542),
+                      ),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: Color(0x1F0A2542)),
+                      borderSide: BorderSide(
+                        color: isDark
+                            ? CoSpendColors.darkBorder
+                            : const Color(0x1F0A2542),
+                      ),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: CoSpendColors.jadeGreen, width: 2),
+                      borderSide: const BorderSide(
+                          color: CoSpendColors.jadeGreen, width: 2),
                     ),
                   ),
                   validator: Validators.description,
                   onChanged: (_) => setState(() {}),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 16),
 
-                // Category & Date in a Row
+                // ── CATEGORY ─────────────────────────────────────────────────
                 Row(
                   children: [
-                    // Category selector chip
-                    Builder(
-                      builder: (context) {
-                        final activeCatLabel =
-                            _selectedCustomCategory?.label ?? _category.label;
-                        final activeCatIcon =
-                            _selectedCustomCategory?.icon ?? _category.icon;
-
-                        return Expanded(
-                          child: InkWell(
-                            onTap: _showCategoryPicker,
-                            borderRadius: BorderRadius.circular(12),
-                            child: CoSpendCard(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 12,
-                              ),
-                              child: Row(
-                                children: [
-                                  TintedIcon(
-                                    icon: activeCatIcon,
-                                    color: CoSpendColors.prussianBlue,
-                                    size: 18,
-                                    containerSize: 32,
-                                  ),
-                                  const SizedBox(width: 10),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        const Text(
-                                          'CATEGORY',
-                                          style: TextStyle(
-                                            fontSize: 10,
-                                            fontWeight: FontWeight.w700,
-                                            letterSpacing: 0.6,
-                                            color: Color(0xFF6B7280),
-                                          ),
-                                        ),
-                                        const SizedBox(height: 2),
-                                        Text(
-                                          activeCatLabel,
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.w700,
-                                            fontSize: 13,
-                                            color: CoSpendColors.prussianBlue,
-                                          ),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  const Icon(Icons.arrow_drop_down_rounded, color: Color(0xFF9CA3AF)),
-                                ],
-                              ),
-                            ),
-                          ),
-                        );
-                      },
+                    Icon(
+                      Icons.label_outline_rounded,
+                      size: 14,
+                      color: isDark
+                          ? CoSpendColors.darkTextMuted
+                          : CoSpendColors.textMuted,
                     ),
-                    const SizedBox(width: 12),
-
-                    // Date selector chip
-                    Expanded(
-                      child: InkWell(
-                        onTap: _pickDate,
-                        borderRadius: BorderRadius.circular(12),
-                        child: CoSpendCard(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 12,
-                          ),
-                          child: Row(
-                            children: [
-                              const TintedIcon(
-                                icon: Icons.calendar_today_rounded,
-                                color: CoSpendColors.prussianBlue,
-                                size: 18,
-                                containerSize: 32,
-                              ),
-                              const SizedBox(width: 10),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    const Text(
-                                      'DATE',
-                                      style: TextStyle(
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.w700,
-                                        letterSpacing: 0.6,
-                                        color: Color(0xFF6B7280),
-                                      ),
-                                    ),
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      DateFormat('dd MMM yyyy').format(_spentAt),
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.w700,
-                                        fontSize: 13,
-                                        color: CoSpendColors.prussianBlue,
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const Icon(Icons.arrow_drop_down_rounded, color: Color(0xFF9CA3AF)),
-                            ],
-                          ),
-                        ),
+                    const SizedBox(width: 6),
+                    Text(
+                      'CATEGORY',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.8,
+                        color: isDark
+                            ? CoSpendColors.darkTextMuted
+                            : CoSpendColors.textMuted,
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 14),
+                const SizedBox(height: 10),
+                Builder(
+                  builder: (context) {
+                    final household =
+                        ref.watch(currentHouseholdProvider).value;
+                    final customCats =
+                        household?.customCategories ?? const [];
+                    final allCats = [
+                      ...customCats.map((c) => _CategoryChipData(
+                            id: c.id,
+                            label: c.label,
+                            icon: c.icon,
+                            color: c.color,
+                            isCustom: true,
+                          )),
+                      ...ExpenseCategory.values.map((c) => _CategoryChipData(
+                            id: c.id,
+                            label: c.label,
+                            icon: c.icon,
+                            color: c.color,
+                            isCustom: false,
+                          )),
+                    ];
 
-                // Subcategories Section
+                    final activeCatId =
+                        _selectedCustomCategory?.id ?? _category.id;
+
+                    return SizedBox(
+                      height: 40,
+                      child: ListView.separated(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: allCats.length,
+                        separatorBuilder: (_, _) =>
+                            const SizedBox(width: 8),
+                        itemBuilder: (context, index) {
+                          final cat = allCats[index];
+                          final isSelected = cat.id == activeCatId;
+                          return GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                if (cat.isCustom) {
+                                  _selectedCustomCategory = customCats
+                                      .where((c) => c.id == cat.id)
+                                      .firstOrNull;
+                                  _category = ExpenseCategory.other;
+                                } else {
+                                  _category = ExpenseCategory.values
+                                      .firstWhere((c) => c.id == cat.id);
+                                  _selectedCustomCategory = null;
+                                }
+                                _selectedSubcategory = null;
+                              });
+                            },
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 180),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 14, vertical: 8),
+                              decoration: BoxDecoration(
+                                color: isSelected
+                                    ? CoSpendColors.jadeGreen
+                                    : (isDark
+                                        ? CoSpendColors.darkCard
+                                        : CoSpendColors.white),
+                                borderRadius: CoSpendRadii.pillRadius,
+                                border: Border.all(
+                                  color: isSelected
+                                      ? CoSpendColors.jadeGreen
+                                      : (isDark
+                                          ? CoSpendColors.darkBorder
+                                          : CoSpendColors.border),
+                                  width: 1,
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    cat.icon,
+                                    size: 14,
+                                    color: isSelected
+                                        ? Colors.white
+                                        : cat.color,
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    cat.label,
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: isSelected
+                                          ? FontWeight.w700
+                                          : FontWeight.w500,
+                                      color: isSelected
+                                          ? Colors.white
+                                          : (isDark
+                                              ? Colors.white70
+                                              : CoSpendColors.textPrimary),
+                                    ),
+                                  ),
+                                  if (isSelected) ...[
+                                    const SizedBox(width: 4),
+                                    const Icon(
+                                      Icons.check_rounded,
+                                      size: 13,
+                                      color: Colors.white,
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    );
+                  },
+                ),
+                const SizedBox(height: 16),
+
+                // ── SUBCATEGORY (OPTIONAL) ────────────────────────────────────
                 Builder(
                   builder: (context) {
                     final activeCatId =
                         _selectedCustomCategory?.id ?? _category.id;
-                    final household = ref.watch(currentHouseholdProvider).value;
-                    final availableSubcats = household?.getSubcategories(activeCatId) ??
-                        defaultCategorySubcategories[activeCatId] ??
-                        const [];
+                    final household =
+                        ref.watch(currentHouseholdProvider).value;
+                    final availableSubcats =
+                        household?.getSubcategories(activeCatId) ??
+                            defaultCategorySubcategories[activeCatId] ??
+                            const [];
 
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -860,7 +707,8 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                             const SectionLabel('SUBCATEGORY (OPTIONAL)'),
                             if (_selectedSubcategory != null)
                               GestureDetector(
-                                onTap: () => setState(() => _selectedSubcategory = null),
+                                onTap: () => setState(
+                                    () => _selectedSubcategory = null),
                                 child: const Text(
                                   'Clear',
                                   style: TextStyle(
@@ -878,7 +726,8 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                           child: Row(
                             children: [
                               ...availableSubcats.map((subcat) {
-                                final isSelected = _selectedSubcategory == subcat;
+                                final isSelected =
+                                    _selectedSubcategory == subcat;
                                 return Padding(
                                   padding: const EdgeInsets.only(right: 8),
                                   child: FilterChip(
@@ -886,7 +735,8 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                                     selected: isSelected,
                                     showCheckmark: false,
                                     avatar: isSelected
-                                        ? const Icon(Icons.check, size: 14, color: Colors.white)
+                                        ? const Icon(Icons.check,
+                                            size: 14, color: Colors.white)
                                         : null,
                                     backgroundColor: Colors.white,
                                     selectedColor: CoSpendColors.jadeGreen,
@@ -897,33 +747,40 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                                           : const Color(0x1F0A2542),
                                     ),
                                     labelStyle: TextStyle(
-                                      fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                                      color: isSelected ? Colors.white : const Color(0xFF374151),
+                                      fontWeight: isSelected
+                                          ? FontWeight.w700
+                                          : FontWeight.w500,
+                                      color: isSelected
+                                          ? Colors.white
+                                          : const Color(0xFF374151),
                                       fontSize: 12,
                                     ),
                                     onSelected: (selected) {
                                       HapticFeedback.selectionClick();
                                       setState(() {
-                                        _selectedSubcategory = selected ? subcat : null;
+                                        _selectedSubcategory =
+                                            selected ? subcat : null;
                                       });
                                     },
                                   ),
                                 );
                               }),
                               ActionChip(
-                                avatar: const Icon(Icons.add_rounded, size: 16, color: CoSpendColors.prussianBlue),
+                                avatar: const Icon(Icons.add_rounded,
+                                    size: 16,
+                                    color: CoSpendColors.prussianBlue),
                                 label: const Text('Add Subcategory'),
                                 backgroundColor: Colors.white,
                                 shape: const StadiumBorder(),
                                 side: const BorderSide(
-                                  color: Color(0x1F0A2542),
-                                ),
+                                    color: Color(0x1F0A2542)),
                                 labelStyle: const TextStyle(
                                   fontWeight: FontWeight.w600,
                                   color: CoSpendColors.prussianBlue,
                                   fontSize: 12,
                                 ),
-                                onPressed: () => _promptAddSubcategory(activeCatId),
+                                onPressed: () =>
+                                    _promptAddSubcategory(activeCatId),
                               ),
                             ],
                           ),
@@ -934,15 +791,13 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                 ),
                 const SizedBox(height: 12),
 
-                // Paid By Selector Tile
+                // ── PAID BY ───────────────────────────────────────────────────
                 InkWell(
                   onTap: () => _showPayerPicker(members),
                   borderRadius: BorderRadius.circular(12),
                   child: CoSpendCard(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 12,
-                    ),
+                        horizontal: 16, vertical: 12),
                     child: Row(
                       children: [
                         CircleAvatar(
@@ -987,13 +842,10 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                         ),
                         Container(
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 5,
-                          ),
+                              horizontal: 12, vertical: 5),
                           decoration: BoxDecoration(
-                            border: Border.all(
-                              color: const Color(0x280A2542),
-                            ),
+                            border:
+                                Border.all(color: const Color(0x280A2542)),
                             borderRadius: BorderRadius.circular(999),
                           ),
                           child: const Text(
@@ -1011,56 +863,134 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                 ),
                 const SizedBox(height: 20),
 
-                // Split Header & Segmented Button
+                // ── SPLIT WITH ────────────────────────────────────────────────
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const SectionLabel('SPLIT EXPENSE'),
-                    if (_splitMode == SplitMode.equal &&
-                        _selectedMemberIds.isNotEmpty)
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-                        decoration: BoxDecoration(
-                          color: CoSpendColors.jadeGreen.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(999),
-                        ),
-                        child: Text(
-                          '${Money.format(_amountPaisa ~/ _selectedMemberIds.length)} / person',
-                          style: const TextStyle(
-                            color: CoSpendColors.jadeGreen,
-                            fontWeight: FontWeight.w700,
-                            fontSize: 11,
-                          ),
+                    Icon(
+                      Icons.people_outline_rounded,
+                      size: 16,
+                      color: isDark
+                          ? CoSpendColors.darkTextMuted
+                          : CoSpendColors.textMuted,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      'SPLIT WITH',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.8,
+                        color: isDark
+                            ? CoSpendColors.darkTextMuted
+                            : CoSpendColors.textMuted,
+                      ),
+                    ),
+                    const Spacer(),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: CoSpendColors.jadeGreen
+                            .withValues(alpha: 0.12),
+                        borderRadius: CoSpendRadii.pillRadius,
+                        border: Border.all(
+                          color: CoSpendColors.jadeGreen
+                              .withValues(alpha: 0.3),
+                          width: 0.8,
                         ),
                       ),
+                      child: const Text(
+                        'Household Group',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: CoSpendColors.jadeGreen,
+                        ),
+                      ),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 10),
 
-                CoSpendSegmentedControl<SplitMode>(
-                  selected: _splitMode,
-                  items: const {
-                    SplitMode.equal: 'Equal',
-                    SplitMode.custom: 'Exact',
-                    SplitMode.percentage: '%',
-                  },
-                  onChanged: (mode) => setState(() => _splitMode = mode),
+                // Segmented control: Equal | Custom | % Split
+                Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: isDark
+                        ? CoSpendColors.darkCard
+                        : const Color(0xFFF1F5F9),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    children: [
+                      for (final mode in SplitMode.values)
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () =>
+                                setState(() => _splitMode = mode),
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 180),
+                              padding:
+                                  const EdgeInsets.symmetric(vertical: 9),
+                              decoration: BoxDecoration(
+                                color: _splitMode == mode
+                                    ? (isDark
+                                        ? CoSpendColors.darkCanvas
+                                        : Colors.white)
+                                    : Colors.transparent,
+                                borderRadius: BorderRadius.circular(9),
+                                boxShadow: _splitMode == mode && !isDark
+                                    ? [
+                                        BoxShadow(
+                                          color: Colors.black
+                                              .withValues(alpha: 0.08),
+                                          blurRadius: 6,
+                                          offset: const Offset(0, 2),
+                                        ),
+                                      ]
+                                    : null,
+                              ),
+                              alignment: Alignment.center,
+                              child: Text(
+                                mode == SplitMode.equal
+                                    ? 'Equal'
+                                    : mode == SplitMode.custom
+                                        ? 'Custom'
+                                        : '% Split',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: _splitMode == mode
+                                      ? FontWeight.w700
+                                      : FontWeight.w500,
+                                  color: _splitMode == mode
+                                      ? (isDark
+                                          ? Colors.white
+                                          : CoSpendColors.prussianBlue)
+                                      : (isDark
+                                          ? CoSpendColors.darkTextMuted
+                                          : CoSpendColors.textMuted),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 12),
 
-                // Split Validation Warning / Success Card
+                // Split Validation Warning
                 if (splitValidationError != null && _amountPaisa > 0)
                   Container(
                     margin: const EdgeInsets.only(bottom: 12),
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 10,
-                    ),
+                        horizontal: 14, vertical: 10),
                     decoration: BoxDecoration(
                       color: CoSpendColors.alertRed.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: CoSpendColors.alertRed.withValues(alpha: 0.3),
+                        color: CoSpendColors.alertRed
+                            .withValues(alpha: 0.3),
                       ),
                     ),
                     child: Row(
@@ -1082,25 +1012,125 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                     ),
                   ),
 
-                // Participant List per mode
+                // Participant list per split mode
                 _buildSplitSection(theme, scheme, members),
 
+                const SizedBox(height: 16),
+
+                // ── DATE & TAX ROW ────────────────────────────────────────────
+                Row(
+                  children: [
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: _pickDate,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 14, vertical: 11),
+                          decoration: BoxDecoration(
+                            color: isDark
+                                ? CoSpendColors.darkCard
+                                : CoSpendColors.white,
+                            borderRadius: CoSpendRadii.cardRadius,
+                            border: Border.all(
+                              color: isDark
+                                  ? CoSpendColors.darkBorder
+                                  : CoSpendColors.borderLight,
+                              width: 0.8,
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.calendar_today_rounded,
+                                size: 15,
+                                color: isDark
+                                    ? CoSpendColors.darkTextMuted
+                                    : CoSpendColors.textMuted,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                _isToday(_spentAt)
+                                    ? 'Today, ${DateFormat('MMM dd').format(_spentAt)}'
+                                    : DateFormat('MMM dd, yyyy')
+                                        .format(_spentAt),
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: isDark
+                                      ? Colors.white
+                                      : CoSpendColors.prussianBlue,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 11),
+                      decoration: BoxDecoration(
+                        color: isDark
+                            ? CoSpendColors.darkCard
+                            : CoSpendColors.white,
+                        borderRadius: CoSpendRadii.cardRadius,
+                        border: Border.all(
+                          color: isDark
+                              ? CoSpendColors.darkBorder
+                              : CoSpendColors.borderLight,
+                          width: 0.8,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.receipt_outlined,
+                            size: 15,
+                            color: isDark
+                                ? CoSpendColors.darkTextMuted
+                                : CoSpendColors.textMuted,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Tax Included',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: isDark
+                                  ? Colors.white
+                                  : CoSpendColors.prussianBlue,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
                 const SizedBox(height: 24),
 
-                // Submit Button
+                // ── SAVE EXPENSE BUTTON ───────────────────────────────────────
                 SizedBox(
                   width: double.infinity,
-                  height: 50,
+                  height: 54,
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: CoSpendColors.jadeGreen,
                       foregroundColor: Colors.white,
-                      disabledBackgroundColor: CoSpendColors.prussianBlue.withValues(alpha: 0.08),
-                      disabledForegroundColor: CoSpendColors.prussianBlue.withValues(alpha: 0.35),
-                      elevation: isFormValid ? 2 : 0,
+                      disabledBackgroundColor: isDark
+                          ? CoSpendColors.darkCard
+                          : CoSpendColors.prussianBlue
+                              .withValues(alpha: 0.08),
+                      disabledForegroundColor:
+                          CoSpendColors.prussianBlue.withValues(alpha: 0.35),
+                      elevation: 0,
                       shape: const StadiumBorder(),
                     ),
-                    onPressed: isFormValid && !isSaving ? () => _submit(members) : null,
+                    onPressed: isFormValid && !isSaving
+                        ? () => _submit(members)
+                        : null,
                     child: isSaving
                         ? const SizedBox(
                             width: 22,
@@ -1113,13 +1143,15 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                         : const Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(Icons.check_rounded, size: 20),
+                              Icon(Icons.check_rounded,
+                                  size: 20, color: Colors.white),
                               SizedBox(width: 8),
                               Text(
-                                'Add Expense',
+                                'Save Expense',
                                 style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.w700,
+                                  color: Colors.white,
                                 ),
                               ),
                             ],
@@ -1140,15 +1172,33 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
     ColorScheme scheme,
     List<HouseholdMember> members,
   ) {
+    final isDark = theme.brightness == Brightness.dark;
     switch (_splitMode) {
       case SplitMode.equal:
-        return CoSpendCard(
-          padding: EdgeInsets.zero,
+        return Container(
+          decoration: BoxDecoration(
+            color: isDark ? CoSpendColors.darkCard : CoSpendColors.white,
+            borderRadius: CoSpendRadii.cardRadius,
+            border: Border.all(
+              color: isDark
+                  ? CoSpendColors.darkBorder
+                  : CoSpendColors.borderLight,
+              width: 0.8,
+            ),
+            boxShadow: isDark ? null : CoSpendShadows.card,
+          ),
           child: Column(
             children: [
               for (int i = 0; i < members.length; i++) ...[
                 if (i > 0)
-                  const Divider(height: 1, indent: 56, endIndent: 16, color: Color(0x0F0A2542)),
+                  Divider(
+                    height: 1,
+                    indent: 56,
+                    endIndent: 16,
+                    color: isDark
+                        ? CoSpendColors.darkBorder
+                        : const Color(0x0F0A2542),
+                  ),
                 InkWell(
                   onTap: () {
                     final member = members[i];
@@ -1162,75 +1212,96 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                       }
                     });
                   },
+                  borderRadius: CoSpendRadii.cardRadius,
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 13),
                     child: Row(
                       children: [
+                        // Avatar
                         CircleAvatar(
-                          radius: 17,
-                          backgroundColor: const Color(0x140A2542),
+                          radius: 22,
+                          backgroundColor: isDark
+                              ? CoSpendColors.darkCanvas
+                              : const Color(0xFFEEF2F7),
                           child: Text(
                             members[i].name.isNotEmpty
                                 ? members[i].name[0].toUpperCase()
                                 : '?',
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontWeight: FontWeight.w700,
-                              color: CoSpendColors.prussianBlue,
-                              fontSize: 13,
+                              color: isDark
+                                  ? Colors.white
+                                  : CoSpendColors.prussianBlue,
+                              fontSize: 15,
                             ),
                           ),
                         ),
                         const SizedBox(width: 12),
+                        // Name + subtitle
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
                                 members[i].name,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 14,
-                                  color: CoSpendColors.prussianBlue,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 14.5,
+                                  color: isDark
+                                      ? Colors.white
+                                      : CoSpendColors.prussianBlue,
                                 ),
                               ),
                               const SizedBox(height: 2),
                               Text(
-                                _selectedMemberIds.contains(members[i].id) &&
-                                        _selectedMemberIds.isNotEmpty
-                                    ? Money.format(_amountPaisa ~/ _selectedMemberIds.length)
-                                    : 'Excluded',
+                                'Household Member',
                                 style: TextStyle(
-                                  color: _selectedMemberIds.contains(members[i].id)
-                                      ? CoSpendColors.jadeGreen
-                                      : const Color(0xFF9CA3AF),
-                                  fontWeight: _selectedMemberIds.contains(members[i].id)
-                                      ? FontWeight.w600
-                                      : FontWeight.normal,
                                   fontSize: 12,
+                                  color: isDark
+                                      ? CoSpendColors.darkTextMuted
+                                      : CoSpendColors.textMuted,
                                 ),
                               ),
                             ],
                           ),
                         ),
-                        AnimatedContainer(
-                          duration: const Duration(milliseconds: 180),
-                          width: 22,
-                          height: 22,
-                          decoration: BoxDecoration(
-                            color: _selectedMemberIds.contains(members[i].id)
-                                ? CoSpendColors.jadeGreen
-                                : Colors.transparent,
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: _selectedMemberIds.contains(members[i].id)
-                                  ? CoSpendColors.jadeGreen
-                                  : const Color(0xFFD1D5DB),
-                              width: 1.5,
+                        // Share amount + label
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Text(
+                              _selectedMemberIds.contains(members[i].id) &&
+                                      _selectedMemberIds.isNotEmpty
+                                  ? 'Rs. ${(_amountPaisa / _selectedMemberIds.length / 100).toStringAsFixed(2)}'
+                                  : 'Excluded',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w800,
+                                fontSize: 14,
+                                color: _selectedMemberIds
+                                        .contains(members[i].id)
+                                    ? (isDark
+                                        ? Colors.white
+                                        : CoSpendColors.prussianBlue)
+                                    : const Color(0xFF9CA3AF),
+                              ),
                             ),
-                          ),
-                          child: _selectedMemberIds.contains(members[i].id)
-                              ? const Icon(Icons.check, size: 14, color: Colors.white)
-                              : null,
+                            const SizedBox(height: 2),
+                            Text(
+                              _selectedMemberIds.contains(members[i].id)
+                                  ? 'EQUAL SHARE'
+                                  : 'EXCLUDED',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 0.3,
+                                color:
+                                    _selectedMemberIds.contains(members[i].id)
+                                        ? CoSpendColors.textMuted
+                                        : const Color(0xFF9CA3AF),
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
@@ -1242,7 +1313,18 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
         );
 
       case SplitMode.custom:
-        return CoSpendCard(
+        return Container(
+          decoration: BoxDecoration(
+            color: isDark ? CoSpendColors.darkCard : CoSpendColors.white,
+            borderRadius: CoSpendRadii.cardRadius,
+            border: Border.all(
+              color: isDark
+                  ? CoSpendColors.darkBorder
+                  : CoSpendColors.borderLight,
+              width: 0.8,
+            ),
+            boxShadow: isDark ? null : CoSpendShadows.card,
+          ),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           child: Column(
             children: [
@@ -1253,14 +1335,18 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                     children: [
                       CircleAvatar(
                         radius: 16,
-                        backgroundColor: const Color(0x140A2542),
+                        backgroundColor: isDark
+                            ? CoSpendColors.darkCanvas
+                            : const Color(0x140A2542),
                         child: Text(
                           member.name.isNotEmpty
                               ? member.name[0].toUpperCase()
                               : '?',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontWeight: FontWeight.w700,
-                            color: CoSpendColors.prussianBlue,
+                            color: isDark
+                                ? Colors.white
+                                : CoSpendColors.prussianBlue,
                             fontSize: 12,
                           ),
                         ),
@@ -1269,9 +1355,11 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                       Expanded(
                         child: Text(
                           member.name,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontWeight: FontWeight.w600,
-                            color: CoSpendColors.prussianBlue,
+                            color: isDark
+                                ? Colors.white
+                                : CoSpendColors.prussianBlue,
                           ),
                         ),
                       ),
@@ -1281,31 +1369,37 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                           controller: _customControllers[member.id],
                           keyboardType:
                               const TextInputType.numberWithOptions(
-                            decimal: true,
-                          ),
+                                  decimal: true),
                           inputFormatters: [
                             FilteringTextInputFormatter.allow(
-                              RegExp(r'^\d*\.?\d{0,2}'),
-                            ),
+                                RegExp(r'^\d*\.?\d{0,2}')),
                           ],
                           textAlign: TextAlign.end,
                           decoration: InputDecoration(
                             prefixText: 'Rs. ',
                             isDense: true,
                             filled: true,
-                            fillColor: const Color(0xFFF7F8FA),
+                            fillColor: isDark
+                                ? CoSpendColors.darkCanvas
+                                : const Color(0xFFF7F8FA),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(color: Color(0x1A0A2542)),
+                              borderSide: BorderSide(
+                                color: isDark
+                                    ? CoSpendColors.darkBorder
+                                    : const Color(0x1A0A2542),
+                              ),
                             ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(color: Color(0x1A0A2542)),
+                              borderSide: BorderSide(
+                                color: isDark
+                                    ? CoSpendColors.darkBorder
+                                    : const Color(0x1A0A2542),
+                              ),
                             ),
                             contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 10,
-                            ),
+                                horizontal: 12, vertical: 10),
                           ),
                         ),
                       ),
@@ -1317,7 +1411,18 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
         );
 
       case SplitMode.percentage:
-        return CoSpendCard(
+        return Container(
+          decoration: BoxDecoration(
+            color: isDark ? CoSpendColors.darkCard : CoSpendColors.white,
+            borderRadius: CoSpendRadii.cardRadius,
+            border: Border.all(
+              color: isDark
+                  ? CoSpendColors.darkBorder
+                  : CoSpendColors.borderLight,
+              width: 0.8,
+            ),
+            boxShadow: isDark ? null : CoSpendShadows.card,
+          ),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           child: Column(
             children: [
@@ -1328,14 +1433,18 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                     children: [
                       CircleAvatar(
                         radius: 16,
-                        backgroundColor: const Color(0x140A2542),
+                        backgroundColor: isDark
+                            ? CoSpendColors.darkCanvas
+                            : const Color(0x140A2542),
                         child: Text(
                           member.name.isNotEmpty
                               ? member.name[0].toUpperCase()
                               : '?',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontWeight: FontWeight.w700,
-                            color: CoSpendColors.prussianBlue,
+                            color: isDark
+                                ? Colors.white
+                                : CoSpendColors.prussianBlue,
                             fontSize: 12,
                           ),
                         ),
@@ -1347,26 +1456,30 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                           children: [
                             Text(
                               member.name,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontWeight: FontWeight.w600,
-                                color: CoSpendColors.prussianBlue,
+                                color: isDark
+                                    ? Colors.white
+                                    : CoSpendColors.prussianBlue,
                               ),
                             ),
                             Text(
                               Money.format(
                                 (_amountPaisa *
                                         (double.tryParse(
-                                              _percentageControllers[
-                                                      member.id]
-                                                  ?.text ??
-                                              '0',
-                                            ) ??
-                                            0) /
+                                                  _percentageControllers[
+                                                          member.id]
+                                                      ?.text ??
+                                                  '0',
+                                                ) ??
+                                                0) /
                                         100)
                                     .round(),
                               ),
-                              style: const TextStyle(
-                                color: Color(0xFF6B7280),
+                              style: TextStyle(
+                                color: isDark
+                                    ? CoSpendColors.darkTextMuted
+                                    : const Color(0xFF6B7280),
                                 fontSize: 12,
                               ),
                             ),
@@ -1379,31 +1492,37 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                           controller: _percentageControllers[member.id],
                           keyboardType:
                               const TextInputType.numberWithOptions(
-                            decimal: true,
-                          ),
+                                  decimal: true),
                           inputFormatters: [
                             FilteringTextInputFormatter.allow(
-                              RegExp(r'^\d*\.?\d{0,1}'),
-                            ),
+                                RegExp(r'^\d*\.?\d{0,1}')),
                           ],
                           textAlign: TextAlign.end,
                           decoration: InputDecoration(
                             suffixText: '%',
                             isDense: true,
                             filled: true,
-                            fillColor: const Color(0xFFF7F8FA),
+                            fillColor: isDark
+                                ? CoSpendColors.darkCanvas
+                                : const Color(0xFFF7F8FA),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(color: Color(0x1A0A2542)),
+                              borderSide: BorderSide(
+                                color: isDark
+                                    ? CoSpendColors.darkBorder
+                                    : const Color(0x1A0A2542),
+                              ),
                             ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(color: Color(0x1A0A2542)),
+                              borderSide: BorderSide(
+                                color: isDark
+                                    ? CoSpendColors.darkBorder
+                                    : const Color(0x1A0A2542),
+                              ),
                             ),
                             contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 10,
-                            ),
+                                horizontal: 10, vertical: 10),
                           ),
                         ),
                       ),
@@ -1415,4 +1534,24 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
         );
     }
   }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Category Chip Data Model
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _CategoryChipData {
+  const _CategoryChipData({
+    required this.id,
+    required this.label,
+    required this.icon,
+    required this.color,
+    required this.isCustom,
+  });
+
+  final String id;
+  final String label;
+  final IconData icon;
+  final Color color;
+  final bool isCustom;
 }
