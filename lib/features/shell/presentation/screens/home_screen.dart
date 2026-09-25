@@ -15,15 +15,12 @@ import '../../../../shared/widgets/error_view.dart';
 import '../../../../shared/widgets/skeleton_box.dart';
 import '../../../auth/presentation/providers/session_provider.dart';
 import '../../../dashboard/presentation/providers/dashboard_providers.dart';
-import '../../../dashboard/presentation/widgets/budget_progress_card.dart';
-import '../../../dashboard/presentation/widgets/category_breakdown_card.dart';
-import '../../../dashboard/presentation/widgets/financial_card.dart';
-import '../../../dashboard/presentation/widgets/spending_chart.dart';
 import '../../../expenses/presentation/providers/expense_providers.dart';
 import '../../../household/presentation/providers/household_providers.dart';
 import '../../../household/presentation/providers/notification_providers.dart';
 import '../../../household/presentation/widgets/invite_members_sheet.dart';
 import '../../../household/presentation/widgets/notifications_sheet.dart';
+import '../../../settlement/presentation/providers/settlement_providers.dart';
 
 /// The core Fintech Dashboard for the household.
 class HomeScreen extends ConsumerWidget {
@@ -68,6 +65,7 @@ class HomeScreen extends ConsumerWidget {
     final budgetStatus = ref.watch(budgetStatusProvider);
     final selectedMonth = ref.watch(dashboardMonthProvider);
     final exceededAlerts = ref.watch(exceededBudgetAlertsProvider);
+    final settlementAsync = ref.watch(settlementProvider);
 
     final currentUserId = session?.user?.id ?? '';
     final unreadNotifs = ref.watch(unreadNotificationCountProvider);
@@ -91,99 +89,20 @@ class HomeScreen extends ConsumerWidget {
     final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
+      backgroundColor: isDark ? CoSpendColors.darkCanvas : CoSpendColors.canvas,
       appBar: AppBar(
-        titleSpacing: 8,
-        leading: Padding(
-          padding: const EdgeInsets.only(left: 14),
-          child: Center(
-            child: Container(
-              padding: const EdgeInsets.all(2.5),
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: const LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    CoSpendColors.jadeGreen,
-                    CoSpendColors.prussianBlue,
-                  ],
-                ),
-              ),
-              child: Container(
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: isDark ? CoSpendColors.darkCanvas : CoSpendColors.canvas,
-                ),
-                padding: const EdgeInsets.all(2),
-                child: AppAvatar(
-                  name: userName,
-                  photoUrl: session?.user?.photoUrl,
-                  size: 34,
-                  onTap: () => context.push(Routes.profile),
-                ),
-              ),
-            ),
+        backgroundColor: isDark ? CoSpendColors.darkCanvas : CoSpendColors.canvas,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        centerTitle: true,
+        title: Text(
+          'DASHBOARD',
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 1.8,
+            color: isDark ? Colors.white : CoSpendColors.prussianBlue,
           ),
-        ),
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              '${_greeting()}, $userName 👋',
-              style: TextStyle(
-                fontWeight: FontWeight.w800,
-                fontSize: 16,
-                letterSpacing: -0.4,
-                color: isDark ? Colors.white : CoSpendColors.prussianBlue,
-              ),
-            ),
-            const SizedBox(height: 3),
-            InkWell(
-              onTap: () => _pickMonth(context, ref),
-              borderRadius: CoSpendRadii.pillRadius,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
-                decoration: BoxDecoration(
-                  color: isDark ? CoSpendColors.darkCard : CoSpendColors.white,
-                  borderRadius: CoSpendRadii.pillRadius,
-                  border: Border.all(
-                    color: isDark ? CoSpendColors.darkBorder : CoSpendColors.borderLight,
-                    width: 0.8,
-                  ),
-                  boxShadow: isDark ? null : CoSpendShadows.cardSubtle,
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      width: 6,
-                      height: 6,
-                      decoration: const BoxDecoration(
-                        color: CoSpendColors.jadeGreen,
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                    const SizedBox(width: 5),
-                    Text(
-                      DateFormat('MMMM yyyy').format(selectedMonth),
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: isDark ? CoSpendColors.darkTextMuted : CoSpendColors.textMuted,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(width: 2),
-                    Icon(
-                      Icons.keyboard_arrow_down_rounded,
-                      size: 14,
-                      color: isDark ? CoSpendColors.darkTextMuted : CoSpendColors.textMuted,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
         ),
         actions: [
           householdAsync.maybeWhen(
@@ -197,7 +116,11 @@ class HomeScreen extends ConsumerWidget {
                       isLabelVisible: unreadNotifs > 0,
                       backgroundColor: CoSpendColors.alertRed,
                       label: Text('$unreadNotifs'),
-                      child: const Icon(Icons.notifications_outlined),
+                      child: Icon(
+                        Icons.notifications_outlined,
+                        color: isDark ? Colors.white70 : CoSpendColors.textMuted,
+                        size: 22,
+                      ),
                     ),
                     tooltip: 'Activity & Alerts',
                     onPressed: () {
@@ -209,17 +132,23 @@ class HomeScreen extends ConsumerWidget {
                   ),
                   Padding(
                     padding: const EdgeInsets.only(right: 12),
-                    child: ActionChip(
-                      avatar: const Icon(Icons.group_add_rounded, size: 14),
-                      label: Text(
-                        household.inviteCode,
-                        style: const TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
+                    child: GestureDetector(
+                      onTap: () => context.push(Routes.profile),
+                      child: Container(
+                        padding: const EdgeInsets.all(2),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: CoSpendColors.jadeGreen,
+                            width: 2,
+                          ),
+                        ),
+                        child: AppAvatar(
+                          name: userName,
+                          photoUrl: session?.user?.photoUrl,
+                          size: 32,
                         ),
                       ),
-                      onPressed: () =>
-                          InviteMembersSheet.show(context, household),
                     ),
                   ),
                 ],
@@ -249,191 +178,92 @@ class HomeScreen extends ConsumerWidget {
           final members = membersAsync.value ?? const [];
           final memberNameMap = {for (final m in members) m.id: m.name};
 
-          final currentUserId = session?.user?.id ?? '';
-          final isOwner =
-              household.ownerId.isEmpty || household.ownerId == currentUserId;
+          final settlement = settlementAsync.value;
+          // Current user's net balance: positive = owed to them, negative = they owe
+          final myBalance = settlement?.balances
+              .where((b) => b.memberId == currentUserId)
+              .firstOrNull;
 
           return ListView(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 80),
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
             children: [
-              // Personal Category Budget Alerts - Refined Alert with Left Stripe
-              if (exceededAlerts.isNotEmpty) ...[
-                for (final alert in exceededAlerts)
-                  Container(
-                    margin: const EdgeInsets.only(bottom: 14),
-                    decoration: BoxDecoration(
-                      color: isDark ? const Color(0xFF2B1015) : const Color(0xFFFFF5F5),
-                      borderRadius: CoSpendRadii.cardRadius,
-                      border: Border.all(
-                        color: CoSpendColors.alertRed.withValues(alpha: 0.25),
-                        width: 1,
-                      ),
-                      boxShadow: !isDark ? CoSpendShadows.cardSubtle : null,
-                    ),
-                    child: IntrinsicHeight(
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 4,
-                            decoration: const BoxDecoration(
-                              color: CoSpendColors.alertRed,
-                              borderRadius: BorderRadius.horizontal(
-                                left: Radius.circular(CoSpendRadii.card),
-                              ),
-                            ),
-                          ),
-                          Expanded(
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                              child: Row(
-                                children: [
-                                  Container(
-                                    width: 32,
-                                    height: 32,
-                                    decoration: BoxDecoration(
-                                      color: CoSpendColors.alertRed.withValues(alpha: 0.12),
-                                      shape: BoxShape.circle,
-                                    ),
-                                    alignment: Alignment.center,
-                                    child: const Icon(
-                                      Icons.warning_amber_rounded,
-                                      color: CoSpendColors.alertRed,
-                                      size: 17,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          '${alert.label} Budget Exceeded',
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.w800,
-                                            fontSize: 13,
-                                            color: CoSpendColors.alertRed,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 2),
-                                        Text(
-                                          'You spent ${Money.format(alert.mySpentPaisa)} of your ${Money.format(alert.myBudgetPaisa)} quota for this month.',
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            color: isDark ? CoSpendColors.darkTextMuted : CoSpendColors.textMuted,
-                                            fontWeight: FontWeight.w500,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-              ],
-
-              // 4 Financial Summary Cards: Total Flat Budget, Total Spendings, Your Share, Spent By You
-              FinancialSummaryCards(
-                totalBudgetPaisa: household.effectiveTotalBudgetPaisa,
-                totalSpendingPaisa: stats.totalSpendingPaisa,
-                userAllocatedSharePaisa:
-                    household.getMemberTotalBudget(currentUserId),
-                userSpentPaisa: stats.userPaidPaisa,
-              ),
-              const SizedBox(height: 16),
-
-              // Monthly Budget Card
-              if (budgetStatus != null) ...[
-                BudgetProgressCard(budgetStatus: budgetStatus),
-                const SizedBox(height: 16),
-              ] else ...[
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                  decoration: BoxDecoration(
-                    color: scheme.surfaceContainerLow,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: scheme.outlineVariant.withValues(alpha: 0.35),
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: scheme.primary.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Icon(Icons.savings_rounded, color: scheme.primary, size: 20),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              isOwner
-                                  ? 'Set Category Budgets'
-                                  : 'Category Budgets',
-                              style: theme.textTheme.titleSmall?.copyWith(
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                            Text(
-                              isOwner
-                                  ? 'Track spending caps for Food, Bills, etc.'
-                                  : 'Spending limits set by flat owner.',
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: scheme.onSurfaceVariant,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      OutlinedButton(
-                        onPressed: () => context.push(Routes.categoryBudgets),
-                        style: OutlinedButton.styleFrom(
-                          visualDensity: VisualDensity.compact,
-                          padding: const EdgeInsets.symmetric(horizontal: 12),
-                        ),
-                        child: Text(isOwner ? 'Set' : 'View'),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 16),
-              ],
-
-              // Daily Spending Trend Bar Chart
-              MonthlySpendingChart(
-                stats: stats,
+              // ── Greeting + Month Selector + Invite Code ──────────────────
+              _HeaderSection(
+                greeting: _greeting(),
+                userName: userName,
                 selectedMonth: selectedMonth,
+                inviteCode: household.inviteCode,
+                onMonthTap: () => _pickMonth(context, ref),
+                onInviteTap: () => InviteMembersSheet.show(context, household),
+                isDark: isDark,
               ),
               const SizedBox(height: 16),
 
-              // Category Breakdown Card (if any spending exists)
-              if (stats.categoryBreakdown.isNotEmpty) ...[
-                CategoryBreakdownCard(stats: stats),
-                const SizedBox(height: 16),
+              // ── Hero Total Monthly Spend Card ─────────────────────────────
+              _HeroSpendCard(
+                totalSpendingPaisa: stats.totalSpendingPaisa,
+                budgetPaisa: household.effectiveTotalBudgetPaisa,
+                sharedSpendingPaisa: stats.totalSpendingPaisa - stats.userPaidPaisa,
+                individualSpendingPaisa: stats.userPaidPaisa,
+                budgetStatus: budgetStatus,
+              ),
+              const SizedBox(height: 14),
+
+              // ── Budget Alerts ─────────────────────────────────────────────
+              if (exceededAlerts.isNotEmpty) ...[ 
+                for (final alert in exceededAlerts)
+                  _BudgetAlertBanner(
+                    label: alert.label,
+                    mySpentPaisa: alert.mySpentPaisa,
+                    myBudgetPaisa: alert.myBudgetPaisa,
+                    isDark: isDark,
+                  ),
               ],
 
-              // Recent Expenses Header + List
+              // ── Recent Activity ───────────────────────────────────────────
+              const SizedBox(height: 4),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const SectionLabel('Recent Expenses', padding: EdgeInsets.zero),
-                  TextButton(
-                    onPressed: () => context.go(Routes.expenses),
-                    child: const Text('View all'),
+                  Text(
+                    'Recent Activity',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -0.3,
+                      color: isDark ? Colors.white : CoSpendColors.prussianBlue,
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () => context.go(Routes.expenses),
+                    child: Row(
+                      children: [
+                        Text(
+                          'See All',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: isDark
+                                ? CoSpendColors.darkTextMuted
+                                : CoSpendColors.textMuted,
+                          ),
+                        ),
+                        const SizedBox(width: 2),
+                        Icon(
+                          Icons.arrow_forward_rounded,
+                          size: 15,
+                          color: isDark
+                              ? CoSpendColors.darkTextMuted
+                              : CoSpendColors.textMuted,
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
-              const SizedBox(height: 6),
+              const SizedBox(height: 12),
 
+              // Recent expense tiles
               recentExpensesAsync.when(
                 loading: () => const Column(
                   children: [
@@ -452,10 +282,13 @@ class HomeScreen extends ConsumerWidget {
                       padding: const EdgeInsets.all(24),
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
-                        color: scheme.surfaceContainerLow,
-                        borderRadius: BorderRadius.circular(16),
+                        color: isDark ? CoSpendColors.darkCard : CoSpendColors.white,
+                        borderRadius: CoSpendRadii.cardRadius,
                         border: Border.all(
-                          color: scheme.outlineVariant.withValues(alpha: 0.4),
+                          color: isDark
+                              ? CoSpendColors.darkBorder
+                              : CoSpendColors.borderLight,
+                          width: 0.8,
                         ),
                       ),
                       child: Column(
@@ -471,7 +304,7 @@ class HomeScreen extends ConsumerWidget {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            'Tap the button below to add your first expense.',
+                            'Tap the + button below to add your first expense.',
                             style: theme.textTheme.bodySmall?.copyWith(
                               color: scheme.onSurfaceVariant,
                             ),
@@ -481,62 +314,560 @@ class HomeScreen extends ConsumerWidget {
                     );
                   }
 
-                  return Column(
-                    children: [
-                      for (final exp in recent)
-                        _RecentExpenseTile(
-                          description: exp.description,
-                          amountPaisa: exp.amountPaisa,
-                          category: exp.category,
-                          customCategoryId: exp.customCategoryId,
-                          subcategory: exp.subcategory,
-                          spentAt: exp.spentAt,
-                          payerName:
-                              memberNameMap[exp.paidById] ?? 'Flatmate',
-                          onTap: () {
-                            context.push(
-                              Routes.expenseDetails.replaceAll(':id', exp.id),
-                              extra: exp,
-                            );
-                          },
-                        ),
-                    ],
+                  return Container(
+                    decoration: BoxDecoration(
+                      color: isDark ? CoSpendColors.darkCard : CoSpendColors.white,
+                      borderRadius: CoSpendRadii.cardRadius,
+                      border: Border.all(
+                        color: isDark
+                            ? CoSpendColors.darkBorder
+                            : CoSpendColors.borderLight,
+                        width: 0.8,
+                      ),
+                      boxShadow: isDark ? null : CoSpendShadows.card,
+                    ),
+                    child: Column(
+                      children: [
+                        for (int i = 0; i < recent.length; i++) ...[
+                          _RecentActivityTile(
+                            description: recent[i].description,
+                            amountPaisa: recent[i].amountPaisa,
+                            category: recent[i].category,
+                            customCategoryId: recent[i].customCategoryId,
+                            subcategory: recent[i].subcategory,
+                            spentAt: recent[i].spentAt,
+                            payerName: memberNameMap[recent[i].paidById] ?? 'Flatmate',
+                            onTap: () {
+                              context.push(
+                                Routes.expenseDetails.replaceAll(':id', recent[i].id),
+                                extra: recent[i],
+                              );
+                            },
+                            isDark: isDark,
+                          ),
+                          if (i < recent.length - 1)
+                            Divider(
+                              height: 1,
+                              color: isDark
+                                  ? CoSpendColors.darkBorder
+                                  : CoSpendColors.borderLight,
+                              indent: 68,
+                            ),
+                        ],
+                      ],
+                    ),
                   );
                 },
+              ),
+
+              const SizedBox(height: 24),
+
+              // ── Quick Insights ────────────────────────────────────────────
+              Text(
+                'Quick Insights',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: -0.3,
+                  color: isDark ? Colors.white : CoSpendColors.prussianBlue,
+                ),
+              ),
+              const SizedBox(height: 12),
+              _QuickInsightsRow(
+                myBalance: myBalance?.netPaisa ?? 0,
+                memberNameMap: memberNameMap,
+                settlement: settlementAsync.value,
+                currentUserId: currentUserId,
+                isDark: isDark,
               ),
             ],
           );
         },
       ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       floatingActionButton: Container(
-        margin: const EdgeInsets.only(bottom: 6),
         decoration: const BoxDecoration(
-          borderRadius: BorderRadius.all(Radius.circular(999)),
+          shape: BoxShape.circle,
           boxShadow: CoSpendShadows.floating,
         ),
-        child: FloatingActionButton.extended(
+        child: FloatingActionButton(
           onPressed: () => context.push(Routes.addExpense),
-          icon: const Icon(Icons.add_rounded, color: Colors.white, size: 20),
-          label: const Text(
-            'Add Expense',
-            style: TextStyle(
-              fontWeight: FontWeight.w700,
-              color: Colors.white,
-              fontSize: 14,
-              letterSpacing: 0.1,
-            ),
-          ),
           backgroundColor: CoSpendColors.jadeGreen,
           elevation: 0,
-          shape: const StadiumBorder(),
+          shape: const CircleBorder(),
+          child: const Icon(Icons.add_rounded, color: Colors.white, size: 28),
         ),
       ),
     );
   }
 }
 
-class _RecentExpenseTile extends ConsumerWidget {
-  const _RecentExpenseTile({
+// ─────────────────────────────────────────────────────────────────────────────
+// Header Section Widget
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _HeaderSection extends StatelessWidget {
+  const _HeaderSection({
+    required this.greeting,
+    required this.userName,
+    required this.selectedMonth,
+    required this.inviteCode,
+    required this.onMonthTap,
+    required this.onInviteTap,
+    required this.isDark,
+  });
+
+  final String greeting;
+  final String userName;
+  final DateTime selectedMonth;
+  final String inviteCode;
+  final VoidCallback onMonthTap;
+  final VoidCallback onInviteTap;
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '$greeting, ${userName.split(' ').first}',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: isDark ? CoSpendColors.darkTextMuted : CoSpendColors.textMuted,
+                ),
+              ),
+              const SizedBox(height: 2),
+              GestureDetector(
+                onTap: onMonthTap,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      DateFormat('MMMM yyyy').format(selectedMonth),
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.5,
+                        color: isDark ? Colors.white : CoSpendColors.prussianBlue,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Icon(
+                      Icons.keyboard_arrow_down_rounded,
+                      size: 20,
+                      color: isDark ? Colors.white70 : CoSpendColors.textMuted,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        GestureDetector(
+          onTap: onInviteTap,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            decoration: BoxDecoration(
+              color: isDark ? CoSpendColors.darkCard : CoSpendColors.white,
+              borderRadius: CoSpendRadii.pillRadius,
+              border: Border.all(
+                color: isDark ? CoSpendColors.darkBorder : CoSpendColors.border,
+                width: 1,
+              ),
+              boxShadow: isDark ? null : CoSpendShadows.cardSubtle,
+            ),
+            child: Text(
+              inviteCode,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.5,
+                color: isDark ? Colors.white : CoSpendColors.prussianBlue,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Hero Spend Card Widget
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _HeroSpendCard extends StatelessWidget {
+  const _HeroSpendCard({
+    required this.totalSpendingPaisa,
+    required this.budgetPaisa,
+    required this.sharedSpendingPaisa,
+    required this.individualSpendingPaisa,
+    this.budgetStatus,
+  });
+
+  final int totalSpendingPaisa;
+  final int budgetPaisa;
+  final int sharedSpendingPaisa;
+  final int individualSpendingPaisa;
+  final BudgetStatus? budgetStatus;
+
+  @override
+  Widget build(BuildContext context) {
+    final pct = budgetStatus?.percentage ?? 0.0;
+    final clampedPct = pct.clamp(0.0, 100.0);
+    final isExceeded = budgetStatus?.isExceeded ?? false;
+    final isApproaching = budgetStatus?.isApproaching ?? false;
+    final progressColor = isExceeded
+        ? CoSpendColors.alertRed
+        : isApproaching
+            ? CoSpendColors.warningAmber
+            : CoSpendColors.jadeGreen;
+
+    return Container(
+      padding: const EdgeInsets.all(22),
+      decoration: BoxDecoration(
+        borderRadius: CoSpendRadii.cardLargeRadius,
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFF0A1F3D),
+            Color(0xFF0E2D5A),
+          ],
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: CoSpendColors.prussianBlue.withValues(alpha: 0.45),
+            blurRadius: 28,
+            offset: const Offset(0, 12),
+            spreadRadius: -4,
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // ── Header row: label + wallet icon ──────────────────────────────
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Total Monthly Spend',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.white.withValues(alpha: 0.75),
+                  letterSpacing: 0.1,
+                ),
+              ),
+              Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.15),
+                    width: 0.8,
+                  ),
+                ),
+                alignment: Alignment.center,
+                child: const Icon(
+                  Icons.account_balance_wallet_rounded,
+                  color: CoSpendColors.jadeGreen,
+                  size: 20,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+
+          // ── Total amount ──────────────────────────────────────────────────
+          Text(
+            Money.format(totalSpendingPaisa),
+            style: const TextStyle(
+              fontSize: 32,
+              fontWeight: FontWeight.w800,
+              color: Colors.white,
+              letterSpacing: -0.8,
+              height: 1.1,
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // ── Budget Limit Row ──────────────────────────────────────────────
+          if (budgetPaisa > 0) ...[
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Budget Limit',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.white.withValues(alpha: 0.65),
+                  ),
+                ),
+                Text(
+                  Money.format(budgetPaisa),
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+
+            // ── Progress Bar ──────────────────────────────────────────────
+            ClipRRect(
+              borderRadius: CoSpendRadii.pillRadius,
+              child: Stack(
+                children: [
+                  Container(
+                    height: 7,
+                    color: Colors.white.withValues(alpha: 0.15),
+                  ),
+                  TweenAnimationBuilder<double>(
+                    duration: const Duration(milliseconds: 700),
+                    curve: Curves.easeOutCubic,
+                    tween: Tween<double>(begin: 0, end: clampedPct / 100.0),
+                    builder: (context, value, child) => FractionallySizedBox(
+                      widthFactor: value,
+                      child: Container(
+                        height: 7,
+                        decoration: BoxDecoration(
+                          color: progressColor,
+                          borderRadius: CoSpendRadii.pillRadius,
+                          boxShadow: [
+                            BoxShadow(
+                              color: progressColor.withValues(alpha: 0.5),
+                              blurRadius: 6,
+                              offset: const Offset(0, 1),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 8),
+            Align(
+              alignment: Alignment.centerRight,
+              child: Text(
+                '${clampedPct.toStringAsFixed(0)}% of limit used',
+                style: TextStyle(
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.white.withValues(alpha: 0.6),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Divider(
+              height: 1,
+              color: Colors.white.withValues(alpha: 0.12),
+            ),
+            const SizedBox(height: 16),
+          ] else ...[
+            const SizedBox(height: 16),
+            Divider(
+              height: 1,
+              color: Colors.white.withValues(alpha: 0.12),
+            ),
+            const SizedBox(height: 16),
+          ],
+
+          // ── Shared / Individual Split ─────────────────────────────────────
+          Row(
+            children: [
+              Expanded(
+                child: _SpendSplitTile(
+                  label: 'SHARED',
+                  amountPaisa: sharedSpendingPaisa,
+                  icon: Icons.trending_up_rounded,
+                  iconColor: CoSpendColors.jadeGreen,
+                ),
+              ),
+              Container(
+                width: 1,
+                height: 40,
+                color: Colors.white.withValues(alpha: 0.15),
+              ),
+              Expanded(
+                child: _SpendSplitTile(
+                  label: 'INDIVIDUAL',
+                  amountPaisa: individualSpendingPaisa,
+                  icon: Icons.trending_down_rounded,
+                  iconColor: const Color(0xFF93C5FD),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SpendSplitTile extends StatelessWidget {
+  const _SpendSplitTile({
+    required this.label,
+    required this.amountPaisa,
+    required this.icon,
+    required this.iconColor,
+  });
+
+  final String label;
+  final int amountPaisa;
+  final IconData icon;
+  final Color iconColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      child: Row(
+        children: [
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: iconColor.withValues(alpha: 0.18),
+              shape: BoxShape.circle,
+            ),
+            alignment: Alignment.center,
+            child: Icon(icon, size: 16, color: iconColor),
+          ),
+          const SizedBox(width: 10),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.6,
+                  color: Colors.white.withValues(alpha: 0.55),
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                Money.format(amountPaisa),
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
+                  letterSpacing: -0.3,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Budget Alert Banner
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _BudgetAlertBanner extends StatelessWidget {
+  const _BudgetAlertBanner({
+    required this.label,
+    required this.mySpentPaisa,
+    required this.myBudgetPaisa,
+    required this.isDark,
+  });
+
+  final String label;
+  final int mySpentPaisa;
+  final int myBudgetPaisa;
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context) {
+    final pct = myBudgetPaisa > 0
+        ? ((mySpentPaisa / myBudgetPaisa) * 100).round()
+        : 85;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF2B1015) : const Color(0xFFFFF5F5),
+        borderRadius: CoSpendRadii.cardRadius,
+        border: Border.all(
+          color: CoSpendColors.alertRed.withValues(alpha: 0.25),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: CoSpendColors.alertRed.withValues(alpha: 0.12),
+              shape: BoxShape.circle,
+            ),
+            alignment: Alignment.center,
+            child: const Icon(
+              Icons.error_outline_rounded,
+              color: CoSpendColors.alertRed,
+              size: 18,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Budget Alert: $label Spending',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 13.5,
+                    color: CoSpendColors.alertRed,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Your group has spent $pct% of the $label budget. Consider reviewing upcoming needs.',
+                  style: const TextStyle(
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w500,
+                    color: CoSpendColors.alertRed,
+                    height: 1.4,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Recent Activity Tile
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _RecentActivityTile extends ConsumerWidget {
+  const _RecentActivityTile({
     required this.description,
     required this.amountPaisa,
     required this.category,
@@ -545,6 +876,7 @@ class _RecentExpenseTile extends ConsumerWidget {
     required this.spentAt,
     required this.payerName,
     required this.onTap,
+    required this.isDark,
   });
 
   final String description;
@@ -555,6 +887,7 @@ class _RecentExpenseTile extends ConsumerWidget {
   final DateTime spentAt;
   final String payerName;
   final VoidCallback onTap;
+  final bool isDark;
 
   String _relativeDate(DateTime date) {
     final now = DateTime.now();
@@ -562,14 +895,13 @@ class _RecentExpenseTile extends ConsumerWidget {
     final target = DateTime(date.year, date.month, date.day);
     final diff = today.difference(target).inDays;
 
-    if (diff == 0) return 'Today';
+    if (diff == 0) return 'Today, ${DateFormat('hh:mm a').format(date)}';
     if (diff == 1) return 'Yesterday';
-    return DateFormat('dd MMM').format(date);
+    return DateFormat('MMM dd, yyyy').format(date);
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final household = ref.watch(currentHouseholdProvider).value;
 
     final custom = customCategoryId != null
@@ -578,22 +910,27 @@ class _RecentExpenseTile extends ConsumerWidget {
             .firstOrNull
         : null;
     final catIcon = custom?.icon ?? category.icon as IconData;
-    final hasSubcat = subcategory != null && subcategory!.trim().isNotEmpty;
+    final catColor = custom?.color ?? category.color as Color;
+    final catLabel = custom?.label ?? category.label as String;
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: CoSpendCard(
-        onTap: onTap,
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+    return InkWell(
+      onTap: onTap,
+      borderRadius: CoSpendRadii.cardRadius,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         child: Row(
           children: [
-            TintedIcon(
-              icon: catIcon,
-              color: CoSpendColors.prussianBlue,
-              size: 19,
-              containerSize: 42,
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: catColor.withValues(alpha: 0.12),
+                shape: BoxShape.circle,
+              ),
+              alignment: Alignment.center,
+              child: Icon(catIcon, size: 20, color: catColor),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 14),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -608,26 +945,28 @@ class _RecentExpenseTile extends ConsumerWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 2),
+                  const SizedBox(height: 3),
                   Row(
                     children: [
                       Text(
-                        'Paid by $payerName · ${_relativeDate(spentAt)}',
+                        catLabel,
                         style: TextStyle(
-                          color: isDark ? CoSpendColors.darkTextMuted : CoSpendColors.textMuted,
                           fontSize: 11.5,
+                          fontWeight: FontWeight.w500,
+                          color: isDark
+                              ? CoSpendColors.darkTextMuted
+                              : CoSpendColors.textMuted,
                         ),
                       ),
-                      if (hasSubcat) ...[
-                        Text(
-                          ' · $subcategory',
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            color: isDark ? CoSpendColors.darkTextMuted : CoSpendColors.textSubtle,
-                          ),
+                      Text(
+                        ' · ${_relativeDate(spentAt)}',
+                        style: TextStyle(
+                          fontSize: 11.5,
+                          color: isDark
+                              ? CoSpendColors.darkTextMuted
+                              : CoSpendColors.textMuted,
                         ),
-                      ],
+                      ),
                     ],
                   ),
                 ],
@@ -635,11 +974,11 @@ class _RecentExpenseTile extends ConsumerWidget {
             ),
             const SizedBox(width: 8),
             Text(
-              Money.format(amountPaisa),
+              '- ${Money.format(amountPaisa)}',
               style: TextStyle(
-                fontWeight: FontWeight.w800,
-                fontSize: 15.5,
-                letterSpacing: -0.3,
+                fontWeight: FontWeight.w700,
+                fontSize: 14.5,
+                letterSpacing: -0.2,
                 color: isDark ? Colors.white : CoSpendColors.prussianBlue,
               ),
             ),
@@ -650,6 +989,202 @@ class _RecentExpenseTile extends ConsumerWidget {
   }
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Quick Insights Row
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _QuickInsightsRow extends StatelessWidget {
+  const _QuickInsightsRow({
+    required this.myBalance,
+    required this.memberNameMap,
+    required this.settlement,
+    required this.currentUserId,
+    required this.isDark,
+  });
+
+  final int myBalance;
+  final Map<String, String> memberNameMap;
+  final dynamic settlement;
+  final String currentUserId;
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context) {
+    // Find someone they owe to
+    String owesTo = '';
+    int owesAmount = 0;
+    String owedBy = '';
+    int owedAmount = 0;
+
+    if (settlement != null) {
+      for (final transfer in settlement!.transfers) {
+        if (transfer.fromMemberId == currentUserId) {
+          // user owes someone
+          owesTo = memberNameMap[transfer.toMemberId] ?? 'Flatmate';
+          owesAmount = transfer.amountPaisa;
+          break;
+        }
+      }
+      for (final transfer in settlement!.transfers) {
+        if (transfer.toMemberId == currentUserId) {
+          // someone owes the user
+          owedBy = memberNameMap[transfer.fromMemberId] ?? 'Flatmate';
+          owedAmount = transfer.amountPaisa;
+          break;
+        }
+      }
+    }
+
+    final cardBg = isDark ? CoSpendColors.darkCard : CoSpendColors.white;
+    final borderColor =
+        isDark ? CoSpendColors.darkBorder : CoSpendColors.borderLight;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: cardBg,
+        borderRadius: CoSpendRadii.cardRadius,
+        border: Border.all(color: borderColor, width: 0.8),
+        boxShadow: isDark ? null : CoSpendShadows.card,
+      ),
+      child: Row(
+        children: [
+          // Settlements
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.all(18),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.trending_down_rounded,
+                        size: 15,
+                        color: isDark
+                            ? CoSpendColors.darkTextMuted
+                            : CoSpendColors.textMuted,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        'SETTLEMENTS',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.8,
+                          color: isDark
+                              ? CoSpendColors.darkTextMuted
+                              : CoSpendColors.textMuted,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    owedAmount > 0
+                        ? '${owedBy.split(' ').first} owes you'
+                        : 'All settled up',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: isDark ? Colors.white : CoSpendColors.prussianBlue,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    owedAmount > 0
+                        ? Money.format(owedAmount)
+                        : Money.format(0),
+                    style: TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -0.3,
+                      color: owedAmount > 0
+                          ? CoSpendColors.jadeGreen
+                          : (isDark
+                              ? CoSpendColors.darkTextMuted
+                              : CoSpendColors.textMuted),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Container(
+            width: 1,
+            height: 80,
+            color: isDark ? CoSpendColors.darkBorder : CoSpendColors.borderLight,
+          ),
+          // Balance
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.all(18),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.trending_up_rounded,
+                        size: 15,
+                        color: isDark
+                            ? CoSpendColors.darkTextMuted
+                            : CoSpendColors.textMuted,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        'BALANCE',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.8,
+                          color: isDark
+                              ? CoSpendColors.darkTextMuted
+                              : CoSpendColors.textMuted,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    owesAmount > 0
+                        ? 'You owe ${owesTo.split(' ').first}'
+                        : 'No pending dues',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: isDark ? Colors.white : CoSpendColors.prussianBlue,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    owesAmount > 0
+                        ? Money.format(owesAmount)
+                        : Money.format(0),
+                    style: TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -0.3,
+                      color: owesAmount > 0
+                          ? CoSpendColors.alertRed
+                          : (isDark
+                              ? CoSpendColors.darkTextMuted
+                              : CoSpendColors.textMuted),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Dashboard Skeleton
+// ─────────────────────────────────────────────────────────────────────────────
+
 class _DashboardSkeleton extends StatelessWidget {
   const _DashboardSkeleton();
 
@@ -658,25 +1193,17 @@ class _DashboardSkeleton extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: const [
-        Row(
-          children: [
-            Expanded(child: SkeletonBox(height: 90)),
-            SizedBox(width: 12),
-            Expanded(child: SkeletonBox(height: 90)),
-          ],
-        ),
-        SizedBox(height: 12),
-        Row(
-          children: [
-            Expanded(child: SkeletonBox(height: 90)),
-            SizedBox(width: 12),
-            Expanded(child: SkeletonBox(height: 90)),
-          ],
-        ),
+        SkeletonBox(height: 60),
+        SizedBox(height: 16),
+        SkeletonBox(height: 200),
+        SizedBox(height: 16),
+        SkeletonBox(height: 64),
+        SizedBox(height: 8),
+        SkeletonBox(height: 64),
+        SizedBox(height: 8),
+        SkeletonBox(height: 64),
         SizedBox(height: 20),
-        SkeletonBox(height: 160),
-        SizedBox(height: 20),
-        SkeletonBox(height: 120),
+        SkeletonBox(height: 110),
       ],
     );
   }
