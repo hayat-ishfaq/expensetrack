@@ -11,6 +11,7 @@ import '../../../../core/utils/money.dart';
 import '../../../../shared/widgets/empty_state.dart';
 import '../../../../shared/widgets/error_view.dart';
 import '../../../../shared/widgets/skeleton_box.dart';
+import '../../../auth/presentation/providers/session_provider.dart';
 import '../../../expenses/domain/expense.dart';
 import '../../../expenses/domain/expense_category.dart';
 import '../../../expenses/presentation/providers/expense_providers.dart';
@@ -64,6 +65,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
     }).toList();
   }
 
+  /// Groups expenses by date, returning an ordered map of label → items.
   Map<String, List<Expense>> _groupByDate(List<Expense> expenses) {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
@@ -75,13 +77,12 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
       final expDate = DateTime(exp.spentAt.year, exp.spentAt.month, exp.spentAt.day);
       String groupKey;
       if (expDate == today) {
-        groupKey = 'TODAY · ${DateFormat('dd MMMM').format(exp.spentAt)}';
+        groupKey = 'TODAY';
       } else if (expDate == yesterday) {
-        groupKey = 'YESTERDAY · ${DateFormat('dd MMMM').format(exp.spentAt)}';
+        groupKey = 'YESTERDAY';
       } else {
-        groupKey = DateFormat('dd MMMM yyyy').format(exp.spentAt).toUpperCase();
+        groupKey = DateFormat('MMMM dd, yyyy').format(exp.spentAt).toUpperCase();
       }
-
       groups.putIfAbsent(groupKey, () => []).add(exp);
     }
 
@@ -93,18 +94,63 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final expensesAsync = ref.watch(householdExpensesProvider);
     final membersAsync = ref.watch(householdMembersProvider);
+    final session = ref.watch(sessionProvider).value;
+    final currentUserId = session?.user?.id ?? '';
 
     return Scaffold(
+      backgroundColor: isDark ? CoSpendColors.darkCanvas : CoSpendColors.canvas,
       appBar: AppBar(
+        backgroundColor: isDark ? CoSpendColors.darkCanvas : CoSpendColors.canvas,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        centerTitle: true,
         title: Text(
-          'Expenses',
+          'LEDGER',
           style: TextStyle(
+            fontSize: 14,
             fontWeight: FontWeight.w800,
-            fontSize: 20,
-            letterSpacing: -0.4,
+            letterSpacing: 1.8,
             color: isDark ? Colors.white : CoSpendColors.prussianBlue,
           ),
         ),
+        actions: [
+          IconButton(
+            icon: Icon(
+              Icons.notifications_outlined,
+              color: isDark ? Colors.white70 : CoSpendColors.textMuted,
+              size: 22,
+            ),
+            onPressed: () {},
+          ),
+          Padding(
+            padding: const EdgeInsets.only(right: 12),
+            child: GestureDetector(
+              onTap: () => context.push(Routes.profile),
+              child: Container(
+                padding: const EdgeInsets.all(2),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: CoSpendColors.jadeGreen,
+                    width: 2,
+                  ),
+                ),
+                child: CircleAvatar(
+                  radius: 16,
+                  backgroundColor: CoSpendColors.prussianBlue,
+                  child: Text(
+                    (session?.user?.name ?? 'U').substring(0, 1).toUpperCase(),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 13,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
       body: expensesAsync.when(
         loading: () => const _ExpensesSkeleton(),
@@ -145,25 +191,36 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
           final members = membersAsync.value ?? const [];
           final memberNameMap = {for (final m in members) m.id: m.name};
 
+          // Build category chips from available categories in this data
+          final availableCategories = allExpenses
+              .map((e) => e.category)
+              .toSet()
+              .toList();
+
           return Column(
             children: [
-              // Search Bar: Soft pill with subtle shadow
+              // ── Search Bar ──────────────────────────────────────────────
               Padding(
-                padding: const EdgeInsets.fromLTRB(16, 6, 16, 8),
+                padding: const EdgeInsets.fromLTRB(16, 6, 16, 10),
                 child: Container(
                   decoration: BoxDecoration(
                     color: isDark ? CoSpendColors.darkCard : CoSpendColors.white,
                     borderRadius: CoSpendRadii.pillRadius,
-                    boxShadow: !isDark ? CoSpendShadows.cardSubtle : null,
                     border: Border.all(
                       color: isDark ? CoSpendColors.darkBorder : CoSpendColors.borderLight,
+                      width: 1,
                     ),
+                    boxShadow: isDark ? null : CoSpendShadows.cardSubtle,
                   ),
                   child: TextField(
                     controller: _searchController,
                     onChanged: (_) => setState(() {}),
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: isDark ? Colors.white : CoSpendColors.prussianBlue,
+                    ),
                     decoration: InputDecoration(
-                      hintText: 'Search expenses...',
+                      hintText: 'Search transactions...',
                       hintStyle: TextStyle(
                         fontSize: 14,
                         color: isDark ? CoSpendColors.darkTextMuted : CoSpendColors.textSubtle,
@@ -175,7 +232,11 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                       ),
                       suffixIcon: _searchController.text.isNotEmpty
                           ? IconButton(
-                              icon: const Icon(Icons.clear_rounded, size: 18),
+                              icon: Icon(
+                                Icons.clear_rounded,
+                                size: 18,
+                                color: isDark ? CoSpendColors.darkTextMuted : CoSpendColors.textMuted,
+                              ),
                               onPressed: () {
                                 _searchController.clear();
                                 setState(() {});
@@ -186,7 +247,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                       isDense: true,
                       contentPadding: const EdgeInsets.symmetric(
                         horizontal: 16,
-                        vertical: 12,
+                        vertical: 13,
                       ),
                       border: InputBorder.none,
                       enabledBorder: InputBorder.none,
@@ -196,149 +257,177 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                 ),
               ),
 
-              // Filter Chips: Solid Prussian Blue when active, thin border when inactive
+              // ── Category Filter Chips ───────────────────────────────────
               SizedBox(
-                height: 44,
+                height: 42,
                 child: ListView(
                   scrollDirection: Axis.horizontal,
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   children: [
-                    _buildFilterPill(
+                    // "All" chip
+                    _CategoryChip(
                       label: 'All',
-                      isSelected: _dateFilter == DateFilter.all && _categoryFilter == null,
-                      onTap: () {
-                        setState(() {
+                      icon: Icons.receipt_long_rounded,
+                      isSelected: _categoryFilter == null && _dateFilter == DateFilter.all,
+                      onTap: () => setState(() {
+                        _categoryFilter = null;
+                        _dateFilter = DateFilter.all;
+                      }),
+                      isDark: isDark,
+                    ),
+                    const SizedBox(width: 8),
+                    // Category-specific chips
+                    for (final cat in availableCategories) ...[
+                      _CategoryChip(
+                        label: cat.label,
+                        icon: cat.icon,
+                        isSelected: _categoryFilter == cat,
+                        onTap: () => setState(() {
+                          _categoryFilter = _categoryFilter == cat ? null : cat;
                           _dateFilter = DateFilter.all;
-                          _categoryFilter = null;
-                        });
-                      },
-                      isDark: isDark,
-                    ),
-                    const SizedBox(width: 8),
-                    _buildFilterPill(
-                      label: 'Today',
-                      isSelected: _dateFilter == DateFilter.today,
-                      onTap: () {
-                        setState(() {
-                          _dateFilter = _dateFilter == DateFilter.today
-                              ? DateFilter.all
-                              : DateFilter.today;
-                        });
-                      },
-                      isDark: isDark,
-                    ),
-                    const SizedBox(width: 8),
-                    _buildFilterPill(
-                      label: 'This week',
-                      isSelected: _dateFilter == DateFilter.thisWeek,
-                      onTap: () {
-                        setState(() {
-                          _dateFilter = _dateFilter == DateFilter.thisWeek
-                              ? DateFilter.all
-                              : DateFilter.thisWeek;
-                        });
-                      },
-                      isDark: isDark,
-                    ),
-                    const SizedBox(width: 8),
-                    _buildFilterPill(
-                      label: 'This month',
-                      isSelected: _dateFilter == DateFilter.thisMonth,
-                      onTap: () {
-                        setState(() {
-                          _dateFilter = _dateFilter == DateFilter.thisMonth
-                              ? DateFilter.all
-                              : DateFilter.thisMonth;
-                        });
-                      },
-                      isDark: isDark,
-                    ),
-                    const SizedBox(width: 8),
-
-                    // Category Filter Dropdown Pill
-                    GestureDetector(
-                      onTap: () => _pickCategorySheet(context),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-                        decoration: BoxDecoration(
-                          color: _categoryFilter != null
-                              ? CoSpendColors.prussianBlue
-                              : (isDark ? CoSpendColors.darkCard : CoSpendColors.white),
-                          borderRadius: CoSpendRadii.pillRadius,
-                          border: Border.all(
-                            color: _categoryFilter != null
-                                ? CoSpendColors.prussianBlue
-                                : (isDark ? CoSpendColors.darkBorder : CoSpendColors.border),
-                            width: 1,
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              _categoryFilter?.icon ?? Icons.tune_rounded,
-                              size: 15,
-                              color: _categoryFilter != null
-                                  ? Colors.white
-                                  : (isDark ? CoSpendColors.darkTextMuted : CoSpendColors.textMuted),
-                            ),
-                            const SizedBox(width: 6),
-                            Text(
-                              _categoryFilter?.label ?? 'Category',
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: _categoryFilter != null ? FontWeight.w700 : FontWeight.w500,
-                                color: _categoryFilter != null
-                                    ? Colors.white
-                                    : (isDark ? Colors.white : CoSpendColors.textPrimary),
-                              ),
-                            ),
-                          ],
-                        ),
+                        }),
+                        isDark: isDark,
                       ),
-                    ),
+                      const SizedBox(width: 8),
+                    ],
                   ],
                 ),
               ),
+              const SizedBox(height: 4),
 
-              const SizedBox(height: 6),
-              Divider(
-                height: 1,
-                color: isDark ? CoSpendColors.darkBorder : CoSpendColors.borderLight,
-              ),
-
-              // Expense List or Empty Search
+              // ── Expense List ────────────────────────────────────────────
               Expanded(
                 child: filteredExpenses.isEmpty
                     ? const Center(
                         child: EmptyState(
                           icon: Icons.search_off_rounded,
                           title: 'No expenses found',
-                          message: 'Try changing your search keywords or clearing active filters.',
+                          message:
+                              'Try changing your search keywords or clearing active filters.',
                         ),
                       )
                     : ListView.builder(
-                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 80),
-                        itemCount: grouped.keys.length,
+                        padding: const EdgeInsets.fromLTRB(0, 8, 0, 100),
+                        itemCount: grouped.keys.length + 1, // +1 for footer
                         itemBuilder: (context, groupIndex) {
-                          final dateHeader = grouped.keys.elementAt(groupIndex);
+                          // Footer
+                          if (groupIndex == grouped.keys.length) {
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              child: Text(
+                                'Showing all records',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 12.5,
+                                  fontWeight: FontWeight.w500,
+                                  color: isDark
+                                      ? CoSpendColors.darkTextMuted
+                                      : CoSpendColors.textSubtle,
+                                ),
+                              ),
+                            );
+                          }
+
+                          final dateHeader =
+                              grouped.keys.elementAt(groupIndex);
                           final items = grouped[dateHeader]!;
 
                           return Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              SectionLabel(dateHeader),
-                              for (final exp in items)
-                                _ExpenseTile(
-                                  expense: exp,
-                                  payerName: memberNameMap[exp.paidById] ?? 'Flatmate',
-                                  onTap: () {
-                                    context.push(
-                                      Routes.expenseDetails.replaceAll(':id', exp.id),
-                                      extra: exp,
-                                    );
-                                  },
+                              // Date Group Header
+                              Padding(
+                                padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      dateHeader,
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w700,
+                                        letterSpacing: 0.8,
+                                        color: isDark
+                                            ? CoSpendColors.darkTextMuted
+                                            : CoSpendColors.textMuted,
+                                      ),
+                                    ),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 10, vertical: 3),
+                                      decoration: BoxDecoration(
+                                        color: isDark
+                                            ? CoSpendColors.darkCard
+                                            : CoSpendColors.white,
+                                        borderRadius: CoSpendRadii.pillRadius,
+                                        border: Border.all(
+                                          color: isDark
+                                              ? CoSpendColors.darkBorder
+                                              : CoSpendColors.borderLight,
+                                          width: 0.8,
+                                        ),
+                                      ),
+                                      child: Text(
+                                        '${items.length} ${items.length == 1 ? 'Entry' : 'Entries'}',
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w600,
+                                          color: isDark
+                                              ? CoSpendColors.darkTextMuted
+                                              : CoSpendColors.textMuted,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
+                              ),
+
+                              // Expense Tiles in a card group
+                              Container(
+                                margin: const EdgeInsets.symmetric(horizontal: 16),
+                                decoration: BoxDecoration(
+                                  color: isDark
+                                      ? CoSpendColors.darkCard
+                                      : CoSpendColors.white,
+                                  borderRadius: CoSpendRadii.cardRadius,
+                                  border: Border.all(
+                                    color: isDark
+                                        ? CoSpendColors.darkBorder
+                                        : CoSpendColors.borderLight,
+                                    width: 0.8,
+                                  ),
+                                  boxShadow: isDark ? null : CoSpendShadows.card,
+                                ),
+                                child: Column(
+                                  children: [
+                                    for (int i = 0; i < items.length; i++) ...[
+                                      _LedgerExpenseTile(
+                                        expense: items[i],
+                                        payerName:
+                                            memberNameMap[items[i].paidById] ??
+                                                'Flatmate',
+                                        currentUserId: currentUserId,
+                                        onTap: () {
+                                          context.push(
+                                            Routes.expenseDetails
+                                                .replaceAll(':id', items[i].id),
+                                            extra: items[i],
+                                          );
+                                        },
+                                        isDark: isDark,
+                                      ),
+                                      if (i < items.length - 1)
+                                        Divider(
+                                          height: 1,
+                                          color: isDark
+                                              ? CoSpendColors.darkBorder
+                                              : CoSpendColors.borderLight,
+                                          indent: 72,
+                                        ),
+                                    ],
+                                  ],
+                                ),
+                              ),
                             ],
                           );
                         },
@@ -348,160 +437,121 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
           );
         },
       ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       floatingActionButton: Container(
-        margin: const EdgeInsets.only(bottom: 6),
         decoration: const BoxDecoration(
-          borderRadius: BorderRadius.all(Radius.circular(999)),
+          shape: BoxShape.circle,
           boxShadow: CoSpendShadows.floating,
         ),
-        child: FloatingActionButton.extended(
+        child: FloatingActionButton(
           onPressed: () => context.push(Routes.addExpense),
-          icon: const Icon(Icons.add_rounded, color: Colors.white, size: 20),
-          label: const Text(
-            'Add Expense',
-            style: TextStyle(
-              fontWeight: FontWeight.w700,
-              color: Colors.white,
-              fontSize: 14,
-              letterSpacing: 0.1,
-            ),
-          ),
           backgroundColor: CoSpendColors.jadeGreen,
           elevation: 0,
-          shape: const StadiumBorder(),
+          shape: const CircleBorder(),
+          child: const Icon(Icons.add_rounded, color: Colors.white, size: 28),
         ),
       ),
-    );
-  }
-
-  Widget _buildFilterPill({
-    required String label,
-    required bool isSelected,
-    required VoidCallback onTap,
-    required bool isDark,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? CoSpendColors.prussianBlue
-              : (isDark ? CoSpendColors.darkCard : Colors.transparent),
-          borderRadius: CoSpendRadii.pillRadius,
-          border: Border.all(
-            color: isSelected
-                ? CoSpendColors.prussianBlue
-                : (isDark ? CoSpendColors.darkBorder : CoSpendColors.border),
-            width: 1,
-          ),
-        ),
-        alignment: Alignment.center,
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 13,
-            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-            color: isSelected
-                ? Colors.white
-                : (isDark ? CoSpendColors.darkTextMuted : CoSpendColors.textMuted),
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _pickCategorySheet(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    showModalBottomSheet<void>(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (context) {
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Filter by Category',
-                        style: TextStyle(
-                          fontSize: 17,
-                          fontWeight: FontWeight.w800,
-                          color: isDark ? Colors.white : CoSpendColors.prussianBlue,
-                        ),
-                      ),
-                      if (_categoryFilter != null)
-                        TextButton(
-                          onPressed: () {
-                            setState(() => _categoryFilter = null);
-                            Navigator.of(context).pop();
-                          },
-                          child: const Text('Clear'),
-                        ),
-                    ],
-                  ),
-                ),
-                Flexible(
-                  child: ListView(
-                    shrinkWrap: true,
-                    children: [
-                      for (final cat in ExpenseCategory.values)
-                        ListTile(
-                          leading: TintedIcon(
-                            icon: cat.icon,
-                            color: CoSpendColors.prussianBlue,
-                            size: 19,
-                            containerSize: 38,
-                          ),
-                          title: Text(
-                            cat.label,
-                            style: TextStyle(
-                              fontWeight: FontWeight.w600,
-                              color: isDark ? Colors.white : CoSpendColors.textPrimary,
-                            ),
-                          ),
-                          trailing: _categoryFilter == cat
-                              ? const Icon(Icons.check_circle_rounded, color: CoSpendColors.jadeGreen)
-                              : null,
-                          onTap: () {
-                            setState(() => _categoryFilter = cat);
-                            Navigator.of(context).pop();
-                          },
-                        ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
     );
   }
 }
 
-class _ExpenseTile extends ConsumerWidget {
-  const _ExpenseTile({
+// ─────────────────────────────────────────────────────────────────────────────
+// Category Filter Chip
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _CategoryChip extends StatelessWidget {
+  const _CategoryChip({
+    required this.label,
+    required this.icon,
+    required this.isSelected,
+    required this.onTap,
+    required this.isDark,
+  });
+
+  final String label;
+  final IconData icon;
+  final bool isSelected;
+  final VoidCallback onTap;
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        curve: Curves.easeInOut,
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? CoSpendColors.jadeGreen
+              : (isDark ? CoSpendColors.darkCard : CoSpendColors.white),
+          borderRadius: CoSpendRadii.pillRadius,
+          border: Border.all(
+            color: isSelected
+                ? CoSpendColors.jadeGreen
+                : (isDark ? CoSpendColors.darkBorder : CoSpendColors.border),
+            width: 1,
+          ),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: CoSpendColors.jadeGreen.withValues(alpha: 0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  )
+                ]
+              : null,
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              size: 14,
+              color: isSelected
+                  ? Colors.white
+                  : (isDark ? CoSpendColors.darkTextMuted : CoSpendColors.textMuted),
+            ),
+            const SizedBox(width: 6),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                color: isSelected
+                    ? Colors.white
+                    : (isDark ? Colors.white70 : CoSpendColors.textPrimary),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Ledger Expense Tile
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _LedgerExpenseTile extends ConsumerWidget {
+  const _LedgerExpenseTile({
     required this.expense,
     required this.payerName,
+    required this.currentUserId,
     required this.onTap,
+    required this.isDark,
   });
 
   final Expense expense;
   final String payerName;
+  final String currentUserId;
   final VoidCallback onTap;
+  final bool isDark;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final household = ref.watch(currentHouseholdProvider).value;
 
     final custom = expense.customCategoryId != null
@@ -511,24 +561,51 @@ class _ExpenseTile extends ConsumerWidget {
         : null;
     final catIcon = custom?.icon ?? expense.category.icon;
     final catLabel = custom?.label ?? expense.category.label;
-    final dateStr = DateFormat('dd MMM').format(expense.spentAt);
-    final hasSubcat =
-        expense.subcategory != null && expense.subcategory!.trim().isNotEmpty;
+    final catColor = custom?.color ?? expense.category.color;
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: CoSpendCard(
-        onTap: onTap,
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+    // Compute my share for "You get back / You owe" display
+    final iPaid = expense.paidById == currentUserId;
+    int mySharePaisa = 0;
+    final myIndex = expense.splitAmongIds.indexOf(currentUserId);
+    if (myIndex >= 0 && myIndex < expense.splitAmountsPaisa.length) {
+      mySharePaisa = expense.splitAmountsPaisa[myIndex];
+    }
+
+    // If I paid: I get back (total - my share). If someone else paid: I owe my share.
+    final int netPaisa;
+    final bool isGetBack;
+    if (iPaid) {
+      netPaisa = expense.amountPaisa - mySharePaisa;
+      isGetBack = true;
+    } else {
+      netPaisa = mySharePaisa;
+      isGetBack = false;
+    }
+
+    final showSettleLine = netPaisa > 0;
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: CoSpendRadii.cardRadius,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            TintedIcon(
-              icon: catIcon,
-              color: CoSpendColors.prussianBlue,
-              size: 20,
-              containerSize: 42,
+            // Category Icon
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: catColor.withValues(alpha: 0.12),
+                shape: BoxShape.circle,
+              ),
+              alignment: Alignment.center,
+              child: Icon(catIcon, size: 20, color: catColor),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 14),
+
+            // Title + subtitle
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -544,32 +621,24 @@ class _ExpenseTile extends ConsumerWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 2),
-                  Row(
-                    children: [
-                      Text(
-                        'Paid by $payerName · $dateStr',
-                        style: TextStyle(
-                          color: isDark ? CoSpendColors.darkTextMuted : CoSpendColors.textMuted,
-                          fontSize: 11.5,
-                        ),
-                      ),
-                      if (hasSubcat) ...[
-                        Text(
-                          ' · ${expense.subcategory}',
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            color: isDark ? CoSpendColors.darkTextMuted : CoSpendColors.textSubtle,
-                          ),
-                        ),
-                      ],
-                    ],
+                  const SizedBox(height: 3),
+                  Text(
+                    '$catLabel · Paid by $payerName',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: isDark
+                          ? CoSpendColors.darkTextMuted
+                          : CoSpendColors.textMuted,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: 10),
+
+            // Amount + settle line
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
@@ -577,27 +646,42 @@ class _ExpenseTile extends ConsumerWidget {
                   Money.format(expense.amountPaisa),
                   style: TextStyle(
                     fontWeight: FontWeight.w800,
-                    fontSize: 15.5,
+                    fontSize: 15,
                     letterSpacing: -0.3,
                     color: isDark ? Colors.white : CoSpendColors.prussianBlue,
                   ),
                 ),
-                const SizedBox(height: 1),
-                Text(
-                  catLabel,
-                  style: TextStyle(
-                    fontSize: 10.5,
-                    fontWeight: FontWeight.w500,
-                    color: isDark ? CoSpendColors.darkTextMuted : CoSpendColors.textSubtle,
+                if (showSettleLine) ...[
+                  const SizedBox(height: 3),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        isGetBack
+                            ? Icons.north_east_rounded
+                            : Icons.south_west_rounded,
+                        size: 12,
+                        color: isGetBack
+                            ? CoSpendColors.jadeGreen
+                            : CoSpendColors.alertRed,
+                      ),
+                      const SizedBox(width: 2),
+                      Text(
+                        isGetBack
+                            ? 'You get back ${Money.format(netPaisa)}'
+                            : 'You owe ${Money.format(netPaisa)}',
+                        style: TextStyle(
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w600,
+                          color: isGetBack
+                              ? CoSpendColors.jadeGreen
+                              : CoSpendColors.alertRed,
+                        ),
+                      ),
+                    ],
                   ),
-                ),
+                ],
               ],
-            ),
-            const SizedBox(width: 2),
-            Icon(
-              Icons.chevron_right_rounded,
-              size: 18,
-              color: isDark ? CoSpendColors.darkBorder : const Color(0xFFCBD5E1),
             ),
           ],
         ),
@@ -605,6 +689,10 @@ class _ExpenseTile extends ConsumerWidget {
     );
   }
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Skeleton
+// ─────────────────────────────────────────────────────────────────────────────
 
 class _ExpensesSkeleton extends StatelessWidget {
   const _ExpensesSkeleton();
@@ -615,12 +703,20 @@ class _ExpensesSkeleton extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       children: const [
         SkeletonBox(height: 48),
-        SizedBox(height: 16),
-        SkeletonBox(height: 64),
+        SizedBox(height: 12),
+        SkeletonBox(height: 40),
+        SizedBox(height: 20),
+        SkeletonBox(height: 20),
         SizedBox(height: 8),
-        SkeletonBox(height: 64),
+        SkeletonBox(height: 72),
         SizedBox(height: 8),
-        SkeletonBox(height: 64),
+        SkeletonBox(height: 72),
+        SizedBox(height: 20),
+        SkeletonBox(height: 20),
+        SizedBox(height: 8),
+        SkeletonBox(height: 72),
+        SizedBox(height: 8),
+        SkeletonBox(height: 72),
       ],
     );
   }
