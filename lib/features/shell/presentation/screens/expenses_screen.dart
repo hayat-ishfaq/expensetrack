@@ -519,7 +519,7 @@ class _ExpenseTile extends ConsumerWidget {
       padding: const EdgeInsets.only(bottom: 8),
       child: CoSpendCard(
         onTap: onTap,
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
         child: Row(
           children: [
             TintedIcon(
@@ -569,7 +569,7 @@ class _ExpenseTile extends ConsumerWidget {
                 ],
               ),
             ),
-            const SizedBox(width: 10),
+            const SizedBox(width: 8),
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
@@ -593,7 +593,7 @@ class _ExpenseTile extends ConsumerWidget {
                 ),
               ],
             ),
-            const SizedBox(width: 4),
+            const SizedBox(width: 2),
             Icon(
               Icons.chevron_right_rounded,
               size: 18,
