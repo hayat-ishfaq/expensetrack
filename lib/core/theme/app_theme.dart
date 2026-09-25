@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 
 import 'design_system.dart';
 
-/// Premium fintech Material 3 theme for CoSpend:
-/// Built with Jade Green (#00BC57), Prussian Blue (#0A2542), and off-white canvas (#F7F8FA).
+/// Premium fintech Material 3 theme for CoSpend.
+/// Inspired by Revolut, Monarch Money, and Apple Wallet.
+/// Built with Jade Green (#00BC57), Prussian Blue (#0A2542), and off-white canvas (#F5F7FA).
 abstract final class AppTheme {
   static const Color jadeGreen = CoSpendColors.jadeGreen;
   static const Color prussianBlue = CoSpendColors.prussianBlue;
@@ -89,9 +90,9 @@ abstract final class AppTheme {
         scrolledUnderElevation: 0,
         centerTitle: false,
         titleTextStyle: TextStyle(
-          fontSize: 19,
+          fontSize: 20,
           fontWeight: FontWeight.w800,
-          letterSpacing: -0.4,
+          letterSpacing: -0.5,
           color: scheme.onSurface,
         ),
       ),
@@ -102,10 +103,10 @@ abstract final class AppTheme {
         color: isDark ? CoSpendColors.darkCard : pureWhite,
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(cardRadius),
+          borderRadius: BorderRadius.circular(CoSpendRadii.card),
           side: BorderSide(
             color: isDark ? CoSpendColors.darkBorder : CoSpendColors.borderLight,
-            width: 1,
+            width: 0.8,
           ),
         ),
       ),
@@ -229,21 +230,28 @@ abstract final class AppTheme {
         backgroundColor: isDark ? const Color(0xFF071A2E) : pureWhite,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
-        indicatorColor: jadeGreen.withValues(alpha: 0.14),
+        height: 64,
+        indicatorColor: jadeGreen.withValues(alpha: 0.12),
         indicatorShape: const StadiumBorder(),
+        labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
         labelTextStyle: WidgetStateProperty.resolveWith((states) {
           final isSelected = states.contains(WidgetState.selected);
           return TextStyle(
-            fontSize: 12,
+            fontSize: 11,
             fontWeight: isSelected ? FontWeight.w800 : FontWeight.w500,
-            color: isSelected ? jadeGreen : (isDark ? CoSpendColors.darkTextMuted : CoSpendColors.textMuted),
+            letterSpacing: isSelected ? 0.1 : 0,
+            color: isSelected
+                ? jadeGreen
+                : (isDark ? CoSpendColors.darkTextMuted : CoSpendColors.textMuted),
           );
         }),
         iconTheme: WidgetStateProperty.resolveWith((states) {
           final isSelected = states.contains(WidgetState.selected);
           return IconThemeData(
-            size: 24,
-            color: isSelected ? jadeGreen : (isDark ? CoSpendColors.darkTextMuted : CoSpendColors.textMuted),
+            size: 22,
+            color: isSelected
+                ? jadeGreen
+                : (isDark ? CoSpendColors.darkTextMuted : CoSpendColors.textMuted),
           );
         }),
       ),

@@ -1,53 +1,76 @@
 import 'package:flutter/material.dart';
 
 /// Centralized design tokens and reusable visual primitives for CoSpend.
+/// Premium fintech UI inspired by Revolut, Monarch Money, and Apple Wallet.
 abstract final class CoSpendColors {
-  // Primary brand palette
+  // ── Primary brand palette ──────────────────────────────────────────────────
   static const Color prussianBlue = Color(0xFF0A2542);
   static const Color prussianBlueLight = Color(0xFF133863);
-  static const Color prussianBlueTint = Color(0x140A2542); // ~8% opacity
-  static const Color prussianBlueMuted = Color(0x240A2542); // ~14% opacity
+  static const Color prussianBlueTint = Color(0x140A2542);
+  static const Color prussianBlueMuted = Color(0x240A2542);
 
   static const Color jadeGreen = Color(0xFF00BC57);
+  static const Color jadeGreenDark = Color(0xFF009945);
   static const Color jadeGreenLight = Color(0xFFE6F8EE);
-  static const Color jadeGreenTint = Color(0x1800BC57); // ~10% opacity
+  static const Color jadeGreenTint = Color(0x1800BC57);
 
-  // Neutral surfaces
+  // ── Neutral surfaces ───────────────────────────────────────────────────────
   static const Color white = Colors.white;
-  static const Color canvas = Color(0xFFF7F8FA);
-  static const Color surfaceMuted = Color(0xFFF1F5F9);
-  static const Color border = Color(0xFFE2E8F0);
-  static const Color borderLight = Color(0xFFEEF2F6);
+  static const Color canvas = Color(0xFFF5F7FA);
+  static const Color surfaceMuted = Color(0xFFEEF2F7);
+  static const Color border = Color(0xFFDDE3EC);
+  static const Color borderLight = Color(0xFFEAEFF6);
   static const Color textPrimary = Color(0xFF0A2542);
+  static const Color textSecondary = Color(0xFF2D4A6A);
   static const Color textMuted = Color(0xFF64748B);
   static const Color textSubtle = Color(0xFF94A3B8);
 
-  // Dark mode surfaces
-  static const Color darkCanvas = Color(0xFF06182B);
-  static const Color darkCard = Color(0xFF0D2845);
-  static const Color darkBorder = Color(0xFF1E3A5A);
+  // ── Dark mode surfaces ─────────────────────────────────────────────────────
+  static const Color darkCanvas = Color(0xFF050F1C);
+  static const Color darkCard = Color(0xFF0B1F38);
+  static const Color darkCardElevated = Color(0xFF102A4C);
+  static const Color darkBorder = Color(0xFF1A3455);
+  static const Color darkBorderSubtle = Color(0xFF122845);
   static const Color darkTextPrimary = Colors.white;
-  static const Color darkTextMuted = Color(0xFF94A3B8);
+  static const Color darkTextMuted = Color(0xFF8BA4C0);
+  static const Color darkTextSubtle = Color(0xFF526A85);
 
-  // Status / warning (Reserved ONLY for budget limits / alerts)
+  // ── Status / semantic ──────────────────────────────────────────────────────
   static const Color alertRed = Color(0xFFEF4444);
   static const Color alertRedLight = Color(0xFFFEF2F2);
   static const Color alertRedTint = Color(0x1AEF4444);
-
   static const Color warningAmber = Color(0xFFF59E0B);
+  static const Color warningAmberLight = Color(0xFFFFF8E6);
   static const Color warningAmberTint = Color(0x1AF59E0B);
+
+  // ── Glassmorphism overlays ─────────────────────────────────────────────────
+  static const Color glassWhite = Color(0x1AFFFFFF);
+  static const Color glassBorderWhite = Color(0x33FFFFFF);
+  static const Color glassDark = Color(0x14000000);
+
+  // ── Hero gradient stops ────────────────────────────────────────────────────
+  static const List<Color> heroGradient = [
+    Color(0xFF0A2542),
+    Color(0xFF0E3060),
+    Color(0xFF163E78),
+  ];
+  static const List<Color> greenAccentGradient = [
+    Color(0xFF00BC57),
+    Color(0xFF00A04A),
+  ];
 }
 
-/// Standardized elevation shadows with soft Prussian-Blue tinting.
+/// Standardized elevation shadows — Prussian-Blue-tinted, soft & deep.
 abstract final class CoSpendShadows {
   static const List<BoxShadow> card = [
     BoxShadow(
-      color: Color(0x0C0A2542),
-      blurRadius: 14,
+      color: Color(0x0D0A2542),
+      blurRadius: 18,
       offset: Offset(0, 4),
+      spreadRadius: -2,
     ),
     BoxShadow(
-      color: Color(0x040A2542),
+      color: Color(0x050A2542),
       blurRadius: 4,
       offset: Offset(0, 1),
     ),
@@ -63,28 +86,61 @@ abstract final class CoSpendShadows {
 
   static const List<BoxShadow> softCard = [
     BoxShadow(
-      color: Color(0x0C0A2542),
-      blurRadius: 14,
-      offset: Offset(0, 4),
+      color: Color(0x0D0A2542),
+      blurRadius: 20,
+      offset: Offset(0, 6),
     ),
   ];
 
   static const List<BoxShadow> floating = [
     BoxShadow(
-      color: Color(0x2800BC57),
-      blurRadius: 16,
-      offset: Offset(0, 6),
+      color: Color(0x4400BC57),
+      blurRadius: 24,
+      offset: Offset(0, 8),
+      spreadRadius: -4,
+    ),
+  ];
+
+  static const List<BoxShadow> heroBannerShadow = [
+    BoxShadow(
+      color: Color(0x500A2542),
+      blurRadius: 32,
+      offset: Offset(0, 12),
+      spreadRadius: -8,
+    ),
+  ];
+
+  static const List<BoxShadow> navBar = [
+    BoxShadow(
+      color: Color(0x140A2542),
+      blurRadius: 24,
+      offset: Offset(0, -4),
     ),
   ];
 }
 
-/// Standard corner radii.
+/// Standard corner radii — aligned with premium fintech design language.
 abstract final class CoSpendRadii {
-  static const double card = 12.0;
+  static const double xs = 8.0;
+  static const double card = 16.0;
+  static const double cardLarge = 20.0;
   static const double pill = 999.0;
 
+  static final BorderRadius xsRadius = BorderRadius.circular(xs);
   static final BorderRadius cardRadius = BorderRadius.circular(card);
+  static final BorderRadius cardLargeRadius = BorderRadius.circular(cardLarge);
   static final BorderRadius pillRadius = BorderRadius.circular(pill);
+}
+
+/// 4pt spacing system.
+abstract final class CoSpendSpacing {
+  static const double xs = 4.0;
+  static const double sm = 8.0;
+  static const double md = 12.0;
+  static const double base = 16.0;
+  static const double lg = 20.0;
+  static const double xl = 24.0;
+  static const double xxl = 32.0;
 }
 
 /// Standardized section label (e.g., "FLAT SETTINGS", "SUBCATEGORIES").
@@ -108,7 +164,7 @@ class SectionLabel extends StatelessWidget {
         style: TextStyle(
           fontSize: 11,
           fontWeight: FontWeight.w700,
-          letterSpacing: 0.8,
+          letterSpacing: 1.0,
           color: isDark ? CoSpendColors.darkTextMuted : CoSpendColors.textMuted,
         ),
       ),
@@ -116,14 +172,14 @@ class SectionLabel extends StatelessWidget {
   }
 }
 
-/// Icon inside a soft ~10-12% opacity circular background container.
+/// Icon inside a soft ~10% opacity circular background container.
 class TintedIcon extends StatelessWidget {
   const TintedIcon({
     super.key,
     required this.icon,
     this.color = CoSpendColors.prussianBlue,
     this.size = 20,
-    this.containerSize = 38,
+    this.containerSize = 40,
   });
 
   final IconData icon;
@@ -137,7 +193,7 @@ class TintedIcon extends StatelessWidget {
       width: containerSize,
       height: containerSize,
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.11),
+        color: color.withValues(alpha: 0.10),
         shape: BoxShape.circle,
       ),
       alignment: Alignment.center,
@@ -146,7 +202,7 @@ class TintedIcon extends StatelessWidget {
   }
 }
 
-/// Standardized 12px rounded card with soft Prussian-tinted shadow.
+/// Premium 16px rounded card with soft Prussian-tinted shadow.
 class CoSpendCard extends StatelessWidget {
   const CoSpendCard({
     super.key,
@@ -174,8 +230,8 @@ class CoSpendCard extends StatelessWidget {
     final border = borderColor != null
         ? Border.all(color: borderColor!, width: 1)
         : (isDark
-            ? Border.all(color: CoSpendColors.darkBorder, width: 1)
-            : Border.all(color: CoSpendColors.borderLight, width: 1));
+            ? Border.all(color: CoSpendColors.darkBorder, width: 0.8)
+            : Border.all(color: CoSpendColors.borderLight, width: 0.8));
 
     Widget content = Container(
       margin: margin,
@@ -200,7 +256,7 @@ class CoSpendCard extends StatelessWidget {
   }
 }
 
-/// Tactile scale-down animation on tap (~0.97).
+/// Tactile scale-down animation on tap (~0.97) — Apple-style spring feedback.
 class BouncingButton extends StatefulWidget {
   const BouncingButton({
     super.key,
@@ -227,8 +283,8 @@ class _BouncingButtonState extends State<BouncingButton>
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 100),
-      reverseDuration: const Duration(milliseconds: 140),
+      duration: const Duration(milliseconds: 90),
+      reverseDuration: const Duration(milliseconds: 160),
     );
     _scaleAnimation = Tween<double>(begin: 1.0, end: widget.scale).animate(
       CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
@@ -302,6 +358,7 @@ class CoSpendSegmentedControl<T> extends StatelessWidget {
         borderRadius: CoSpendRadii.pillRadius,
         border: Border.all(
           color: isDark ? CoSpendColors.darkBorder : CoSpendColors.borderLight,
+          width: 0.8,
         ),
       ),
       child: Row(
@@ -350,7 +407,7 @@ class CoSpendSegmentedControl<T> extends StatelessWidget {
   }
 }
 
-/// Hero Budget Card styled in deep Prussian Blue gradient.
+/// Premium Hero Budget Card — deep Prussian Blue gradient with glassmorphism accents.
 class HeroBudgetCard extends StatelessWidget {
   const HeroBudgetCard({
     super.key,
@@ -375,33 +432,23 @@ class HeroBudgetCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final clampedRatio = (percentUsed / 100.0).clamp(0.0, 1.0);
     final isExceeded = percentUsed > 100.0;
+    final isApproaching = percentUsed >= 80.0 && !isExceeded;
     final progressColor = isExceeded
         ? CoSpendColors.alertRed
-        : (percentUsed >= 80.0
-            ? CoSpendColors.warningAmber
-            : CoSpendColors.jadeGreen);
+        : (isApproaching ? CoSpendColors.warningAmber : CoSpendColors.jadeGreen);
 
     return BouncingButton(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(22),
         decoration: BoxDecoration(
-          borderRadius: CoSpendRadii.cardRadius,
+          borderRadius: CoSpendRadii.cardLargeRadius,
           gradient: const LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              Color(0xFF0A2542),
-              Color(0xFF133863),
-            ],
+            colors: CoSpendColors.heroGradient,
           ),
-          boxShadow: [
-            BoxShadow(
-              color: CoSpendColors.prussianBlue.withValues(alpha: 0.35),
-              blurRadius: 18,
-              offset: const Offset(0, 8),
-            ),
-          ],
+          boxShadow: CoSpendShadows.heroBannerShadow,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -412,10 +459,14 @@ class HeroBudgetCard extends StatelessWidget {
                 Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.all(7),
+                      padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.12),
+                        color: CoSpendColors.glassWhite,
                         shape: BoxShape.circle,
+                        border: Border.all(
+                          color: CoSpendColors.glassBorderWhite,
+                          width: 0.8,
+                        ),
                       ),
                       child: const Icon(
                         Icons.account_balance_wallet_rounded,
@@ -423,13 +474,13 @@ class HeroBudgetCard extends StatelessWidget {
                         size: 16,
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: 10),
                     Text(
                       title.toUpperCase(),
                       style: const TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w700,
-                        letterSpacing: 0.8,
+                        letterSpacing: 1.0,
                         color: Color(0xFF93C5FD),
                       ),
                     ),
@@ -438,14 +489,15 @@ class HeroBudgetCard extends StatelessWidget {
                 ?trailing,
               ],
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 16),
             Text(
               amountText,
               style: const TextStyle(
-                fontSize: 26,
+                fontSize: 30,
                 fontWeight: FontWeight.w800,
                 color: Colors.white,
-                letterSpacing: -0.5,
+                letterSpacing: -0.8,
+                height: 1.1,
               ),
             ),
             const SizedBox(height: 4),
@@ -453,30 +505,43 @@ class HeroBudgetCard extends StatelessWidget {
               subtitle,
               style: TextStyle(
                 fontSize: 13,
-                color: Colors.white.withValues(alpha: 0.75),
+                color: Colors.white.withValues(alpha: 0.65),
+                fontWeight: FontWeight.w400,
               ),
             ),
-            const SizedBox(height: 16),
-            // Animated Progress Bar
+            const SizedBox(height: 20),
             ClipRRect(
               borderRadius: CoSpendRadii.pillRadius,
               child: Stack(
                 children: [
                   Container(
-                    height: 8,
-                    color: Colors.white.withValues(alpha: 0.15),
+                    height: 6,
+                    color: Colors.white.withValues(alpha: 0.12),
                   ),
                   TweenAnimationBuilder<double>(
-                    duration: const Duration(milliseconds: 600),
+                    duration: const Duration(milliseconds: 700),
                     curve: Curves.easeOutCubic,
                     tween: Tween<double>(begin: 0, end: clampedRatio),
                     builder: (context, value, child) => FractionallySizedBox(
                       widthFactor: value,
                       child: Container(
-                        height: 8,
+                        height: 6,
                         decoration: BoxDecoration(
-                          color: progressColor,
+                          gradient: LinearGradient(
+                            colors: isExceeded
+                                ? [CoSpendColors.alertRed, const Color(0xFFFF6B6B)]
+                                : isApproaching
+                                    ? [CoSpendColors.warningAmber, const Color(0xFFFFD166)]
+                                    : [CoSpendColors.jadeGreen, const Color(0xFF00E676)],
+                          ),
                           borderRadius: CoSpendRadii.pillRadius,
+                          boxShadow: [
+                            BoxShadow(
+                              color: progressColor.withValues(alpha: 0.55),
+                              blurRadius: 6,
+                              offset: const Offset(0, 1),
+                            ),
+                          ],
                         ),
                       ),
                     ),
@@ -484,7 +549,7 @@ class HeroBudgetCard extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 10),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -492,16 +557,27 @@ class HeroBudgetCard extends StatelessWidget {
                   progressText,
                   style: TextStyle(
                     fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white.withValues(alpha: 0.85),
+                    fontWeight: FontWeight.w500,
+                    color: Colors.white.withValues(alpha: 0.7),
                   ),
                 ),
-                Text(
-                  '${percentUsed.toStringAsFixed(0)}% used',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    color: isExceeded ? CoSpendColors.alertRed : Colors.white,
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: progressColor.withValues(alpha: 0.18),
+                    borderRadius: CoSpendRadii.pillRadius,
+                    border: Border.all(
+                      color: progressColor.withValues(alpha: 0.3),
+                      width: 0.8,
+                    ),
+                  ),
+                  child: Text(
+                    '${percentUsed.toStringAsFixed(0)}%',
+                    style: TextStyle(
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w700,
+                      color: isExceeded ? CoSpendColors.alertRed : progressColor,
+                    ),
                   ),
                 ),
               ],

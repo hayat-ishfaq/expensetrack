@@ -108,38 +108,59 @@ class MoreScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
     final session = ref.watch(sessionProvider).value;
     final household = ref.watch(currentHouseholdProvider).value;
     final themeMode = ref.watch(themeModeProvider).value ?? ThemeMode.system;
 
     final user = session?.user;
     final isOwner = household != null && household.ownerId == user?.id;
+    final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('More')),
+      appBar: AppBar(
+        title: Text(
+          'More',
+          style: TextStyle(
+            fontWeight: FontWeight.w800,
+            fontSize: 20,
+            color: isDark ? Colors.white : CoSpendColors.prussianBlue,
+          ),
+        ),
+      ),
       body: ListView(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         children: [
           // Profile Card
           CoSpendCard(
             onTap: () => context.push(Routes.profile),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
             child: Row(
               children: [
+                // Avatar with gradient ring
                 Container(
-                  padding: const EdgeInsets.all(2),
+                  padding: const EdgeInsets.all(2.5),
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    border: Border.all(
-                      color: CoSpendColors.prussianBlue.withValues(alpha: 0.18),
-                      width: 2,
+                    gradient: const LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        CoSpendColors.jadeGreen,
+                        CoSpendColors.prussianBlue,
+                      ],
                     ),
                   ),
-                  child: AppAvatar(
-                    name: user?.name ?? '',
-                    photoUrl: user?.photoUrl,
-                    size: 46,
+                  child: Container(
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: CoSpendColors.white,
+                    ),
+                    padding: const EdgeInsets.all(2),
+                    child: AppAvatar(
+                      name: user?.name ?? '',
+                      photoUrl: user?.photoUrl,
+                      size: 46,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 14),
@@ -152,10 +173,11 @@ class MoreScreen extends ConsumerWidget {
                           Flexible(
                             child: Text(
                               user?.name ?? 'CoSpend member',
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w700,
+                              style: TextStyle(
+                                fontWeight: FontWeight.w800,
                                 fontSize: 16,
-                                color: CoSpendColors.prussianBlue,
+                                letterSpacing: -0.3,
+                                color: isDark ? Colors.white : CoSpendColors.prussianBlue,
                               ),
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -168,27 +190,30 @@ class MoreScreen extends ConsumerWidget {
                                 vertical: 2,
                               ),
                               decoration: BoxDecoration(
-                                color: CoSpendColors.prussianBlue.withValues(alpha: 0.08),
+                                gradient: const LinearGradient(
+                                  colors: CoSpendColors.heroGradient,
+                                ),
                                 borderRadius: BorderRadius.circular(999),
                               ),
                               child: const Text(
                                 'Owner',
                                 style: TextStyle(
-                                  color: CoSpendColors.prussianBlue,
+                                  color: Colors.white,
                                   fontWeight: FontWeight.w700,
                                   fontSize: 10,
+                                  letterSpacing: 0.3,
                                 ),
                               ),
                             ),
                           ],
                         ],
                       ),
-                      const SizedBox(height: 2),
+                      const SizedBox(height: 3),
                       Text(
                         user?.email ?? '',
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: Color(0xFF6B7280),
+                        style: TextStyle(
+                          fontSize: 12.5,
+                          color: isDark ? CoSpendColors.darkTextMuted : CoSpendColors.textMuted,
                         ),
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -207,16 +232,15 @@ class MoreScreen extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(width: 8),
-                const TintedIcon(
-                  icon: Icons.edit_outlined,
-                  size: 16,
-                  color: CoSpendColors.prussianBlue,
-                  containerSize: 32,
+                Icon(
+                  Icons.chevron_right_rounded,
+                  color: isDark ? CoSpendColors.darkTextMuted : CoSpendColors.textSubtle,
+                  size: 20,
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
 
           // Flat & Budget Section
           if (household != null) ...[
@@ -434,11 +458,27 @@ class MoreScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 24),
 
+          // App version footer
           Center(
-            child: Text(
-              '${AppConstants.appName} · v1.0.0',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: scheme.onSurfaceVariant,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+              decoration: BoxDecoration(
+                color: isDark
+                    ? CoSpendColors.darkCardElevated
+                    : CoSpendColors.surfaceMuted,
+                borderRadius: CoSpendRadii.pillRadius,
+                border: Border.all(
+                  color: isDark ? CoSpendColors.darkBorder : CoSpendColors.borderLight,
+                  width: 0.8,
+                ),
+              ),
+              child: Text(
+                '${AppConstants.appName} · v1.0.0',
+                style: TextStyle(
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w600,
+                  color: isDark ? CoSpendColors.darkTextMuted : CoSpendColors.textMuted,
+                ),
               ),
             ),
           ),

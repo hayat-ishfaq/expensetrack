@@ -97,19 +97,30 @@ class HomeScreen extends ConsumerWidget {
           padding: const EdgeInsets.only(left: 14),
           child: Center(
             child: Container(
-              padding: const EdgeInsets.all(2),
+              padding: const EdgeInsets.all(2.5),
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                border: Border.all(
-                  color: CoSpendColors.prussianBlue.withValues(alpha: 0.25),
-                  width: 2,
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    CoSpendColors.jadeGreen,
+                    CoSpendColors.prussianBlue,
+                  ],
                 ),
               ),
-              child: AppAvatar(
-                name: userName,
-                photoUrl: session?.user?.photoUrl,
-                size: 36,
-                onTap: () => context.push(Routes.profile),
+              child: Container(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: isDark ? CoSpendColors.darkCanvas : CoSpendColors.canvas,
+                ),
+                padding: const EdgeInsets.all(2),
+                child: AppAvatar(
+                  name: userName,
+                  photoUrl: session?.user?.photoUrl,
+                  size: 34,
+                  onTap: () => context.push(Routes.profile),
+                ),
               ),
             ),
           ),
@@ -123,40 +134,50 @@ class HomeScreen extends ConsumerWidget {
               style: TextStyle(
                 fontWeight: FontWeight.w800,
                 fontSize: 16,
-                letterSpacing: -0.3,
+                letterSpacing: -0.4,
                 color: isDark ? Colors.white : CoSpendColors.prussianBlue,
               ),
             ),
-            const SizedBox(height: 2),
+            const SizedBox(height: 3),
             InkWell(
               onTap: () => _pickMonth(context, ref),
               borderRadius: CoSpendRadii.pillRadius,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
                 decoration: BoxDecoration(
-                  color: isDark ? CoSpendColors.darkCard : CoSpendColors.surfaceMuted,
+                  color: isDark ? CoSpendColors.darkCard : CoSpendColors.white,
                   borderRadius: CoSpendRadii.pillRadius,
                   border: Border.all(
-                    color: isDark ? CoSpendColors.darkBorder : CoSpendColors.border,
+                    color: isDark ? CoSpendColors.darkBorder : CoSpendColors.borderLight,
                     width: 0.8,
                   ),
+                  boxShadow: isDark ? null : CoSpendShadows.cardSubtle,
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
+                    Container(
+                      width: 6,
+                      height: 6,
+                      decoration: const BoxDecoration(
+                        color: CoSpendColors.jadeGreen,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 5),
                     Text(
                       DateFormat('MMMM yyyy').format(selectedMonth),
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 11,
-                        color: CoSpendColors.jadeGreen,
-                        fontWeight: FontWeight.w700,
+                        color: isDark ? CoSpendColors.darkTextMuted : CoSpendColors.textMuted,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                     const SizedBox(width: 2),
-                    const Icon(
+                    Icon(
                       Icons.keyboard_arrow_down_rounded,
-                      size: 15,
-                      color: CoSpendColors.jadeGreen,
+                      size: 14,
+                      color: isDark ? CoSpendColors.darkTextMuted : CoSpendColors.textMuted,
                     ),
                   ],
                 ),
@@ -502,7 +523,7 @@ class HomeScreen extends ConsumerWidget {
               fontWeight: FontWeight.w700,
               color: Colors.white,
               fontSize: 14,
-              letterSpacing: 0.2,
+              letterSpacing: 0.1,
             ),
           ),
           backgroundColor: CoSpendColors.jadeGreen,

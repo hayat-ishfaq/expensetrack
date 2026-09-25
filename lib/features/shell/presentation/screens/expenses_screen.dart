@@ -101,6 +101,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
           style: TextStyle(
             fontWeight: FontWeight.w800,
             fontSize: 20,
+            letterSpacing: -0.4,
             color: isDark ? Colors.white : CoSpendColors.prussianBlue,
           ),
         ),
@@ -362,7 +363,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
               fontWeight: FontWeight.w700,
               color: Colors.white,
               fontSize: 14,
-              letterSpacing: 0.2,
+              letterSpacing: 0.1,
             ),
           ),
           backgroundColor: CoSpendColors.jadeGreen,

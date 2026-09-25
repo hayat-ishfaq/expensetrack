@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/errors/app_exception.dart';
 import '../../../../core/errors/firebase_error_mapper.dart';
+import '../../../../core/theme/design_system.dart';
 import '../../../../core/utils/money.dart';
 import '../../../../shared/models/household_member.dart';
 import '../../../../shared/widgets/empty_state.dart';
@@ -23,9 +24,19 @@ class SettleUpScreen extends ConsumerWidget {
     final settlementAsync = ref.watch(settlementProvider);
     final expensesAsync = ref.watch(householdExpensesProvider);
     final membersAsync = ref.watch(householdMembersProvider);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Settle Up')),
+      appBar: AppBar(
+        title: Text(
+          'Settle Up',
+          style: TextStyle(
+            fontWeight: FontWeight.w800,
+            fontSize: 20,
+            color: isDark ? Colors.white : CoSpendColors.prussianBlue,
+          ),
+        ),
+      ),
       body: settlementAsync.when(
         loading: () => const _SettlementSkeleton(),
         error: (error, _) => ErrorView(
@@ -48,10 +59,49 @@ class SettleUpScreen extends ConsumerWidget {
             );
           }
           if (settlement.isSettled) {
-            return const EmptyState(
-              icon: Icons.check_circle_outline,
-              title: 'All settled up',
-              message: 'Everyone is even — no transfers are needed right now.',
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(32),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 80,
+                      height: 80,
+                      decoration: BoxDecoration(
+                        color: CoSpendColors.jadeGreenLight,
+                        shape: BoxShape.circle,
+                      ),
+                      alignment: Alignment.center,
+                      child: const Icon(
+                        Icons.check_rounded,
+                        color: CoSpendColors.jadeGreen,
+                        size: 40,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    Text(
+                      'All settled up! 🎉',
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.4,
+                        color: isDark ? Colors.white : CoSpendColors.prussianBlue,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Everyone is even — no transfers are needed right now.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: isDark ? CoSpendColors.darkTextMuted : CoSpendColors.textMuted,
+                        height: 1.5,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             );
           }
           return _SettlementView(
@@ -82,46 +132,43 @@ class _SettlementView extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final members = membersAsync.value ?? const <HouseholdMember>[];
 
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 32),
       children: [
-        _SummaryCard(totalPaisa: settlement.totalOwedPaisa),
+        _SummaryHeroCard(totalPaisa: settlement.totalOwedPaisa),
         const SizedBox(height: 20),
-        Text(
-          'Balances',
-          style: theme.textTheme.titleSmall?.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        const SizedBox(height: 8),
+
+        const SectionLabel('Balances', padding: EdgeInsets.only(bottom: 8)),
         for (final balance in settlement.balances)
           _BalanceTile(
             balance: balance,
             name: _nameFor(balance.memberId, members),
+            isDark: isDark,
           ),
-        const SizedBox(height: 20),
-        Text(
-          'How to settle',
-          style: theme.textTheme.titleSmall?.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        const SizedBox(height: 8),
+
+        const SizedBox(height: 16),
+        const SectionLabel('How to settle', padding: EdgeInsets.only(bottom: 8)),
         for (final transfer in settlement.transfers)
           _TransferTile(
             transfer: transfer,
             fromName: _nameFor(transfer.fromMemberId, members),
             toName: _nameFor(transfer.toMemberId, members),
+            isDark: isDark,
           ),
-        const SizedBox(height: 8),
-        Text(
-          'Suggestions only — settle however works best for your flat.',
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: scheme.onSurfaceVariant,
+
+        const SizedBox(height: 12),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4),
+          child: Text(
+            'Suggestions only — settle however works best for your flat.',
+            style: TextStyle(
+              fontSize: 12,
+              color: isDark ? CoSpendColors.darkTextMuted : CoSpendColors.textMuted,
+              height: 1.5,
+            ),
           ),
         ),
       ],
@@ -129,107 +176,172 @@ class _SettlementView extends ConsumerWidget {
   }
 }
 
-class _SummaryCard extends StatelessWidget {
-  const _SummaryCard({required this.totalPaisa});
+class _SummaryHeroCard extends StatelessWidget {
+  const _SummaryHeroCard({required this.totalPaisa});
 
   final int totalPaisa;
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-
-    return Card(
-      color: scheme.primaryContainer,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            Container(
-              width: 46,
-              height: 46,
-              decoration: BoxDecoration(
-                color: scheme.primary,
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: Icon(
-                Icons.swap_horiz_rounded,
-                color: scheme.onPrimary,
-              ),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Total to settle',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: scheme.onPrimaryContainer,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    Money.format(totalPaisa),
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      color: scheme.onPrimaryContainer,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: -0.3,
-                      fontFeatures: const [FontFeature.tabularFigures()],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
+    return Container(
+      padding: const EdgeInsets.all(22),
+      decoration: BoxDecoration(
+        borderRadius: CoSpendRadii.cardLargeRadius,
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: CoSpendColors.heroGradient,
         ),
+        boxShadow: CoSpendShadows.heroBannerShadow,
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 52,
+            height: 52,
+            decoration: BoxDecoration(
+              color: CoSpendColors.glassWhite,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: CoSpendColors.glassBorderWhite,
+                width: 0.8,
+              ),
+            ),
+            alignment: Alignment.center,
+            child: const Icon(
+              Icons.swap_horiz_rounded,
+              color: CoSpendColors.jadeGreen,
+              size: 26,
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'TOTAL TO SETTLE',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 1.0,
+                    color: Color(0xFF93C5FD),
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  Money.format(totalPaisa),
+                  style: const TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
+                    letterSpacing: -0.6,
+                    height: 1.1,
+                    fontFeatures: [FontFeature.tabularFigures()],
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'Across all flatmates',
+                  style: TextStyle(
+                    fontSize: 12.5,
+                    color: Colors.white.withValues(alpha: 0.6),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
 }
 
 class _BalanceTile extends StatelessWidget {
-  const _BalanceTile({required this.balance, required this.name});
+  const _BalanceTile({
+    required this.balance,
+    required this.name,
+    required this.isDark,
+  });
 
   final SettlementBalance balance;
   final String name;
-
-  static const Color _credit = Color(0xFF16A34A);
+  final bool isDark;
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-    final initial =
-        name.isEmpty ? '?' : name.trim().characters.first.toUpperCase();
-    final color =
-        balance.isOwed ? _credit : scheme.error;
+    final initial = name.isEmpty ? '?' : name.trim().characters.first.toUpperCase();
+    final isOwed = balance.isOwed;
+    final accentColor = isOwed ? CoSpendColors.jadeGreen : CoSpendColors.alertRed;
+    final bgColor = isOwed
+        ? CoSpendColors.jadeGreenTint
+        : CoSpendColors.alertRedTint;
 
-    return Card(
-      margin: const EdgeInsets.only(bottom: 8),
-      child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: scheme.surfaceContainerHighest,
-          child: Text(
-            initial,
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w700,
-              color: scheme.primary,
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: CoSpendCard(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+        child: Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: CoSpendColors.prussianBlueTint,
+                shape: BoxShape.circle,
+              ),
+              alignment: Alignment.center,
+              child: Text(
+                initial,
+                style: TextStyle(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 16,
+                  color: isDark ? Colors.white : CoSpendColors.prussianBlue,
+                ),
+              ),
             ),
-          ),
-        ),
-        title: Text(
-          name,
-          style: const TextStyle(fontWeight: FontWeight.w600),
-        ),
-        subtitle: Text(balance.isOwed ? 'Is owed' : 'Owes'),
-        trailing: Text(
-          Money.formatSigned(balance.netPaisa),
-          style: theme.textTheme.titleSmall?.copyWith(
-            color: color,
-            fontWeight: FontWeight.w700,
-            fontFeatures: const [FontFeature.tabularFigures()],
-          ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    name,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 14.5,
+                      color: isDark ? Colors.white : CoSpendColors.prussianBlue,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    isOwed ? 'Is owed money' : 'Owes money',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: isDark ? CoSpendColors.darkTextMuted : CoSpendColors.textMuted,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              decoration: BoxDecoration(
+                color: bgColor,
+                borderRadius: CoSpendRadii.pillRadius,
+              ),
+              child: Text(
+                Money.formatSigned(balance.netPaisa),
+                style: TextStyle(
+                  color: accentColor,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 14,
+                  letterSpacing: -0.3,
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -241,43 +353,83 @@ class _TransferTile extends StatelessWidget {
     required this.transfer,
     required this.fromName,
     required this.toName,
+    required this.isDark,
   });
 
   final SettlementTransfer transfer;
   final String fromName;
   final String toName;
+  final bool isDark;
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-
-    return Card(
-      margin: const EdgeInsets.only(bottom: 8),
-      child: ListTile(
-        leading: Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            color: scheme.secondaryContainer,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Icon(
-            Icons.arrow_forward_rounded,
-            color: scheme.onSecondaryContainer,
-            size: 20,
-          ),
-        ),
-        title: Text(
-          '$fromName pays $toName',
-          style: const TextStyle(fontWeight: FontWeight.w600),
-        ),
-        trailing: Text(
-          Money.format(transfer.amountPaisa),
-          style: theme.textTheme.titleSmall?.copyWith(
-            fontWeight: FontWeight.w700,
-            fontFeatures: const [FontFeature.tabularFigures()],
-          ),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: CoSpendCard(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+        child: Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: CoSpendColors.prussianBlueTint,
+                borderRadius: BorderRadius.circular(CoSpendRadii.xs),
+              ),
+              alignment: Alignment.center,
+              child: Icon(
+                Icons.arrow_forward_rounded,
+                color: isDark ? Colors.white : CoSpendColors.prussianBlue,
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  RichText(
+                    text: TextSpan(
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: isDark ? Colors.white : CoSpendColors.prussianBlue,
+                      ),
+                      children: [
+                        TextSpan(
+                          text: fromName,
+                          style: const TextStyle(fontWeight: FontWeight.w800),
+                        ),
+                        const TextSpan(text: ' pays '),
+                        TextSpan(
+                          text: toName,
+                          style: const TextStyle(fontWeight: FontWeight.w800),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'Transfer to settle',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: isDark ? CoSpendColors.darkTextMuted : CoSpendColors.textMuted,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Text(
+              Money.format(transfer.amountPaisa),
+              style: TextStyle(
+                fontWeight: FontWeight.w800,
+                fontSize: 15.5,
+                letterSpacing: -0.3,
+                color: isDark ? Colors.white : CoSpendColors.prussianBlue,
+                fontFeatures: const [FontFeature.tabularFigures()],
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -292,19 +444,19 @@ class _SettlementSkeleton extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: const [
-        SkeletonBox(height: 78),
+        SkeletonBox(height: 110, radius: 20),
         SizedBox(height: 20),
-        SkeletonBox(height: 24, width: 120),
+        SkeletonBox(height: 16, width: 80),
         SizedBox(height: 10),
-        SkeletonBox(height: 56),
+        SkeletonBox(height: 66, radius: 16),
         SizedBox(height: 8),
-        SkeletonBox(height: 56),
+        SkeletonBox(height: 66, radius: 16),
         SizedBox(height: 20),
-        SkeletonBox(height: 24, width: 120),
+        SkeletonBox(height: 16, width: 100),
         SizedBox(height: 10),
-        SkeletonBox(height: 56),
+        SkeletonBox(height: 66, radius: 16),
         SizedBox(height: 8),
-        SkeletonBox(height: 56),
+        SkeletonBox(height: 66, radius: 16),
       ],
     );
   }
