@@ -792,73 +792,81 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                 const SizedBox(height: 12),
 
                 // ── PAID BY ───────────────────────────────────────────────────
-                InkWell(
-                  onTap: () => _showPayerPicker(members),
-                  borderRadius: BorderRadius.circular(12),
-                  child: CoSpendCard(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 12),
-                    child: Row(
-                      children: [
-                        CircleAvatar(
-                          radius: 18,
-                          backgroundColor: CoSpendColors.prussianBlue,
-                          child: Text(
-                            payer.name.isNotEmpty
-                                ? payer.name[0].toUpperCase()
-                                : '?',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w700,
-                              fontSize: 14,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'PAID BY',
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w700,
-                                  letterSpacing: 0.6,
-                                  color: Color(0xFF6B7280),
-                                ),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                payer.name,
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w700,
-                                  color: CoSpendColors.prussianBlue,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 5),
-                          decoration: BoxDecoration(
-                            border:
-                                Border.all(color: const Color(0x280A2542)),
-                            borderRadius: BorderRadius.circular(999),
-                          ),
-                          child: const Text(
-                            'Change',
-                            style: TextStyle(
-                              fontWeight: FontWeight.w700,
-                              fontSize: 11,
-                              color: CoSpendColors.prussianBlue,
-                            ),
-                          ),
-                        ),
-                      ],
+                Container(
+                  decoration: BoxDecoration(
+                    color: isDark ? CoSpendColors.darkCard : CoSpendColors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: isDark ? CoSpendColors.darkBorder : const Color(0x1F0A2542),
+                      width: 0.8,
                     ),
+                    boxShadow: isDark ? null : CoSpendShadows.card,
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  child: Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 18,
+                        backgroundColor: CoSpendColors.prussianBlue,
+                        child: Text(
+                          payer.name.isNotEmpty
+                              ? payer.name[0].toUpperCase()
+                              : '?',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'PAID BY',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 0.6,
+                                color: isDark
+                                    ? CoSpendColors.darkTextMuted
+                                    : const Color(0xFF6B7280),
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              payer.name,
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                                color: isDark
+                                    ? Colors.white
+                                    : CoSpendColors.prussianBlue,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      // "You" badge — indicates this is always the current user
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: CoSpendColors.jadeGreen.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                        child: const Text(
+                          'You',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 11,
+                            color: CoSpendColors.jadeGreen,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 const SizedBox(height: 20),
