@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -106,7 +108,6 @@ class _CategoryBudgetScreenState extends ConsumerState<CategoryBudgetScreen> {
         _controllers[item.id]!.text = rupees.toString();
       }
 
-      // Member controllers
       _memberControllers[item.id] ??= {};
       for (final member in members) {
         final memberPaisa =
@@ -114,7 +115,8 @@ class _CategoryBudgetScreenState extends ConsumerState<CategoryBudgetScreen> {
         var ctrl = _memberControllers[item.id]?[member.id];
         if (ctrl == null) {
           ctrl = TextEditingController(
-            text: memberPaisa > 0 ? (memberPaisa / 100).round().toString() : '',
+            text:
+                memberPaisa > 0 ? (memberPaisa / 100).round().toString() : '',
           );
           _memberControllers[item.id]![member.id] = ctrl;
         } else if (memberPaisa > 0) {
@@ -125,11 +127,11 @@ class _CategoryBudgetScreenState extends ConsumerState<CategoryBudgetScreen> {
     _initialized = true;
   }
 
-  int _calculateTotalBudgetRupees() {
+  int _calculateTotalBudgetPaisa() {
     int total = 0;
     for (final c in _controllers.values) {
       final val = int.tryParse(c.text.trim()) ?? 0;
-      total += val;
+      total += val * 100;
     }
     return total;
   }
@@ -200,10 +202,7 @@ class _CategoryBudgetScreenState extends ConsumerState<CategoryBudgetScreen> {
           );
 
       if (!mounted) return;
-      showAppSnack(context, 'Category and individual budgets updated successfully');
-      if (Navigator.of(context).canPop()) {
-        Navigator.of(context).pop();
-      }
+      showAppSnack(context, 'Budgets updated successfully');
     } catch (e) {
       if (!mounted) return;
       showAppSnack(context, FirebaseErrorMapper.messageFor(e));
@@ -221,8 +220,7 @@ class _CategoryBudgetScreenState extends ConsumerState<CategoryBudgetScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     final household = ref.watch(currentHouseholdProvider).value;
     final members = ref.watch(householdMembersProvider).value ?? const [];
@@ -243,7 +241,6 @@ class _CategoryBudgetScreenState extends ConsumerState<CategoryBudgetScreen> {
 
     final categoryItems = _getCategoryItems(household);
 
-    // Ensure all joined members and categories have controllers
     for (final catItem in categoryItems) {
       _controllers[catItem.id] ??= TextEditingController();
       _memberControllers[catItem.id] ??= {};
@@ -252,7 +249,8 @@ class _CategoryBudgetScreenState extends ConsumerState<CategoryBudgetScreen> {
           final memberPaisa =
               household?.getMemberCategoryBudget(catItem.id, member.id) ?? 0;
           _memberControllers[catItem.id]![member.id] = TextEditingController(
-            text: memberPaisa > 0 ? (memberPaisa / 100).round().toString() : '',
+            text:
+                memberPaisa > 0 ? (memberPaisa / 100).round().toString() : '',
           );
         }
       }
@@ -260,718 +258,1357 @@ class _CategoryBudgetScreenState extends ConsumerState<CategoryBudgetScreen> {
 
     final stats = ref.watch(dashboardStatsProvider);
     final isSaving = ref.watch(householdActionsProvider).isLoading;
-    final totalBudgetRupees = _calculateTotalBudgetRupees();
+    final totalBudgetPaisa = _calculateTotalBudgetPaisa();
     final totalSpentPaisa = stats.totalSpendingPaisa;
-    final totalBudgetPaisa = totalBudgetRupees * 100;
+    final remainingPaisa = totalBudgetPaisa - totalSpentPaisa;
+    final pct = totalBudgetPaisa > 0
+        ? ((totalSpentPaisa / totalBudgetPaisa) * 100).clamp(0.0, 100.0)
+        : 0.0;
+    final isOverall = totalBudgetPaisa > 0 && totalSpentPaisa > totalBudgetPaisa;
+    final isApproachingOverall =
+        totalBudgetPaisa > 0 && pct >= 80.0 && !isOverall;
+
+    final statusLabel = isOverall
+        ? 'OVER BUDGET'
+        : isApproachingOverall
+            ? 'APPROACHING'
+            : 'ON TRACK';
+    final statusColor = isOverall
+        ? CoSpendColors.alertRed
+        : isApproachingOverall
+            ? CoSpendColors.warningAmber
+            : CoSpendColors.jadeGreen;
+
+    // Find exceeded categories for budget alert
+    final exceededCategories = categoryItems.where((item) {
+      final budgetPaisa =
+          (int.tryParse(_controllers[item.id]?.text.trim() ?? '') ?? 0) * 100;
+      final spentPaisa = stats.categoryIdBreakdown[item.id] ?? 0;
+      return budgetPaisa > 0 && spentPaisa > budgetPaisa;
+    }).toList();
 
     return Scaffold(
+      backgroundColor: isDark ? CoSpendColors.darkCanvas : CoSpendColors.canvas,
       appBar: AppBar(
-        title: const Text('Category Budgets'),
+        backgroundColor: isDark ? CoSpendColors.darkCanvas : CoSpendColors.canvas,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        centerTitle: true,
+        leading: Navigator.of(context).canPop()
+            ? IconButton(
+                icon: Icon(
+                  Icons.arrow_back_ios_rounded,
+                  size: 18,
+                  color: isDark ? Colors.white : CoSpendColors.prussianBlue,
+                ),
+                onPressed: () => Navigator.of(context).pop(),
+              )
+            : null,
+        title: Text(
+          'BUDGETS HUB',
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 1.8,
+            color: isDark ? Colors.white : CoSpendColors.prussianBlue,
+          ),
+        ),
         actions: [
-          if (isOwner) ...[
-            IconButton(
-              onPressed: () async {
-                final created = await CreateCategorySheet.show(context);
-                if (created != null && mounted) {
-                  setState(() {
-                    _initialized = false;
-                  });
-                }
-              },
-              icon: const Icon(Icons.add_circle_outline_rounded),
-              tooltip: 'Add Custom Category',
+          IconButton(
+            icon: Icon(
+              Icons.notifications_outlined,
+              color: isDark ? Colors.white70 : CoSpendColors.textMuted,
+              size: 22,
             ),
-            TextButton(
-              onPressed: () {
-                for (final c in _controllers.values) {
-                  c.clear();
-                }
-                for (final m in _memberControllers.values) {
-                  for (final c in m.values) {
-                    c.clear();
-                  }
-                }
-                setState(() {});
-              },
-              child: const Text('Clear All'),
+            onPressed: () {},
+          ),
+          Padding(
+            padding: const EdgeInsets.only(right: 12),
+            child: GestureDetector(
+              child: Container(
+                padding: const EdgeInsets.all(2),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: CoSpendColors.jadeGreen,
+                    width: 2,
+                  ),
+                ),
+                child: CircleAvatar(
+                  radius: 16,
+                  backgroundColor: CoSpendColors.prussianBlue,
+                  child: Text(
+                    (session?.user?.name ?? 'U').substring(0, 1).toUpperCase(),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 13,
+                    ),
+                  ),
+                ),
+              ),
             ),
-          ],
+          ),
         ],
       ),
       body: Column(
         children: [
-          if (!isOwner)
-            Container(
-              margin: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF7F8FA),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: const Color(0x1F0A2542),
+          Expanded(
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 100),
+              children: [
+                // ── Summary Card ───────────────────────────────────────────
+                _SummaryCard(
+                  totalBudgetPaisa: totalBudgetPaisa,
+                  totalSpentPaisa: totalSpentPaisa,
+                  remainingPaisa: remainingPaisa,
+                  pct: pct,
+                  statusLabel: statusLabel,
+                  statusColor: statusColor,
+                  isDark: isDark,
                 ),
-              ),
-              child: const Row(
-                children: [
-                  TintedIcon(
-                    icon: Icons.lock_outline_rounded,
-                    size: 16,
-                    containerSize: 28,
-                    color: CoSpendColors.prussianBlue,
-                  ),
-                  SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      'View-Only: Only the flat owner can set or adjust overall and category budgets.',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: CoSpendColors.prussianBlue,
+                const SizedBox(height: 14),
+
+                // ── Action Buttons Row ─────────────────────────────────────
+                Row(
+                  children: [
+                    Expanded(
+                      child: _ActionButton(
+                        icon: Icons.trending_up_rounded,
+                        label: 'Spending Trends',
+                        isDark: isDark,
+                        onTap: () {},
                       ),
                     ),
-                  ),
-                ],
-              ),
-            ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: _ActionButton(
+                        icon: Icons.tune_rounded,
+                        label: 'Manage Limits',
+                        isDark: isDark,
+                        onTap: isOwner ? _saveBudgets : null,
+                        isLoading: isSaving,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    _ActionButton(
+                      icon: Icons.info_outline_rounded,
+                      label: '',
+                      isDark: isDark,
+                      isIconOnly: true,
+                      onTap: () {
+                        showDialog<void>(
+                          context: context,
+                          builder: (_) => AlertDialog(
+                            title: const Text('Budget Info'),
+                            content: const Text(
+                              'Set monthly category limits to track your flat\'s spending. '
+                              'The owner can configure budgets for each category and assign individual member quotas.',
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context),
+                                child: const Text('Got it'),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
 
-          // Total Budget Summary Header Card
-          Container(
-            margin: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-            padding: const EdgeInsets.all(18),
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [
-                  CoSpendColors.prussianBlue,
-                  Color(0xFF133863),
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: CoSpendShadows.softCard,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+                // ── Categories Header ──────────────────────────────────────
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      'TOTAL MONTHLY TARGET',
+                      'Categories',
                       style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 0.8,
-                        color: Colors.white.withValues(alpha: 0.75),
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.3,
+                        color: isDark ? Colors.white : CoSpendColors.prussianBlue,
                       ),
                     ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 3,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(999),
-                      ),
-                      child: Text(
-                        '${_controllers.values.where((c) => (int.tryParse(c.text.trim()) ?? 0) > 0).length} categories set',
-                        style: const TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white,
-                        ),
+                    GestureDetector(
+                      onTap: () {},
+                      child: Row(
+                        children: [
+                          Text(
+                            'See All',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: CoSpendColors.jadeGreen,
+                            ),
+                          ),
+                          const SizedBox(width: 2),
+                          const Icon(
+                            Icons.arrow_forward_rounded,
+                            size: 15,
+                            color: CoSpendColors.jadeGreen,
+                          ),
+                        ],
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 10),
-                Text(
-                  Money.format(totalBudgetPaisa),
-                  style: const TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: -0.5,
-                    color: Colors.white,
+                const SizedBox(height: 12),
+
+                // ── Category Cards ─────────────────────────────────────────
+                for (final catItem in categoryItems) ...[
+                  _CategoryBudgetCard(
+                    catItem: catItem,
+                    controller: _controllers[catItem.id]!,
+                    memberControllers: _memberControllers[catItem.id] ?? {},
+                    members: members,
+                    spentPaisa: stats.categoryIdBreakdown[catItem.id] ?? 0,
+                    isOwner: isOwner,
+                    isExpanded: _expandedCategories.contains(catItem.id),
+                    isDark: isDark,
+                    onToggleExpand: () {
+                      setState(() {
+                        if (_expandedCategories.contains(catItem.id)) {
+                          _expandedCategories.remove(catItem.id);
+                        } else {
+                          _expandedCategories.add(catItem.id);
+                        }
+                      });
+                    },
+                    onAmountChanged: () => setState(() {}),
+                    onAddAmount: (delta) => _addAmount(catItem.id, delta),
+                    onSplitEqually: () =>
+                        _splitEqually(catItem.id, members),
                   ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  totalBudgetPaisa > 0
-                      ? 'Spent this month: ${Money.format(totalSpentPaisa)} (${((totalSpentPaisa / totalBudgetPaisa) * 100).toStringAsFixed(0)}% used)'
-                      : 'Set individual category limits below to establish your flat\'s total monthly spending cap.',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.white.withValues(alpha: 0.8),
-                  ),
-                ),
-                if (!isOwner) ...[
-                  const SizedBox(height: 8),
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.info_outline_rounded,
-                            size: 16, color: Colors.white),
-                        const SizedBox(width: 8),
-                        const Expanded(
-                          child: Text(
-                            'Budgets are configured by the flat owner. You can view your allocated limits below.',
+                  const SizedBox(height: 10),
+                ],
+
+                // ── Add New Category Button ────────────────────────────────
+                if (isOwner) ...[
+                  GestureDetector(
+                    onTap: () async {
+                      final created = await CreateCategorySheet.show(context);
+                      if (created != null && mounted) {
+                        setState(() => _initialized = false);
+                      }
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      decoration: BoxDecoration(
+                        color: isDark ? CoSpendColors.darkCard : CoSpendColors.white,
+                        borderRadius: CoSpendRadii.cardRadius,
+                        border: Border.all(
+                          color: isDark
+                              ? CoSpendColors.darkBorder
+                              : CoSpendColors.borderLight,
+                          width: 1,
+                        ),
+                      ),
+                      alignment: Alignment.center,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.add_circle_outline_rounded,
+                            size: 20,
+                            color: isDark
+                                ? CoSpendColors.darkTextMuted
+                                : CoSpendColors.textMuted,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Add New Category',
                             style: TextStyle(
-                              fontSize: 11,
-                              color: Colors.white,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: isDark
+                                  ? CoSpendColors.darkTextMuted
+                                  : CoSpendColors.textMuted,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                ],
+
+                // ── Budget Alert Card ──────────────────────────────────────
+                if (exceededCategories.isNotEmpty) ...[
+                  _BudgetAlertCard(
+                    exceededCategory: exceededCategories.first,
+                    spentPaisa: stats.categoryIdBreakdown[exceededCategories.first.id] ?? 0,
+                    budgetPaisa: (int.tryParse(
+                                  _controllers[exceededCategories.first.id]
+                                          ?.text
+                                          .trim() ??
+                                      '',
+                                ) ??
+                                0) *
+                            100,
+                    onResolve: () => _saveBudgets(),
+                  ),
+                  const SizedBox(height: 20),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+      floatingActionButton: Container(
+        decoration: const BoxDecoration(
+          shape: BoxShape.circle,
+          boxShadow: CoSpendShadows.floating,
+        ),
+        child: FloatingActionButton(
+          onPressed: () async {
+            final created = await CreateCategorySheet.show(context);
+            if (created != null && mounted) {
+              setState(() => _initialized = false);
+            }
+          },
+          backgroundColor: CoSpendColors.jadeGreen,
+          elevation: 0,
+          shape: const CircleBorder(),
+          child: const Icon(Icons.add_rounded, color: Colors.white, size: 28),
+        ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Summary Card with Donut Chart
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _SummaryCard extends StatelessWidget {
+  const _SummaryCard({
+    required this.totalBudgetPaisa,
+    required this.totalSpentPaisa,
+    required this.remainingPaisa,
+    required this.pct,
+    required this.statusLabel,
+    required this.statusColor,
+    required this.isDark,
+  });
+
+  final int totalBudgetPaisa;
+  final int totalSpentPaisa;
+  final int remainingPaisa;
+  final double pct;
+  final String statusLabel;
+  final Color statusColor;
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context) {
+    final now = DateTime.now();
+    final monthLabel =
+        '${_monthName(now.month)} ${now.year} Budget Cycle';
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: isDark ? CoSpendColors.darkCard : CoSpendColors.white,
+        borderRadius: CoSpendRadii.cardLargeRadius,
+        border: Border.all(
+          color: isDark ? CoSpendColors.darkBorder : CoSpendColors.borderLight,
+          width: 0.8,
+        ),
+        boxShadow: isDark ? null : CoSpendShadows.card,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Title row + status badge
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Total Household\nSpending',
+                      style: TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.4,
+                        height: 1.25,
+                        color: isDark ? Colors.white : CoSpendColors.prussianBlue,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      monthLabel,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: isDark
+                            ? CoSpendColors.darkTextMuted
+                            : CoSpendColors.textMuted,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                decoration: BoxDecoration(
+                  color: statusColor.withValues(alpha: 0.12),
+                  borderRadius: CoSpendRadii.pillRadius,
+                  border: Border.all(
+                    color: statusColor.withValues(alpha: 0.3),
+                    width: 1,
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      statusLabel == 'ON TRACK'
+                          ? Icons.check_circle_rounded
+                          : Icons.warning_amber_rounded,
+                      size: 12,
+                      color: statusColor,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      statusLabel,
+                      style: TextStyle(
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w700,
+                        color: statusColor,
+                        letterSpacing: 0.3,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+
+          // Donut chart
+          Center(
+            child: SizedBox(
+              width: 160,
+              height: 160,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  CustomPaint(
+                    size: const Size(160, 160),
+                    painter: _DonutPainter(
+                      progress: pct / 100.0,
+                      foregroundColor: statusColor,
+                      backgroundColor: isDark
+                          ? CoSpendColors.darkBorder
+                          : const Color(0xFFEEF2F7),
+                    ),
+                  ),
+                  Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        '${pct.toStringAsFixed(0)}%',
+                        style: TextStyle(
+                          fontSize: 30,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: -1,
+                          color: isDark ? Colors.white : CoSpendColors.prussianBlue,
+                        ),
+                      ),
+                      Text(
+                        'SPENT',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 1.2,
+                          color: isDark
+                              ? CoSpendColors.darkTextMuted
+                              : CoSpendColors.textMuted,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 20),
+
+          // Total spent / remaining row
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          width: 8,
+                          height: 8,
+                          decoration: BoxDecoration(
+                            color: statusColor,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          'TOTAL SPENT',
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 0.6,
+                            color: isDark
+                                ? CoSpendColors.darkTextMuted
+                                : CoSpendColors.textMuted,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      Money.format(totalSpentPaisa),
+                      style: TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.3,
+                        color: isDark ? Colors.white : CoSpendColors.prussianBlue,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                width: 1,
+                height: 36,
+                color: isDark ? CoSpendColors.darkBorder : CoSpendColors.borderLight,
+              ),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.only(left: 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'REMAINING',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.6,
+                          color: isDark
+                              ? CoSpendColors.darkTextMuted
+                              : CoSpendColors.textMuted,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        totalBudgetPaisa > 0
+                            ? Money.format(remainingPaisa.abs())
+                            : 'No budget set',
+                        style: TextStyle(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: -0.3,
+                          color: remainingPaisa < 0
+                              ? CoSpendColors.alertRed
+                              : (isDark
+                                  ? Colors.white
+                                  : CoSpendColors.prussianBlue),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  static String _monthName(int month) {
+    const names = [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December',
+    ];
+    return names[month - 1];
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Donut Chart Painter
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _DonutPainter extends CustomPainter {
+  const _DonutPainter({
+    required this.progress,
+    required this.foregroundColor,
+    required this.backgroundColor,
+  });
+
+  final double progress;
+  final Color foregroundColor;
+  final Color backgroundColor;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = size.width / 2 - 12;
+    const strokeWidth = 18.0;
+
+    final bgPaint = Paint()
+      ..color = backgroundColor
+      ..strokeWidth = strokeWidth
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
+
+    canvas.drawCircle(center, radius, bgPaint);
+
+    final fgPaint = Paint()
+      ..color = foregroundColor
+      ..strokeWidth = strokeWidth
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
+
+    final sweepAngle = 2 * math.pi * progress.clamp(0.0, 1.0);
+    canvas.drawArc(
+      Rect.fromCircle(center: center, radius: radius),
+      -math.pi / 2,
+      sweepAngle,
+      false,
+      fgPaint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(_DonutPainter oldDelegate) =>
+      oldDelegate.progress != progress ||
+      oldDelegate.foregroundColor != foregroundColor;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Action Button
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _ActionButton extends StatelessWidget {
+  const _ActionButton({
+    required this.icon,
+    required this.label,
+    required this.isDark,
+    this.onTap,
+    this.isLoading = false,
+    this.isIconOnly = false,
+  });
+
+  final IconData icon;
+  final String label;
+  final bool isDark;
+  final VoidCallback? onTap;
+  final bool isLoading;
+  final bool isIconOnly;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: EdgeInsets.symmetric(
+          horizontal: isIconOnly ? 14 : 12,
+          vertical: 11,
+        ),
+        decoration: BoxDecoration(
+          color: isDark ? CoSpendColors.darkCard : CoSpendColors.white,
+          borderRadius: CoSpendRadii.cardRadius,
+          border: Border.all(
+            color: isDark ? CoSpendColors.darkBorder : CoSpendColors.borderLight,
+            width: 0.8,
+          ),
+          boxShadow: isDark ? null : CoSpendShadows.cardSubtle,
+        ),
+        child: isLoading
+            ? const SizedBox(
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: CoSpendColors.jadeGreen,
+                ),
+              )
+            : Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    icon,
+                    size: 16,
+                    color: isDark
+                        ? CoSpendColors.darkTextMuted
+                        : CoSpendColors.textMuted,
+                  ),
+                  if (!isIconOnly && label.isNotEmpty) ...[
+                    const SizedBox(width: 6),
+                    Flexible(
+                      child: Text(
+                        label,
+                        style: TextStyle(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w600,
+                          color: isDark
+                              ? CoSpendColors.darkTextMuted
+                              : CoSpendColors.textMuted,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Category Budget Card
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _CategoryBudgetCard extends StatelessWidget {
+  const _CategoryBudgetCard({
+    required this.catItem,
+    required this.controller,
+    required this.memberControllers,
+    required this.members,
+    required this.spentPaisa,
+    required this.isOwner,
+    required this.isExpanded,
+    required this.isDark,
+    required this.onToggleExpand,
+    required this.onAmountChanged,
+    required this.onAddAmount,
+    required this.onSplitEqually,
+  });
+
+  final _BudgetCategoryItem catItem;
+  final TextEditingController controller;
+  final Map<String, TextEditingController> memberControllers;
+  final List<HouseholdMember> members;
+  final int spentPaisa;
+  final bool isOwner;
+  final bool isExpanded;
+  final bool isDark;
+  final VoidCallback onToggleExpand;
+  final VoidCallback onAmountChanged;
+  final void Function(int delta) onAddAmount;
+  final VoidCallback onSplitEqually;
+
+  @override
+  Widget build(BuildContext context) {
+    final catBudgetRupees = int.tryParse(controller.text.trim()) ?? 0;
+    final catBudgetPaisa = catBudgetRupees * 100;
+    final isOver = catBudgetPaisa > 0 && spentPaisa > catBudgetPaisa;
+    final isApproaching =
+        catBudgetPaisa > 0 && !isOver && spentPaisa >= catBudgetPaisa * 0.8;
+
+    final pct = catBudgetPaisa > 0
+        ? (spentPaisa / catBudgetPaisa * 100).clamp(0.0, 100.0)
+        : 0.0;
+    final progressColor = isOver
+        ? CoSpendColors.alertRed
+        : isApproaching
+            ? CoSpendColors.warningAmber
+            : CoSpendColors.jadeGreen;
+
+    final remaining = catBudgetPaisa - spentPaisa;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: isDark ? CoSpendColors.darkCard : CoSpendColors.white,
+        borderRadius: CoSpendRadii.cardRadius,
+        border: Border.all(
+          color: isOver
+              ? CoSpendColors.alertRed.withValues(alpha: 0.3)
+              : (isDark ? CoSpendColors.darkBorder : CoSpendColors.borderLight),
+          width: isOver ? 1.2 : 0.8,
+        ),
+        boxShadow: isDark ? null : CoSpendShadows.card,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Top Row: icon + name + amounts
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      width: 46,
+                      height: 46,
+                      decoration: BoxDecoration(
+                        color: catItem.color.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      alignment: Alignment.center,
+                      child: Icon(catItem.icon, color: catItem.color, size: 22),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            catItem.label,
+                            style: TextStyle(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 15,
+                              color: isDark
+                                  ? Colors.white
+                                  : CoSpendColors.prussianBlue,
+                            ),
+                          ),
+                          Text(
+                            'Monthly Limit',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: isDark
+                                  ? CoSpendColors.darkTextMuted
+                                  : CoSpendColors.textMuted,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    // Amount column
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        if (isOwner)
+                          SizedBox(
+                            width: 120,
+                            child: TextField(
+                              controller: controller,
+                              keyboardType: TextInputType.number,
+                              inputFormatters: [
+                                FilteringTextInputFormatter.digitsOnly,
+                              ],
+                              textAlign: TextAlign.end,
+                              style: TextStyle(
+                                fontWeight: FontWeight.w800,
+                                fontSize: 15,
+                                color: isDark
+                                    ? Colors.white
+                                    : CoSpendColors.prussianBlue,
+                              ),
+                              decoration: InputDecoration(
+                                prefixText: 'Rs. ',
+                                prefixStyle: TextStyle(
+                                  color: isDark
+                                      ? CoSpendColors.darkTextMuted
+                                      : CoSpendColors.textMuted,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 13,
+                                ),
+                                hintText: '0',
+                                isDense: true,
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 6,
+                                ),
+                                filled: true,
+                                fillColor: isDark
+                                    ? CoSpendColors.darkCanvas
+                                    : const Color(0xFFF7F8FA),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                  borderSide: BorderSide(
+                                    color: isDark
+                                        ? CoSpendColors.darkBorder
+                                        : const Color(0x1F0A2542),
+                                  ),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                  borderSide: const BorderSide(
+                                    color: CoSpendColors.jadeGreen,
+                                    width: 1.5,
+                                  ),
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                  borderSide: BorderSide(
+                                    color: isDark
+                                        ? CoSpendColors.darkBorder
+                                        : const Color(0x1F0A2542),
+                                  ),
+                                ),
+                              ),
+                              onChanged: (_) => onAmountChanged(),
+                            ),
+                          )
+                        else ...[
+                          Text(
+                            catBudgetPaisa > 0
+                                ? Money.format(spentPaisa)
+                                : Money.format(spentPaisa),
+                            style: TextStyle(
+                              fontWeight: FontWeight.w800,
+                              fontSize: 16,
+                              letterSpacing: -0.3,
+                              color: isOver
+                                  ? CoSpendColors.alertRed
+                                  : (isDark
+                                      ? Colors.white
+                                      : CoSpendColors.prussianBlue),
+                            ),
+                          ),
+                          if (catBudgetPaisa > 0)
+                            Text(
+                              'of ${Money.format(catBudgetPaisa)}',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: isDark
+                                    ? CoSpendColors.darkTextMuted
+                                    : CoSpendColors.textMuted,
+                              ),
+                            ),
+                        ],
+                      ],
+                    ),
+                  ],
+                ),
+
+                if (isOwner) ...[
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      _QuickChip(
+                        label: '+1,000',
+                        onTap: () => onAddAmount(1000),
+                        isDark: isDark,
+                      ),
+                      const SizedBox(width: 6),
+                      _QuickChip(
+                        label: '+5,000',
+                        onTap: () => onAddAmount(5000),
+                        isDark: isDark,
+                      ),
+                      const SizedBox(width: 6),
+                      _QuickChip(
+                        label: '+10,000',
+                        onTap: () => onAddAmount(10000),
+                        isDark: isDark,
+                      ),
+                    ],
+                  ),
+                ],
+
+                if (catBudgetPaisa > 0) ...[
+                  const SizedBox(height: 12),
+                  // Progress bar
+                  ClipRRect(
+                    borderRadius: CoSpendRadii.pillRadius,
+                    child: Stack(
+                      children: [
+                        Container(
+                          height: 7,
+                          color: isDark
+                              ? CoSpendColors.darkBorder
+                              : const Color(0xFFEEF2F7),
+                        ),
+                        TweenAnimationBuilder<double>(
+                          duration: const Duration(milliseconds: 600),
+                          curve: Curves.easeOutCubic,
+                          tween: Tween<double>(begin: 0, end: pct / 100.0),
+                          builder: (context, value, _) => FractionallySizedBox(
+                            widthFactor: value,
+                            child: Container(
+                              height: 7,
+                              decoration: BoxDecoration(
+                                color: progressColor,
+                                borderRadius: CoSpendRadii.pillRadius,
+                              ),
                             ),
                           ),
                         ),
                       ],
                     ),
                   ),
-                ],
-              ],
-            ),
-          ),
-
-          // Category List
-          Expanded(
-            child: ListView.separated(
-              padding: const EdgeInsets.fromLTRB(16, 4, 16, 100),
-              itemCount: categoryItems.length,
-              separatorBuilder: (_, _) => const SizedBox(height: 12),
-              itemBuilder: (context, index) {
-                final catItem = categoryItems[index];
-                final controller = _controllers[catItem.id]!;
-                final spentPaisa = stats.categoryIdBreakdown[catItem.id] ?? 0;
-                final mySpentPaisa =
-                    stats.userCategoryIdBreakdown[catItem.id] ?? 0;
-                final catBudgetRupees =
-                    int.tryParse(controller.text.trim()) ?? 0;
-                final catBudgetPaisa = catBudgetRupees * 100;
-
-                final isOver =
-                    catBudgetPaisa > 0 && spentPaisa > catBudgetPaisa;
-
-                final isExpanded = _expandedCategories.contains(catItem.id);
-
-                // Compute total member allocation sum for this category
-                int allocatedMemberRupees = 0;
-                final memberMap = _memberControllers[catItem.id] ?? {};
-                for (final ctrl in memberMap.values) {
-                  allocatedMemberRupees += int.tryParse(ctrl.text.trim()) ?? 0;
-                }
-
-                return Container(
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: isOver
-                          ? CoSpendColors.alertRed.withValues(alpha: 0.5)
-                          : (catBudgetPaisa > 0
-                              ? CoSpendColors.jadeGreen.withValues(alpha: 0.3)
-                              : const Color(0x140A2542)),
-                      width: isOver ? 1.5 : 1,
-                    ),
-                    boxShadow: CoSpendShadows.softCard,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Row(
-                        children: [
-                          TintedIcon(
-                            icon: catItem.icon,
-                            color: catItem.color,
-                            size: 20,
-                            containerSize: 38,
+                      Text(
+                        isOver
+                            ? 'OVER BUDGET'
+                            : '${pct.toStringAsFixed(0)}% CONSUMED',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.3,
+                          color: progressColor,
+                        ),
+                      ),
+                      Text(
+                        isOver
+                            ? '+${Money.format(-remaining)}'
+                            : '${Money.format(remaining)} LEFT',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: isOver
+                              ? CoSpendColors.alertRed
+                              : (isDark
+                                  ? CoSpendColors.darkTextMuted
+                                  : CoSpendColors.textMuted),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+
+                // Member quotas expand section
+                if (isOwner && members.isNotEmpty && catBudgetPaisa > 0) ...[
+                  const SizedBox(height: 8),
+                  GestureDetector(
+                    onTap: onToggleExpand,
+                    child: Row(
+                      children: [
+                        Text(
+                          isExpanded
+                              ? 'Hide member quotas'
+                              : 'Set member quotas',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: CoSpendColors.jadeGreen,
                           ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  children: [
-                                    Text(
-                                      catItem.label,
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.w700,
-                                        fontSize: 14,
-                                        color: CoSpendColors.prussianBlue,
-                                      ),
-                                    ),
-                                    if (catItem.isCustom) ...[
-                                      const SizedBox(width: 6),
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 6, vertical: 2),
-                                        decoration: BoxDecoration(
-                                          color: catItem.color
-                                              .withValues(alpha: 0.15),
-                                          borderRadius:
-                                              BorderRadius.circular(999),
-                                        ),
-                                        child: Text(
-                                          'CUSTOM',
-                                          style: TextStyle(
-                                            fontSize: 9,
-                                            fontWeight: FontWeight.w800,
-                                            color: catItem.color,
-                                            letterSpacing: 0.5,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                    if (catBudgetPaisa > 0) ...[
-                                      const SizedBox(width: 6),
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 6, vertical: 2),
-                                        decoration: BoxDecoration(
-                                          color: isOver
-                                              ? CoSpendColors.alertRed.withValues(alpha: 0.1)
-                                              : CoSpendColors.jadeGreen.withValues(alpha: 0.12),
-                                          borderRadius: BorderRadius.circular(999),
-                                        ),
-                                        child: Text(
-                                          isOver ? 'EXCEEDED' : 'CONFIGURED',
-                                          style: TextStyle(
-                                            fontSize: 9,
-                                            fontWeight: FontWeight.w800,
-                                            color: isOver
-                                                ? CoSpendColors.alertRed
-                                                : CoSpendColors.jadeGreen,
-                                            letterSpacing: 0.5,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ],
+                        ),
+                        const SizedBox(width: 4),
+                        Icon(
+                          isExpanded
+                              ? Icons.keyboard_arrow_up_rounded
+                              : Icons.keyboard_arrow_down_rounded,
+                          size: 16,
+                          color: CoSpendColors.jadeGreen,
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (isExpanded) ...[
+                    const SizedBox(height: 10),
+                    ...members.map((member) {
+                      final ctrl =
+                          memberControllers[member.id] ??
+                              TextEditingController();
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: Row(
+                          children: [
+                            CircleAvatar(
+                              radius: 14,
+                              backgroundColor:
+                                  CoSpendColors.jadeGreen.withValues(alpha: 0.2),
+                              child: Text(
+                                member.name.substring(0, 1).toUpperCase(),
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                  color: CoSpendColors.jadeGreen,
                                 ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  'Flat spent: ${Money.format(spentPaisa)}',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: isOver
-                                        ? CoSpendColors.alertRed
-                                        : const Color(0xFF6B7280),
-                                    fontWeight: isOver
-                                        ? FontWeight.w700
-                                        : FontWeight.w500,
-                                  ),
-                                ),
-                              ],
+                              ),
                             ),
-                          ),
-                          if (isOwner)
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                member.name,
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: isDark
+                                      ? Colors.white
+                                      : CoSpendColors.prussianBlue,
+                                ),
+                              ),
+                            ),
                             SizedBox(
-                              width: 135,
+                              width: 110,
                               child: TextField(
-                                controller: controller,
+                                controller: ctrl,
                                 keyboardType: TextInputType.number,
                                 inputFormatters: [
                                   FilteringTextInputFormatter.digitsOnly,
                                 ],
                                 textAlign: TextAlign.end,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontWeight: FontWeight.w700,
-                                  fontSize: 15,
-                                  color: CoSpendColors.prussianBlue,
+                                  fontSize: 13,
+                                  color: isDark
+                                      ? Colors.white
+                                      : CoSpendColors.prussianBlue,
                                 ),
                                 decoration: InputDecoration(
                                   prefixText: 'Rs. ',
-                                  prefixStyle: const TextStyle(
-                                    color: Color(0xFF6B7280),
+                                  prefixStyle: TextStyle(
+                                    color: isDark
+                                        ? CoSpendColors.darkTextMuted
+                                        : CoSpendColors.textMuted,
+                                    fontSize: 12,
                                     fontWeight: FontWeight.w600,
-                                    fontSize: 13,
                                   ),
                                   hintText: '0',
                                   isDense: true,
                                   contentPadding: const EdgeInsets.symmetric(
-                                    horizontal: 10,
-                                    vertical: 8,
+                                    horizontal: 8,
+                                    vertical: 6,
                                   ),
                                   filled: true,
-                                  fillColor: const Color(0xFFF7F8FA),
+                                  fillColor: isDark
+                                      ? CoSpendColors.darkCanvas
+                                      : const Color(0xFFF7F8FA),
                                   border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(10),
-                                    borderSide: const BorderSide(color: Color(0x1F0A2542)),
+                                    borderRadius: BorderRadius.circular(8),
+                                    borderSide: BorderSide(
+                                      color: isDark
+                                          ? CoSpendColors.darkBorder
+                                          : const Color(0x1F0A2542),
+                                    ),
                                   ),
                                   focusedBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(10),
-                                    borderSide: const BorderSide(color: CoSpendColors.jadeGreen, width: 2),
-                                  ),
-                                ),
-                                onChanged: (_) => setState(() {}),
-                              ),
-                            )
-                          else
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                Text(
-                                  catBudgetRupees > 0
-                                      ? Money.format(catBudgetPaisa)
-                                      : 'Not set',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w700,
-                                    fontSize: 15,
-                                    color: catBudgetRupees > 0
-                                        ? CoSpendColors.prussianBlue
-                                        : const Color(0xFF9CA3AF),
-                                  ),
-                                ),
-                                if (catBudgetRupees > 0)
-                                  const Text(
-                                    'monthly limit',
-                                    style: TextStyle(
-                                      fontSize: 10,
-                                      color: Color(0xFF6B7280),
+                                    borderRadius: BorderRadius.circular(8),
+                                    borderSide: const BorderSide(
+                                      color: CoSpendColors.jadeGreen,
+                                      width: 1.5,
                                     ),
                                   ),
-                              ],
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                    borderSide: BorderSide(
+                                      color: isDark
+                                          ? CoSpendColors.darkBorder
+                                          : const Color(0x1F0A2542),
+                                    ),
+                                  ),
+                                ),
+                                onChanged: (_) => onAmountChanged(),
+                              ),
                             ),
-                        ],
+                          ],
+                        ),
+                      );
+                    }),
+                    TextButton.icon(
+                      onPressed: onSplitEqually,
+                      icon: const Icon(
+                        Icons.call_split_rounded,
+                        size: 16,
+                        color: CoSpendColors.jadeGreen,
                       ),
-
-                      if (isOwner) ...[
-                        const SizedBox(height: 8),
-                        // Quick increment buttons
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            _QuickChip(
-                              label: '+1,000',
-                              onTap: () => _addAmount(catItem.id, 1000),
-                            ),
-                            const SizedBox(width: 6),
-                            _QuickChip(
-                              label: '+5,000',
-                              onTap: () => _addAmount(catItem.id, 5000),
-                            ),
-                            const SizedBox(width: 6),
-                            _QuickChip(
-                              label: '+10,000',
-                              onTap: () => _addAmount(catItem.id, 10000),
-                            ),
-                            if (catBudgetRupees > 0) ...[
-                              const SizedBox(width: 6),
-                              _QuickChip(
-                                label: '✕',
-                                isDanger: true,
-                                onTap: () {
-                                  controller.clear();
-                                  for (final c in memberMap.values) {
-                                    c.clear();
-                                  }
-                                  setState(() {});
-                                },
-                              ),
-                            ],
-                          ],
+                      label: const Text(
+                        'Split equally',
+                        style: TextStyle(
+                          fontSize: 12.5,
+                          color: CoSpendColors.jadeGreen,
                         ),
-                      ],
-
-                      // Member budget allocation section
-                      if (catBudgetRupees > 0 && members.isNotEmpty) ...[
-                        const SizedBox(height: 10),
-                        Divider(
-                          height: 1,
-                          color: scheme.outlineVariant.withValues(alpha: 0.25),
-                        ),
-                        const SizedBox(height: 8),
-                        InkWell(
-                          onTap: () {
-                            setState(() {
-                              if (isExpanded) {
-                                _expandedCategories.remove(catItem.id);
-                              } else {
-                                _expandedCategories.add(catItem.id);
-                              }
-                            });
-                          },
-                          borderRadius: BorderRadius.circular(8),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 4),
-                            child: Row(
-                              children: [
-                                Icon(
-                                  isExpanded
-                                      ? Icons.keyboard_arrow_up_rounded
-                                      : Icons.keyboard_arrow_down_rounded,
-                                  size: 18,
-                                  color: scheme.primary,
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  'Member Division',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w700,
-                                    color: scheme.primary,
-                                  ),
-                                ),
-                                const Spacer(),
-                                if (allocatedMemberRupees > 0)
-                                  Text(
-                                    'Allocated: Rs. $allocatedMemberRupees / $catBudgetRupees',
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w600,
-                                      color: allocatedMemberRupees == catBudgetRupees
-                                          ? const Color(0xFF10B981)
-                                          : const Color(0xFFF59E0B),
-                                    ),
-                                  ),
-                              ],
-                            ),
-                          ),
-                        ),
-
-                        if (isExpanded) ...[
-                          const SizedBox(height: 6),
-                          if (isOwner && members.length > 1) ...[
-                            Align(
-                              alignment: Alignment.centerRight,
-                              child: TextButton.icon(
-                                onPressed: () =>
-                                    _splitEqually(catItem.id, members),
-                                icon: const Icon(Icons.call_split_rounded,
-                                    size: 14),
-                                label: const Text('Divide Equally'),
-                                style: TextButton.styleFrom(
-                                  visualDensity: VisualDensity.compact,
-                                  textStyle: const TextStyle(fontSize: 11),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                          ],
-                          ...members.map((member) {
-                            final mCtrl = memberMap[member.id] ??
-                                TextEditingController();
-                            final isMe = member.id == currentUserId;
-                            final mSpent = isMe ? mySpentPaisa : 0;
-                            final mBudgetRupees =
-                                int.tryParse(mCtrl.text.trim()) ?? 0;
-                            final mBudgetPaisa = mBudgetRupees * 100;
-                            final mExceeded =
-                                mBudgetPaisa > 0 && mSpent > mBudgetPaisa;
-
-                            return Padding(
-                              padding: const EdgeInsets.only(bottom: 8),
-                              child: Row(
-                                children: [
-                                  CircleAvatar(
-                                    radius: 12,
-                                    backgroundColor:
-                                        scheme.primary.withValues(alpha: 0.15),
-                                    child: Text(
-                                      member.name.isNotEmpty
-                                          ? member.name[0].toUpperCase()
-                                          : '?',
-                                      style: TextStyle(
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.w700,
-                                        color: scheme.primary,
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          '${member.name}${isMe ? ' (You)' : ''}',
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            fontWeight: isMe
-                                                ? FontWeight.w700
-                                                : FontWeight.w500,
-                                          ),
-                                        ),
-                                        if (isMe)
-                                          Text(
-                                            'Spent: ${Money.format(mySpentPaisa)}',
-                                            style: TextStyle(
-                                              fontSize: 10,
-                                              color: mExceeded
-                                                  ? const Color(0xFFEF4444)
-                                                  : scheme.onSurfaceVariant,
-                                              fontWeight: mExceeded
-                                                  ? FontWeight.w700
-                                                  : FontWeight.normal,
-                                            ),
-                                          ),
-                                      ],
-                                    ),
-                                  ),
-                                  if (isOwner)
-                                    SizedBox(
-                                      width: 110,
-                                      child: TextField(
-                                        controller: mCtrl,
-                                        keyboardType: TextInputType.number,
-                                        inputFormatters: [
-                                          FilteringTextInputFormatter.digitsOnly,
-                                        ],
-                                        textAlign: TextAlign.end,
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.w600,
-                                          fontSize: 13,
-                                          color: CoSpendColors.prussianBlue,
-                                        ),
-                                        decoration: InputDecoration(
-                                          prefixText: 'Rs. ',
-                                          prefixStyle: const TextStyle(
-                                            color: Color(0xFF6B7280),
-                                            fontSize: 12,
-                                          ),
-                                          hintText: '0',
-                                          isDense: true,
-                                          contentPadding:
-                                              const EdgeInsets.symmetric(
-                                            horizontal: 8,
-                                            vertical: 8,
-                                          ),
-                                          filled: true,
-                                          fillColor: const Color(0xFFF7F8FA),
-                                          border: OutlineInputBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(8),
-                                            borderSide: const BorderSide(color: Color(0x1F0A2542)),
-                                          ),
-                                          focusedBorder: OutlineInputBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(8),
-                                            borderSide: const BorderSide(color: CoSpendColors.jadeGreen, width: 2),
-                                          ),
-                                        ),
-                                        onChanged: (_) => setState(() {}),
-                                      ),
-                                    )
-                                  else
-                                    Text(
-                                      mBudgetRupees > 0
-                                          ? Money.format(mBudgetPaisa)
-                                          : 'Not set',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.w600,
-                                        fontSize: 13,
-                                        color: mBudgetRupees > 0
-                                            ? CoSpendColors.prussianBlue
-                                            : const Color(0xFF9CA3AF),
-                                      ),
-                                    ),
-                                ],
-                              ),
-                            );
-                          }),
-                        ],
-                      ],
-                    ],
-                  ),
-                );
-              },
+                      ),
+                      style: TextButton.styleFrom(
+                        padding: EdgeInsets.zero,
+                        visualDensity: VisualDensity.compact,
+                      ),
+                    ),
+                  ],
+                ],
+              ],
             ),
           ),
         ],
       ),
-      bottomSheet: isOwner
-          ? Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                boxShadow: [
-                  BoxShadow(
-                    color: CoSpendColors.prussianBlue.withValues(alpha: 0.08),
-                    blurRadius: 14,
-                    offset: const Offset(0, -4),
-                  ),
-                ],
-              ),
-              child: SafeArea(
-                child: SizedBox(
-                  width: double.infinity,
-                  height: 50,
-                  child: ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: CoSpendColors.jadeGreen,
-                      foregroundColor: Colors.white,
-                      shape: const StadiumBorder(),
-                      elevation: 2,
-                    ),
-                    onPressed: isSaving ? null : _saveBudgets,
-                    icon: isSaving
-                        ? const SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          )
-                        : const Icon(Icons.check_circle_outline_rounded),
-                    label: Text(
-                      isSaving ? 'Saving...' : 'Save Category & Member Budgets',
-                      style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            )
-          : null,
     );
   }
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Quick Amount Chip
+// ─────────────────────────────────────────────────────────────────────────────
 
 class _QuickChip extends StatelessWidget {
   const _QuickChip({
     required this.label,
     required this.onTap,
-    this.isDanger = false,
+    required this.isDark,
   });
 
   final String label;
   final VoidCallback onTap;
-  final bool isDanger;
+  final bool isDark;
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
+    return GestureDetector(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(999),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
         decoration: BoxDecoration(
-          color: isDanger
-              ? CoSpendColors.alertRed.withValues(alpha: 0.1)
-              : const Color(0xFFF7F8FA),
+          color: CoSpendColors.jadeGreen.withValues(alpha: 0.1),
+          borderRadius: CoSpendRadii.pillRadius,
           border: Border.all(
-            color: isDanger
-                ? CoSpendColors.alertRed.withValues(alpha: 0.3)
-                : const Color(0x1F0A2542),
+            color: CoSpendColors.jadeGreen.withValues(alpha: 0.25),
+            width: 0.8,
           ),
-          borderRadius: BorderRadius.circular(999),
         ),
         child: Text(
           label,
-          style: TextStyle(
-            fontSize: 11,
+          style: const TextStyle(
+            fontSize: 11.5,
             fontWeight: FontWeight.w700,
-            color: isDanger ? CoSpendColors.alertRed : CoSpendColors.prussianBlue,
+            color: CoSpendColors.jadeGreen,
           ),
         ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Budget Alert Card
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _BudgetAlertCard extends StatelessWidget {
+  const _BudgetAlertCard({
+    required this.exceededCategory,
+    required this.spentPaisa,
+    required this.budgetPaisa,
+    required this.onResolve,
+  });
+
+  final _BudgetCategoryItem exceededCategory;
+  final int spentPaisa;
+  final int budgetPaisa;
+  final VoidCallback onResolve;
+
+  @override
+  Widget build(BuildContext context) {
+    final overBy = spentPaisa - budgetPaisa;
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF0A1F3D), Color(0xFF0E2D5A)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: CoSpendRadii.cardLargeRadius,
+        boxShadow: [
+          BoxShadow(
+            color: CoSpendColors.prussianBlue.withValues(alpha: 0.4),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: CoSpendColors.alertRed.withValues(alpha: 0.2),
+                  shape: BoxShape.circle,
+                ),
+                alignment: Alignment.center,
+                child: const Icon(
+                  Icons.error_outline_rounded,
+                  color: CoSpendColors.alertRed,
+                  size: 18,
+                ),
+              ),
+              const SizedBox(width: 10),
+              const Text(
+                'Budget Alert',
+                style: TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.white,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          RichText(
+            text: TextSpan(
+              style: TextStyle(
+                fontSize: 13.5,
+                color: Colors.white.withValues(alpha: 0.85),
+                height: 1.5,
+              ),
+              children: [
+                const TextSpan(text: 'Your '),
+                TextSpan(
+                  text: exceededCategory.label,
+                  style: const TextStyle(fontWeight: FontWeight.w700),
+                ),
+                TextSpan(
+                  text:
+                      ' budget has exceeded its limit by ${Money.format(overBy)} this cycle.',
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          GestureDetector(
+            onTap: onResolve,
+            child: Container(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 20, vertical: 11),
+              decoration: BoxDecoration(
+                color: CoSpendColors.jadeGreen,
+                borderRadius: CoSpendRadii.pillRadius,
+                boxShadow: [
+                  BoxShadow(
+                    color: CoSpendColors.jadeGreen.withValues(alpha: 0.4),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                    'Resolve Now',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  const Icon(
+                    Icons.arrow_outward_rounded,
+                    size: 16,
+                    color: Colors.white,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

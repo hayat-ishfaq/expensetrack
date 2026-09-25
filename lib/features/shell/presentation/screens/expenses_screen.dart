@@ -57,7 +57,11 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
               e.spentAt.day == now.day;
         case DateFilter.thisWeek:
           final startOfWeek = now.subtract(Duration(days: now.weekday - 1));
-          final start = DateTime(startOfWeek.year, startOfWeek.month, startOfWeek.day);
+          final start = DateTime(
+            startOfWeek.year,
+            startOfWeek.month,
+            startOfWeek.day,
+          );
           return e.spentAt.isAfter(start.subtract(const Duration(seconds: 1)));
         case DateFilter.thisMonth:
           return e.spentAt.year == now.year && e.spentAt.month == now.month;
@@ -74,14 +78,20 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
     final groups = <String, List<Expense>>{};
 
     for (final exp in expenses) {
-      final expDate = DateTime(exp.spentAt.year, exp.spentAt.month, exp.spentAt.day);
+      final expDate = DateTime(
+        exp.spentAt.year,
+        exp.spentAt.month,
+        exp.spentAt.day,
+      );
       String groupKey;
       if (expDate == today) {
         groupKey = 'TODAY';
       } else if (expDate == yesterday) {
         groupKey = 'YESTERDAY';
       } else {
-        groupKey = DateFormat('MMMM dd, yyyy').format(exp.spentAt).toUpperCase();
+        groupKey = DateFormat('MMMM dd, yyyy')
+            .format(exp.spentAt)
+            .toUpperCase();
       }
       groups.putIfAbsent(groupKey, () => []).add(exp);
     }
@@ -100,12 +110,14 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
     return Scaffold(
       backgroundColor: isDark ? CoSpendColors.darkCanvas : CoSpendColors.canvas,
       appBar: AppBar(
-        backgroundColor: isDark ? CoSpendColors.darkCanvas : CoSpendColors.canvas,
+        backgroundColor: isDark
+            ? CoSpendColors.darkCanvas
+            : CoSpendColors.canvas,
         elevation: 0,
         scrolledUnderElevation: 0,
         centerTitle: true,
         title: Text(
-          'LEDGER',
+          'Expenses',
           style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w800,
@@ -130,10 +142,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                 padding: const EdgeInsets.all(2),
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  border: Border.all(
-                    color: CoSpendColors.jadeGreen,
-                    width: 2,
-                  ),
+                  border: Border.all(color: CoSpendColors.jadeGreen, width: 2),
                 ),
                 child: CircleAvatar(
                   radius: 16,
@@ -171,7 +180,8 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                     const EmptyState(
                       icon: Icons.receipt_long_outlined,
                       title: 'No expenses yet',
-                      message: "Your household hasn't recorded any expenses yet.",
+                      message:
+                          "Your household hasn't recorded any expenses yet.",
                     ),
                     const SizedBox(height: 16),
                     FilledButton.icon(
@@ -204,10 +214,14 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                 padding: const EdgeInsets.fromLTRB(16, 6, 16, 10),
                 child: Container(
                   decoration: BoxDecoration(
-                    color: isDark ? CoSpendColors.darkCard : CoSpendColors.white,
+                    color: isDark
+                        ? CoSpendColors.darkCard
+                        : CoSpendColors.white,
                     borderRadius: CoSpendRadii.pillRadius,
                     border: Border.all(
-                      color: isDark ? CoSpendColors.darkBorder : CoSpendColors.borderLight,
+                      color: isDark
+                          ? CoSpendColors.darkBorder
+                          : CoSpendColors.borderLight,
                       width: 1,
                     ),
                     boxShadow: isDark ? null : CoSpendShadows.cardSubtle,
@@ -223,19 +237,25 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                       hintText: 'Search transactions...',
                       hintStyle: TextStyle(
                         fontSize: 14,
-                        color: isDark ? CoSpendColors.darkTextMuted : CoSpendColors.textSubtle,
+                        color: isDark
+                            ? CoSpendColors.darkTextMuted
+                            : CoSpendColors.textSubtle,
                       ),
                       prefixIcon: Icon(
                         Icons.search_rounded,
                         size: 20,
-                        color: isDark ? CoSpendColors.darkTextMuted : CoSpendColors.textMuted,
+                        color: isDark
+                            ? CoSpendColors.darkTextMuted
+                            : CoSpendColors.textMuted,
                       ),
                       suffixIcon: _searchController.text.isNotEmpty
                           ? IconButton(
                               icon: Icon(
                                 Icons.clear_rounded,
                                 size: 18,
-                                color: isDark ? CoSpendColors.darkTextMuted : CoSpendColors.textMuted,
+                                color: isDark
+                                    ? CoSpendColors.darkTextMuted
+                                    : CoSpendColors.textMuted,
                               ),
                               onPressed: () {
                                 _searchController.clear();
@@ -268,7 +288,9 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                     _CategoryChip(
                       label: 'All',
                       icon: Icons.receipt_long_rounded,
-                      isSelected: _categoryFilter == null && _dateFilter == DateFilter.all,
+                      isSelected:
+                          _categoryFilter == null &&
+                          _dateFilter == DateFilter.all,
                       onTap: () => setState(() {
                         _categoryFilter = null;
                         _dateFilter = DateFilter.all;
@@ -302,8 +324,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                         child: EmptyState(
                           icon: Icons.search_off_rounded,
                           title: 'No expenses found',
-                          message:
-                              'Try changing your search keywords or clearing active filters.',
+                          message: 'Try changing your search keywords or clearing active filters.',
                         ),
                       )
                     : ListView.builder(
@@ -328,8 +349,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                             );
                           }
 
-                          final dateHeader =
-                              grouped.keys.elementAt(groupIndex);
+                          final dateHeader = grouped.keys.elementAt(groupIndex);
                           final items = grouped[dateHeader]!;
 
                           return Column(
@@ -337,9 +357,15 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                             children: [
                               // Date Group Header
                               Padding(
-                                padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                                padding: const EdgeInsets.fromLTRB(
+                                  16,
+                                  16,
+                                  16,
+                                  8,
+                                ),
                                 child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   children: [
                                     Text(
                                       dateHeader,
@@ -354,7 +380,9 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                                     ),
                                     Container(
                                       padding: const EdgeInsets.symmetric(
-                                          horizontal: 10, vertical: 3),
+                                        horizontal: 10,
+                                        vertical: 3,
+                                      ),
                                       decoration: BoxDecoration(
                                         color: isDark
                                             ? CoSpendColors.darkCard
@@ -384,7 +412,9 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
 
                               // Expense Tiles in a card group
                               Container(
-                                margin: const EdgeInsets.symmetric(horizontal: 16),
+                                margin: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                ),
                                 decoration: BoxDecoration(
                                   color: isDark
                                       ? CoSpendColors.darkCard
@@ -396,7 +426,9 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                                         : CoSpendColors.borderLight,
                                     width: 0.8,
                                   ),
-                                  boxShadow: isDark ? null : CoSpendShadows.card,
+                                  boxShadow: isDark
+                                      ? null
+                                      : CoSpendShadows.card,
                                 ),
                                 child: Column(
                                   children: [
@@ -405,12 +437,14 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                                         expense: items[i],
                                         payerName:
                                             memberNameMap[items[i].paidById] ??
-                                                'Flatmate',
+                                            'Flatmate',
                                         currentUserId: currentUserId,
                                         onTap: () {
                                           context.push(
-                                            Routes.expenseDetails
-                                                .replaceAll(':id', items[i].id),
+                                            Routes.expenseDetails.replaceAll(
+                                              ':id',
+                                              items[i].id,
+                                            ),
                                             extra: items[i],
                                           );
                                         },
@@ -499,7 +533,7 @@ class _CategoryChip extends StatelessWidget {
                     color: CoSpendColors.jadeGreen.withValues(alpha: 0.3),
                     blurRadius: 8,
                     offset: const Offset(0, 2),
-                  )
+                  ),
                 ]
               : null,
         ),
@@ -511,7 +545,9 @@ class _CategoryChip extends StatelessWidget {
               size: 14,
               color: isSelected
                   ? Colors.white
-                  : (isDark ? CoSpendColors.darkTextMuted : CoSpendColors.textMuted),
+                  : (isDark
+                        ? CoSpendColors.darkTextMuted
+                        : CoSpendColors.textMuted),
             ),
             const SizedBox(width: 6),
             Text(
@@ -556,8 +592,8 @@ class _LedgerExpenseTile extends ConsumerWidget {
 
     final custom = expense.customCategoryId != null
         ? household?.customCategories
-            .where((c) => c.id == expense.customCategoryId)
-            .firstOrNull
+              .where((c) => c.id == expense.customCategoryId)
+              .firstOrNull
         : null;
     final catIcon = custom?.icon ?? expense.category.icon;
     final catLabel = custom?.label ?? expense.category.label;
