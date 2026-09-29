@@ -12,6 +12,7 @@ import '../../../../shared/widgets/app_avatar.dart';
 import '../../../../shared/widgets/empty_state.dart';
 import '../../../../shared/widgets/error_view.dart';
 import '../../../../shared/widgets/skeleton_box.dart';
+import '../../../auth/presentation/providers/auth_providers.dart';
 import '../../../auth/presentation/providers/session_provider.dart';
 import '../../../dashboard/presentation/providers/dashboard_providers.dart';
 import '../../../expenses/presentation/providers/expense_providers.dart';
@@ -57,6 +58,7 @@ class HomeScreen extends ConsumerWidget {
     final scheme = theme.colorScheme;
 
     final session = ref.watch(sessionProvider).value;
+    final currentUser = ref.watch(currentUserProvider).value ?? session?.user;
     final householdAsync = ref.watch(currentHouseholdProvider);
     final membersAsync = ref.watch(householdMembersProvider);
     final recentExpensesAsync = ref.watch(recentExpensesProvider);
@@ -66,9 +68,10 @@ class HomeScreen extends ConsumerWidget {
     final exceededAlerts = ref.watch(exceededBudgetAlertsProvider);
     final settlementAsync = ref.watch(settlementProvider);
 
-    final currentUserId = session?.user?.id ?? '';
+    final currentUserId = currentUser?.id ?? '';
     final unreadNotifs = ref.watch(unreadNotificationCountProvider);
-    final userName = session?.user?.name ?? 'Roommate';
+    final userName = currentUser?.name ?? 'Roommate';
+    final userPhotoUrl = currentUser?.photoUrl;
     final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
@@ -125,7 +128,7 @@ class HomeScreen extends ConsumerWidget {
                         ),
                         child: AppAvatar(
                           name: userName,
-                          photoUrl: session?.user?.photoUrl,
+                          photoUrl: userPhotoUrl,
                           size: 32,
                         ),
                       ),

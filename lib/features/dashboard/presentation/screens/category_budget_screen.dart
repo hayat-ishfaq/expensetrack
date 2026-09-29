@@ -3,13 +3,17 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../../app/router/routes.dart';
 import '../../../../core/errors/firebase_error_mapper.dart';
 import '../../../../core/theme/design_system.dart';
 import '../../../../core/utils/money.dart';
 import '../../../../shared/models/household.dart';
 import '../../../../shared/models/household_member.dart';
+import '../../../../shared/widgets/app_avatar.dart';
 import '../../../../shared/widgets/app_snackbar.dart';
+import '../../../auth/presentation/providers/auth_providers.dart';
 import '../../../auth/presentation/providers/session_provider.dart';
 import '../../../expenses/domain/expense_category.dart';
 import '../../../expenses/presentation/widgets/create_category_sheet.dart';
@@ -225,7 +229,8 @@ class _CategoryBudgetScreenState extends ConsumerState<CategoryBudgetScreen> {
     final household = ref.watch(currentHouseholdProvider).value;
     final members = ref.watch(householdMembersProvider).value ?? const [];
     final session = ref.watch(sessionProvider).value;
-    final currentUserId = session?.user?.id ?? '';
+    final currentUser = ref.watch(currentUserProvider).value ?? session?.user;
+    final currentUserId = currentUser?.id ?? '';
     final isOwner = household != null &&
         (household.ownerId == currentUserId || household.ownerId.isEmpty);
 
@@ -325,6 +330,7 @@ class _CategoryBudgetScreenState extends ConsumerState<CategoryBudgetScreen> {
           Padding(
             padding: const EdgeInsets.only(right: 12),
             child: GestureDetector(
+              onTap: () => context.push(Routes.profile),
               child: Container(
                 padding: const EdgeInsets.all(2),
                 decoration: BoxDecoration(
@@ -334,17 +340,10 @@ class _CategoryBudgetScreenState extends ConsumerState<CategoryBudgetScreen> {
                     width: 2,
                   ),
                 ),
-                child: CircleAvatar(
-                  radius: 16,
-                  backgroundColor: CoSpendColors.prussianBlue,
-                  child: Text(
-                    (session?.user?.name ?? 'U').substring(0, 1).toUpperCase(),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 13,
-                    ),
-                  ),
+                child: AppAvatar(
+                  name: currentUser?.name ?? 'User',
+                  photoUrl: currentUser?.photoUrl,
+                  size: 32,
                 ),
               ),
             ),

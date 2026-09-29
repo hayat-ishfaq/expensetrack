@@ -8,9 +8,11 @@ import '../../../../core/errors/app_exception.dart';
 import '../../../../core/errors/firebase_error_mapper.dart';
 import '../../../../core/theme/design_system.dart';
 import '../../../../core/utils/money.dart';
+import '../../../../shared/widgets/app_avatar.dart';
 import '../../../../shared/widgets/empty_state.dart';
 import '../../../../shared/widgets/error_view.dart';
 import '../../../../shared/widgets/skeleton_box.dart';
+import '../../../auth/presentation/providers/auth_providers.dart';
 import '../../../auth/presentation/providers/session_provider.dart';
 import '../../../expenses/domain/expense.dart';
 import '../../../expenses/domain/expense_category.dart';
@@ -105,7 +107,8 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
     final expensesAsync = ref.watch(householdExpensesProvider);
     final membersAsync = ref.watch(householdMembersProvider);
     final session = ref.watch(sessionProvider).value;
-    final currentUserId = session?.user?.id ?? '';
+    final currentUser = ref.watch(currentUserProvider).value ?? session?.user;
+    final currentUserId = currentUser?.id ?? '';
 
     return Scaffold(
       backgroundColor: isDark ? CoSpendColors.darkCanvas : CoSpendColors.canvas,
@@ -144,17 +147,10 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                   shape: BoxShape.circle,
                   border: Border.all(color: CoSpendColors.jadeGreen, width: 2),
                 ),
-                child: CircleAvatar(
-                  radius: 16,
-                  backgroundColor: CoSpendColors.prussianBlue,
-                  child: Text(
-                    (session?.user?.name ?? 'U').substring(0, 1).toUpperCase(),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 13,
-                    ),
-                  ),
+                child: AppAvatar(
+                  name: currentUser?.name ?? 'User',
+                  photoUrl: currentUser?.photoUrl,
+                  size: 32,
                 ),
               ),
             ),

@@ -108,7 +108,8 @@ class MoreScreen extends ConsumerWidget {
     final themeMode = ref.watch(themeModeProvider).value ?? ThemeMode.system;
 
     final user = session?.user;
-    final isOwner = household != null && household.ownerId == user?.id;
+    final currentUser = ref.watch(currentUserProvider).value ?? user;
+    final isOwner = household != null && household.ownerId == currentUser?.id;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
@@ -141,17 +142,10 @@ class MoreScreen extends ConsumerWidget {
                     width: 2,
                   ),
                 ),
-                child: CircleAvatar(
-                  radius: 16,
-                  backgroundColor: CoSpendColors.prussianBlue,
-                  child: Text(
-                    (user?.name ?? 'U').substring(0, 1).toUpperCase(),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 13,
-                    ),
-                  ),
+                child: AppAvatar(
+                  name: currentUser?.name ?? 'User',
+                  photoUrl: currentUser?.photoUrl,
+                  size: 32,
                 ),
               ),
             ),
