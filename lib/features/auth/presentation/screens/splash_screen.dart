@@ -78,20 +78,23 @@ class _SplashBranding extends StatelessWidget {
                     ),
                   ],
                 ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(24),
-                  child: Image.asset(
-                    'assets/images/app_logo.png',
-                    width: 84,
-                    height: 84,
-                    errorBuilder: (_, _, _) => Container(
+                child: Hero(
+                  tag: 'app-logo',
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(24),
+                    child: Image.asset(
+                      'assets/images/app_logo.png',
                       width: 84,
                       height: 84,
-                      color: scheme.primary,
-                      child: const Icon(
-                        Icons.receipt_long_rounded,
-                        size: 42,
-                        color: Colors.white,
+                      errorBuilder: (_, _, _) => Container(
+                        width: 84,
+                        height: 84,
+                        color: scheme.primary,
+                        child: const Icon(
+                          Icons.receipt_long_rounded,
+                          size: 42,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
                   ),

@@ -5,6 +5,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../app/router/routes.dart';
 import '../../../../core/constants/app_constants.dart';
+import '../../../../core/theme/design_system.dart';
+import '../../../../core/theme/motion.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -19,37 +21,33 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   final PageController _pageController = PageController();
   int _currentIndex = 0;
 
-  final List<OnboardingSlideData> _slides = const [
+  static const List<OnboardingSlideData> _slides = [
     OnboardingSlideData(
       badge: 'FAIR EXPENSES',
-      badgeColor: Color(0xFF00BC57),
-      title: 'Track Shared Expenses\nWithout the Drama',
+      title: 'Track shared bills\nwithout the drama',
       description:
-          'Log flat groceries, utilities, and dining in seconds. CoSpend keeps shared expenses organized with exact paisa accuracy.',
+          'Log groceries, utilities, and dining in seconds. Splits stay exact to the paisa — no rounding fights.',
       mockupType: MockupType.splits,
     ),
     OnboardingSlideData(
       badge: 'SMART BUDGETS',
-      badgeColor: Color(0xFF0A2542),
-      title: 'Category Limits &\nIndividual Quotas',
+      title: 'Caps the whole flat\ncan actually see',
       description:
-          'Set monthly spending caps for Food, Electricity, and Rent. Divide budgets among flatmates with automatic alerts when limits are reached.',
+          'Set Food, Electricity, and Rent limits. Divide quotas among roommates and get alerts before you overspend.',
       mockupType: MockupType.budgets,
     ),
     OnboardingSlideData(
-      badge: 'REAL-TIME ALERTS',
-      badgeColor: Color(0xFF00BC57),
-      title: 'Stay in Sync with\nLive Notifications',
+      badge: 'LIVE ACTIVITY',
+      title: 'Know the moment\nsomeone spends',
       description:
-          'Whenever any roommate spends on something, everyone receives an instant alert and activity update in the flat feed.',
+          'Every expense lands in a shared feed. Instant in-app alerts keep the household honest without group-chat chaos.',
       mockupType: MockupType.settlement,
     ),
     OnboardingSlideData(
-      badge: 'ROOMMATE SYNC',
-      badgeColor: Color(0xFF0A2542),
-      title: 'One Shared Ledger\nFor All Flatmates',
+      badge: 'ONE TAP INVITE',
+      title: 'One ledger.\nEvery roommate.',
       description:
-          'Share your flat invite code with one tap. Everyone stays on the exact same page with live cloud sync and zero confusion.',
+          'Share a FLAT code from WhatsApp. Everyone joins the same books with live cloud sync.',
       mockupType: MockupType.invite,
     ),
   ];
@@ -66,8 +64,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     HapticFeedback.lightImpact();
     if (_currentIndex < _slides.length - 1) {
       _pageController.nextPage(
-        duration: const Duration(milliseconds: 350),
-        curve: Curves.easeInOutCubic,
+        duration: CoSpendMotion.base,
+        curve: CoSpendMotion.entrance,
       );
     } else {
       _completeOnboarding();
@@ -83,35 +81,73 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
+    final size = MediaQuery.sizeOf(context);
+    final isLast = _currentIndex == _slides.length - 1;
 
     return Scaffold(
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Top Bar: App Branding & Skip Button
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
+      body: Stack(
+        children: [
+          DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: isDark
+                    ? const [
+                        Color(0xFF071525),
+                        CoSpendColors.darkCanvas,
+                        Color(0xFF04101C),
+                      ]
+                    : const [
+                        Color(0xFFE8F8EF),
+                        CoSpendColors.canvas,
+                        Color(0xFFF7FAFC),
+                      ],
+              ),
+            ),
+            child: const SizedBox.expand(),
+          ),
+          Positioned(
+            top: -size.width * 0.28,
+            right: -size.width * 0.22,
+            child: _GlowOrb(
+              diameter: size.width * 0.72,
+              color: CoSpendColors.jadeGreen.withValues(alpha: isDark ? 0.16 : 0.18),
+            ),
+          ),
+          Positioned(
+            bottom: size.height * 0.18,
+            left: -size.width * 0.3,
+            child: _GlowOrb(
+              diameter: size.width * 0.62,
+              color: CoSpendColors.prussianBlue.withValues(alpha: isDark ? 0.22 : 0.08),
+            ),
+          ),
+          SafeArea(
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 8, 12, 0),
+                  child: Row(
                     children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(10),
-                        child: Image.asset(
-                          'assets/images/app_logo.png',
-                          width: 32,
-                          height: 32,
-                          errorBuilder: (_, _, _) => Container(
-                            width: 32,
-                            height: 32,
-                            color: scheme.primary,
-                            child: const Icon(
-                              Icons.receipt_long_rounded,
-                              size: 18,
-                              color: Colors.white,
+                      Hero(
+                        tag: 'app-logo',
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: Image.asset(
+                            'assets/images/app_logo.png',
+                            width: 36,
+                            height: 36,
+                            errorBuilder: (_, _, _) => Container(
+                              width: 36,
+                              height: 36,
+                              color: CoSpendColors.jadeGreen,
+                              child: const Icon(
+                                Icons.receipt_long_rounded,
+                                size: 18,
+                                color: Colors.white,
+                              ),
                             ),
                           ),
                         ),
@@ -122,191 +158,233 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         style: theme.textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.w900,
                           letterSpacing: -0.5,
+                          color: isDark ? Colors.white : CoSpendColors.prussianBlue,
                         ),
+                      ),
+                      const Spacer(),
+                      if (!isLast)
+                        TextButton(
+                          onPressed: _completeOnboarding,
+                          child: Text(
+                            'Skip',
+                            style: TextStyle(
+                              color: isDark
+                                  ? CoSpendColors.darkTextMuted
+                                  : CoSpendColors.textMuted,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        )
+                      else
+                        const SizedBox(width: 64, height: 48),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: PageView.builder(
+                    controller: _pageController,
+                    itemCount: _slides.length,
+                    onPageChanged: (idx) => setState(() => _currentIndex = idx),
+                    itemBuilder: (context, index) {
+                      final slide = _slides[index];
+                      return _OnboardingPage(slide: slide, active: index == _currentIndex);
+                    },
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 8, 24, 20),
+                  child: Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: List.generate(_slides.length, (idx) {
+                          final isActive = idx == _currentIndex;
+                          return AnimatedContainer(
+                            duration: CoSpendMotion.fast,
+                            curve: CoSpendMotion.entrance,
+                            margin: const EdgeInsets.symmetric(horizontal: 4),
+                            height: 7,
+                            width: isActive ? 28 : 7,
+                            decoration: BoxDecoration(
+                              color: isActive
+                                  ? CoSpendColors.jadeGreen
+                                  : (isDark
+                                      ? Colors.white.withValues(alpha: 0.18)
+                                      : CoSpendColors.border),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          );
+                        }),
+                      ),
+                      const SizedBox(height: 22),
+                      SizedBox(
+                        width: double.infinity,
+                        height: 54,
+                        child: FilledButton(
+                          onPressed: _nextPage,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                isLast ? "Get Started — It's Free" : 'Next',
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                              if (!isLast) ...[
+                                const SizedBox(width: 8),
+                                const Icon(Icons.arrow_forward_rounded, size: 18),
+                              ],
+                            ],
+                          ),
+                        ),
+                      ),
+                      AnimatedSize(
+                        duration: CoSpendMotion.fast,
+                        curve: CoSpendMotion.entrance,
+                        child: isLast
+                            ? Padding(
+                                padding: const EdgeInsets.only(top: 6),
+                                child: TextButton(
+                                  onPressed: () {
+                                    HapticFeedback.lightImpact();
+                                    context.go(Routes.login);
+                                  },
+                                  child: Text.rich(
+                                    TextSpan(
+                                      style: theme.textTheme.bodyMedium,
+                                      children: [
+                                        TextSpan(
+                                          text: 'Already have an account? ',
+                                          style: TextStyle(
+                                            color: isDark
+                                                ? CoSpendColors.darkTextMuted
+                                                : CoSpendColors.textMuted,
+                                          ),
+                                        ),
+                                        const TextSpan(
+                                          text: 'Log in',
+                                          style: TextStyle(
+                                            color: CoSpendColors.jadeGreen,
+                                            fontWeight: FontWeight.w800,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              )
+                            : const SizedBox.shrink(),
                       ),
                     ],
                   ),
-                  if (_currentIndex < _slides.length - 1)
-                    TextButton(
-                      onPressed: _completeOnboarding,
-                      child: Text(
-                        'Skip',
-                        style: TextStyle(
-                          color: scheme.onSurfaceVariant,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    )
-                  else
-                    const SizedBox(height: 36),
-                ],
-              ),
+                ),
+              ],
             ),
+          ),
+        ],
+      ),
+    );
+  }
+}
 
-            // PageView Carousel
-            Expanded(
-              child: PageView.builder(
-                controller: _pageController,
-                itemCount: _slides.length,
-                onPageChanged: (idx) => setState(() => _currentIndex = idx),
-                itemBuilder: (context, index) {
-                  final slide = _slides[index];
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        // Visual Feature Card
-                        _SlideMockup(mockupType: slide.mockupType),
-                        const SizedBox(height: 32),
+class _GlowOrb extends StatelessWidget {
+  const _GlowOrb({required this.diameter, required this.color});
 
-                        // Badge Tag
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: slide.badgeColor.withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Text(
-                            slide.badge,
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: 0.8,
-                              color: slide.badgeColor,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 12),
+  final double diameter;
+  final Color color;
 
-                        // Title
-                        Text(
-                          slide.title,
-                          textAlign: TextAlign.center,
-                          style: theme.textTheme.headlineSmall?.copyWith(
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: -0.6,
-                            height: 1.2,
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-
-                        // Description
-                        Text(
-                          slide.description,
-                          textAlign: TextAlign.center,
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: scheme.onSurfaceVariant,
-                            height: 1.45,
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
-            ),
-
-            // Bottom Navigation Area
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
-              child: Column(
-                children: [
-                  // Animated Dots Indicator
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: List.generate(_slides.length, (idx) {
-                      final isActive = idx == _currentIndex;
-                      return AnimatedContainer(
-                        duration: const Duration(milliseconds: 300),
-                        margin: const EdgeInsets.symmetric(horizontal: 4),
-                        height: 6,
-                        width: isActive ? 24 : 6,
-                        decoration: BoxDecoration(
-                          color: isActive
-                              ? scheme.primary
-                              : isDark
-                                  ? Colors.white.withValues(alpha: 0.2)
-                                  : scheme.outlineVariant,
-                          borderRadius: BorderRadius.circular(3),
-                        ),
-                      );
-                    }),
-                  ),
-                  const SizedBox(height: 24),
-
-                  // Action Buttons
-                  if (_currentIndex < _slides.length - 1)
-                    SizedBox(
-                      width: double.infinity,
-                      height: 52,
-                      child: FilledButton(
-                        onPressed: _nextPage,
-                        child: const Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              'Next',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                            SizedBox(width: 8),
-                            Icon(Icons.arrow_forward_rounded, size: 18),
-                          ],
-                        ),
-                      ),
-                    )
-                  else ...[
-                    SizedBox(
-                      width: double.infinity,
-                      height: 52,
-                      child: FilledButton(
-                        onPressed: _completeOnboarding,
-                        child: const Text(
-                          'Get Started — It\'s Free',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    TextButton(
-                      onPressed: () {
-                        HapticFeedback.lightImpact();
-                        context.go(Routes.login);
-                      },
-                      child: RichText(
-                        text: TextSpan(
-                          style: theme.textTheme.bodyMedium,
-                          children: [
-                            TextSpan(
-                              text: 'Already have an account? ',
-                              style: TextStyle(color: scheme.onSurfaceVariant),
-                            ),
-                            TextSpan(
-                              text: 'Log in',
-                              style: TextStyle(
-                                color: scheme.primary,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-          ],
+  @override
+  Widget build(BuildContext context) {
+    return IgnorePointer(
+      child: Container(
+        width: diameter,
+        height: diameter,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: color,
         ),
+      ),
+    );
+  }
+}
+
+class _OnboardingPage extends StatelessWidget {
+  const _OnboardingPage({required this.slide, required this.active});
+
+  final OnboardingSlideData slide;
+  final bool active;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      child: Column(
+        children: [
+          const SizedBox(height: 8),
+          Expanded(
+            child: FadeSlideIn(
+              key: ValueKey(slide.badge),
+              offset: const Offset(0, 0.05),
+              child: _SlideMockup(
+                mockupType: slide.mockupType,
+                animate: active,
+              ),
+            ),
+          ),
+          const SizedBox(height: 20),
+          FadeSlideIn(
+            key: ValueKey('${slide.badge}-copy'),
+            delay: const Duration(milliseconds: 60),
+            child: Column(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: CoSpendColors.jadeGreen.withValues(alpha: 0.14),
+                    borderRadius: CoSpendRadii.pillRadius,
+                  ),
+                  child: Text(
+                    slide.badge,
+                    style: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 1.1,
+                      color: CoSpendColors.jadeGreen,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 14),
+                Text(
+                  slide.title,
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: -0.7,
+                    height: 1.15,
+                    color: isDark ? Colors.white : CoSpendColors.prussianBlue,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  slide.description,
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: isDark
+                        ? CoSpendColors.darkTextMuted
+                        : CoSpendColors.textMuted,
+                    height: 1.5,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 8),
+        ],
       ),
     );
   }
@@ -317,76 +395,74 @@ enum MockupType { splits, budgets, settlement, invite }
 class OnboardingSlideData {
   const OnboardingSlideData({
     required this.badge,
-    required this.badgeColor,
     required this.title,
     required this.description,
     required this.mockupType,
   });
 
   final String badge;
-  final Color badgeColor;
   final String title;
   final String description;
   final MockupType mockupType;
 }
 
 class _SlideMockup extends StatelessWidget {
-  const _SlideMockup({required this.mockupType});
+  const _SlideMockup({required this.mockupType, required this.animate});
 
   final MockupType mockupType;
+  final bool animate;
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-    final isDark = theme.brightness == Brightness.dark;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    final bg = isDark ? const Color(0xFF141C2E) : Colors.white;
-    final border = isDark
-        ? Colors.white.withValues(alpha: 0.1)
-        : scheme.outlineVariant.withValues(alpha: 0.5);
-
-    return Container(
-      width: double.infinity,
-      height: 210,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: border),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.05),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
+    return Align(
+      alignment: Alignment.center,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 420, maxHeight: 280),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: isDark ? CoSpendColors.darkCard : CoSpendColors.white,
+            borderRadius: BorderRadius.circular(28),
+            border: Border.all(
+              color: isDark ? CoSpendColors.darkBorder : CoSpendColors.borderLight,
+            ),
+            boxShadow: isDark ? null : CoSpendShadows.heroBannerShadow,
           ),
-        ],
+          child: switch (mockupType) {
+            MockupType.splits => const _SplitsMockup(),
+            MockupType.budgets => _BudgetsMockup(animate: animate),
+            MockupType.settlement => const _SettlementMockup(),
+            MockupType.invite => const _InviteMockup(),
+          },
+        ),
       ),
-      child: switch (mockupType) {
-        MockupType.splits => _buildSplitsMockup(scheme, theme),
-        MockupType.budgets => _buildBudgetsMockup(scheme, theme),
-        MockupType.settlement => _buildSettlementMockup(scheme, theme),
-        MockupType.invite => _buildInviteMockup(scheme, theme),
-      },
     );
   }
+}
 
-  Widget _buildSplitsMockup(ColorScheme scheme, ThemeData theme) {
+class _SplitsMockup extends StatelessWidget {
+  const _SplitsMockup();
+
+  @override
+  Widget build(BuildContext context) {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Row(
           children: [
             Container(
-              padding: const EdgeInsets.all(10),
+              padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: const Color(0xFF6366F1).withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(12),
+                color: const Color(0xFFF97316).withValues(alpha: 0.14),
+                borderRadius: BorderRadius.circular(16),
               ),
               child: const Icon(
                 Icons.restaurant_rounded,
-                color: Color(0xFF6366F1),
-                size: 22,
+                color: Color(0xFFF97316),
+                size: 24,
               ),
             ),
             const SizedBox(width: 12),
@@ -396,143 +472,179 @@ class _SlideMockup extends StatelessWidget {
                 children: [
                   Text(
                     'Dinner & Groceries',
-                    style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
+                    style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
                   ),
                   Text(
-                    'Paid by Hayat • Split 3 ways',
-                    style: TextStyle(fontSize: 11, color: Colors.grey),
+                    'Paid by Hayat · Split 3 ways',
+                    style: TextStyle(fontSize: 12, color: CoSpendColors.textMuted),
                   ),
                 ],
               ),
             ),
             const Text(
               'Rs. 15,000',
-              style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15),
+              style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16),
             ),
           ],
         ),
-        const SizedBox(height: 16),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        const SizedBox(height: 20),
+        const Row(
           children: [
-            _avatarShare('Hayat', 'Rs. 5,000', const Color(0xFF10B981)),
-            _avatarShare('Ali', 'Rs. 5,000', const Color(0xFF6366F1)),
-            _avatarShare('Ahmed', 'Rs. 5,000', const Color(0xFFF59E0B)),
+            Expanded(child: _ShareChip(name: 'Hayat', amount: 'Rs. 5,000', color: Color(0xFF10B981))),
+            SizedBox(width: 8),
+            Expanded(child: _ShareChip(name: 'Ali', amount: 'Rs. 5,000', color: Color(0xFF6366F1))),
+            SizedBox(width: 8),
+            Expanded(child: _ShareChip(name: 'Ahmed', amount: 'Rs. 5,000', color: Color(0xFFF59E0B))),
           ],
         ),
       ],
     );
   }
+}
 
-  Widget _avatarShare(String name, String amount, Color color) {
+class _ShareChip extends StatelessWidget {
+  const _ShareChip({
+    required this.name,
+    required this.amount,
+    required this.color,
+  });
+
+  final String name;
+  final String amount;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(14),
       ),
       child: Column(
         children: [
           CircleAvatar(
-            radius: 12,
+            radius: 14,
             backgroundColor: color,
             child: Text(
               name[0],
               style: const TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.w800,
-                fontSize: 10,
+                fontSize: 12,
               ),
             ),
           ),
-          const SizedBox(height: 4),
-          Text(name, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
-          Text(amount, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: color)),
+          const SizedBox(height: 6),
+          Text(name, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700)),
+          Text(
+            amount,
+            style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: color),
+          ),
         ],
       ),
     );
   }
+}
 
-  Widget _buildBudgetsMockup(ColorScheme scheme, ThemeData theme) {
+class _BudgetsMockup extends StatelessWidget {
+  const _BudgetsMockup({required this.animate});
+
+  final bool animate;
+
+  @override
+  Widget build(BuildContext context) {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        _meterRow(
+        _MeterRow(
           label: 'Food & Dining',
-          spent: 'Rs. 18,500',
-          budget: 'Rs. 25,000',
+          meta: 'Rs. 18,500 / 25,000',
           pct: 0.74,
-          color: const Color(0xFF10B981),
-          status: 'On track',
+          color: CoSpendColors.jadeGreen,
+          animate: animate,
         ),
-        const SizedBox(height: 16),
-        _meterRow(
+        const SizedBox(height: 22),
+        _MeterRow(
           label: 'Electricity & Bills',
-          spent: 'Rs. 14,200',
-          budget: 'Rs. 15,000',
+          meta: 'Rs. 14,200 / 15,000',
           pct: 0.94,
-          color: const Color(0xFFF59E0B),
-          status: '94% limit',
+          color: CoSpendColors.warningAmber,
+          animate: animate,
         ),
       ],
     );
   }
+}
 
-  Widget _meterRow({
-    required String label,
-    required String spent,
-    required String budget,
-    required double pct,
-    required Color color,
-    required String status,
-  }) {
+class _MeterRow extends StatelessWidget {
+  const _MeterRow({
+    required this.label,
+    required this.meta,
+    required this.pct,
+    required this.color,
+    required this.animate,
+  });
+
+  final String label;
+  final String meta;
+  final double pct;
+  final Color color;
+  final bool animate;
+
+  @override
+  Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(label, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(8),
+            Expanded(
+              child: Text(
+                label,
+                style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13.5),
               ),
-              child: Text(status, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: color)),
+            ),
+            Text(
+              '${(pct * 100).round()}%',
+              style: TextStyle(fontWeight: FontWeight.w800, fontSize: 12, color: color),
             ),
           ],
         ),
+        const SizedBox(height: 8),
+        TweenAnimationBuilder<double>(
+          tween: Tween(begin: 0, end: animate ? pct : pct),
+          duration: const Duration(milliseconds: 700),
+          curve: CoSpendMotion.entrance,
+          builder: (context, value, _) {
+            return ClipRRect(
+              borderRadius: BorderRadius.circular(99),
+              child: LinearProgressIndicator(
+                value: value,
+                minHeight: 8,
+                backgroundColor: color.withValues(alpha: 0.12),
+                valueColor: AlwaysStoppedAnimation(color),
+              ),
+            );
+          },
+        ),
         const SizedBox(height: 6),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(4),
-          child: LinearProgressIndicator(
-            value: pct,
-            minHeight: 6,
-            backgroundColor: Colors.grey.withValues(alpha: 0.2),
-            valueColor: AlwaysStoppedAnimation(color),
-          ),
-        ),
-        const SizedBox(height: 4),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text('$spent / $budget', style: const TextStyle(fontSize: 11, color: Colors.grey)),
-            Text('${(pct * 100).toInt()}%', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: color)),
-          ],
-        ),
+        Text(meta, style: const TextStyle(fontSize: 11, color: CoSpendColors.textMuted)),
       ],
     );
   }
+}
 
-  Widget _buildSettlementMockup(ColorScheme scheme, ThemeData theme) {
+class _SettlementMockup extends StatelessWidget {
+  const _SettlementMockup();
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: const Color(0xFF10B981).withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFF10B981).withValues(alpha: 0.3)),
+        color: CoSpendColors.jadeGreen.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(20),
       ),
       child: const Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -540,68 +652,88 @@ class _SlideMockup extends StatelessWidget {
           Row(
             children: [
               CircleAvatar(
-                radius: 16,
+                radius: 22,
                 backgroundColor: Color(0xFF6366F1),
                 child: Text('A', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800)),
               ),
               Expanded(
                 child: Column(
                   children: [
-                    Text('Rs. 4,500', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15, color: Color(0xFF10B981))),
-                    Icon(Icons.arrow_forward_rounded, color: Color(0xFF10B981), size: 16),
+                    Text(
+                      'Rs. 4,500',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w900,
+                        fontSize: 20,
+                        color: CoSpendColors.jadeGreen,
+                      ),
+                    ),
+                    Icon(Icons.south_rounded, color: CoSpendColors.jadeGreen, size: 20),
                   ],
                 ),
               ),
               CircleAvatar(
-                radius: 16,
-                backgroundColor: Color(0xFF10B981),
+                radius: 22,
+                backgroundColor: CoSpendColors.jadeGreen,
                 child: Text('H', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800)),
               ),
             ],
           ),
-          SizedBox(height: 10),
+          SizedBox(height: 14),
           Text(
-            'Ali pays Hayat to settle all flat accounts',
-            style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
+            'Ali pays Hayat — one transfer clears the flat',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, height: 1.35),
           ),
         ],
       ),
     );
   }
+}
 
-  Widget _buildInviteMockup(ColorScheme scheme, ThemeData theme) {
+class _InviteMockup extends StatelessWidget {
+  const _InviteMockup();
+
+  @override
+  Widget build(BuildContext context) {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         const Text(
           'YOUR FLAT INVITE CODE',
-          style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 1.0, color: Colors.grey),
-        ),
-        const SizedBox(height: 8),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          decoration: BoxDecoration(
-            color: scheme.primary.withValues(alpha: 0.12),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: scheme.primary.withValues(alpha: 0.3)),
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 1.2,
+            color: CoSpendColors.textMuted,
           ),
-          child: Text(
+        ),
+        const SizedBox(height: 14),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 14),
+          decoration: BoxDecoration(
+            color: CoSpendColors.prussianBlue,
+            borderRadius: BorderRadius.circular(18),
+          ),
+          child: const Text(
             'FLAT-7K29',
             style: TextStyle(
-              fontSize: 22,
+              fontSize: 26,
               fontWeight: FontWeight.w900,
-              letterSpacing: 4.0,
-              color: scheme.primary,
+              letterSpacing: 4,
+              color: Colors.white,
             ),
           ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 14),
         const Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.share_rounded, size: 14, color: Colors.grey),
+            Icon(Icons.share_rounded, size: 16, color: CoSpendColors.jadeGreen),
             SizedBox(width: 6),
-            Text('Share via WhatsApp or Messages', style: TextStyle(fontSize: 11, color: Colors.grey)),
+            Text(
+              'Share on WhatsApp in one tap',
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+            ),
           ],
         ),
       ],

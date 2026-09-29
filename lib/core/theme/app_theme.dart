@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'design_system.dart';
+import 'motion.dart';
 
 /// Premium fintech Material 3 theme for CoSpend.
 /// Inspired by Revolut, Monarch Money, and Apple Wallet.
@@ -81,6 +82,16 @@ abstract final class AppTheme {
       useMaterial3: true,
       colorScheme: scheme,
       scaffoldBackgroundColor: isDark ? canvasDark : canvasLight,
+      pageTransitionsTheme: const PageTransitionsTheme(
+        builders: {
+          TargetPlatform.android: CoSpendPageTransitionsBuilder(),
+          TargetPlatform.iOS: CoSpendPageTransitionsBuilder(),
+          TargetPlatform.windows: CoSpendPageTransitionsBuilder(),
+          TargetPlatform.linux: CoSpendPageTransitionsBuilder(),
+          TargetPlatform.macOS: CoSpendPageTransitionsBuilder(),
+          TargetPlatform.fuchsia: CoSpendPageTransitionsBuilder(),
+        },
+      ),
 
       appBarTheme: AppBarTheme(
         backgroundColor: Colors.transparent,

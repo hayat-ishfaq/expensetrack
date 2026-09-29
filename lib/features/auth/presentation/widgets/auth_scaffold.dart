@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/routes.dart';
 import '../../../../core/constants/app_constants.dart';
+import '../../../../core/theme/motion.dart';
 import '../../../../shared/widgets/responsive_center.dart';
 
 /// Shared layout for the auth screens: brand header, headline and a scrollable
@@ -79,23 +80,31 @@ class AuthScaffold extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 40),
-                Text(
-                  title,
-                  style: theme.textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: -0.8,
+                FadeSlideIn(
+                  child: Text(
+                    title,
+                    style: theme.textTheme.headlineMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: -0.8,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 8),
-                Text(
-                  subtitle,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                    height: 1.5,
+                FadeSlideIn(
+                  delay: const Duration(milliseconds: 60),
+                  child: Text(
+                    subtitle,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: scheme.onSurfaceVariant,
+                      height: 1.5,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 28),
-                child,
+                FadeSlideIn(
+                  delay: const Duration(milliseconds: 120),
+                  child: child,
+                ),
                 if (footer != null) ...[const SizedBox(height: 20), footer!],
               ],
             ),

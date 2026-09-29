@@ -392,17 +392,18 @@ class HomeScreen extends ConsumerWidget {
         },
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-      floatingActionButton: Container(
-        decoration: const BoxDecoration(
-          shape: BoxShape.circle,
-          boxShadow: CoSpendShadows.floating,
-        ),
-        child: FloatingActionButton(
-          onPressed: () => context.push(Routes.addExpense),
-          backgroundColor: CoSpendColors.jadeGreen,
-          elevation: 0,
-          shape: const CircleBorder(),
-          child: const Icon(Icons.add_rounded, color: Colors.white, size: 28),
+      floatingActionButton: BouncingButton(
+        onTap: () => context.push(Routes.addExpense),
+        child: Container(
+          decoration: const BoxDecoration(
+            shape: BoxShape.circle,
+            boxShadow: CoSpendShadows.floating,
+          ),
+          child: const CircleAvatar(
+            radius: 28,
+            backgroundColor: CoSpendColors.jadeGreen,
+            child: Icon(Icons.add_rounded, color: Colors.white, size: 28),
+          ),
         ),
       ),
     );

@@ -3,6 +3,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/routes.dart';
 import '../../../../core/constants/app_constants.dart';
+import '../../../../core/theme/design_system.dart';
+import '../../../../core/theme/motion.dart';
 import '../../../../shared/widgets/responsive_center.dart';
 
 /// Branded entry screen shown to signed-out users.
@@ -35,90 +37,133 @@ class WelcomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
-      body: SafeArea(
-        child: ResponsiveCenter(
-          maxWidth: 520,
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
+      body: Stack(
+        children: [
+          Positioned(
+            top: -80,
+            right: -60,
+            child: IgnorePointer(
+              child: Container(
+                width: 220,
+                height: 220,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: CoSpendColors.jadeGreen.withValues(alpha: isDark ? 0.12 : 0.14),
+                ),
+              ),
+            ),
+          ),
+          SafeArea(
+            child: ResponsiveCenter(
+              maxWidth: 520,
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child: Image.asset(
-                        'assets/images/app_logo.png',
-                        width: 44,
-                        height: 44,
-                        errorBuilder: (_, _, _) => Container(
-                          width: 44,
-                          height: 44,
-                          color: scheme.primary,
-                          child: const Icon(Icons.wallet_rounded, color: Colors.white),
+                    FadeSlideIn(
+                      child: Row(
+                        children: [
+                          Hero(
+                            tag: 'app-logo',
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(12),
+                              child: Image.asset(
+                                'assets/images/app_logo.png',
+                                width: 44,
+                                height: 44,
+                                errorBuilder: (_, _, _) => Container(
+                                  width: 44,
+                                  height: 44,
+                                  color: scheme.primary,
+                                  child: const Icon(
+                                    Icons.wallet_rounded,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Text(
+                            AppConstants.appName,
+                            style: theme.textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: -0.5,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 40),
+                    FadeSlideIn(
+                      delay: const Duration(milliseconds: 80),
+                      child: Text(
+                        'Co-living budgets,\nshared simply.',
+                        style: theme.textTheme.headlineLarge?.copyWith(
+                          fontWeight: FontWeight.w800,
+                          height: 1.12,
+                          letterSpacing: -1.2,
                         ),
                       ),
                     ),
-                    const SizedBox(width: 12),
-                    Text(
-                      AppConstants.appName,
-                      style: theme.textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: -0.5,
+                    const SizedBox(height: 14),
+                    FadeSlideIn(
+                      delay: const Duration(milliseconds: 140),
+                      child: Text(
+                        'Track shared household expenses, set category budgets, and keep flatmates in sync with ${AppConstants.appName}.',
+                        style: theme.textTheme.bodyLarge?.copyWith(
+                          color: scheme.onSurfaceVariant,
+                          height: 1.5,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 36),
+                    for (var i = 0; i < _features.length; i++)
+                      FadeSlideIn(
+                        delay: Duration(milliseconds: 180 + i * 70),
+                        child: _FeatureTile(
+                          icon: _features[i].icon,
+                          title: _features[i].title,
+                          subtitle: _features[i].subtitle,
+                        ),
+                      ),
+                    const SizedBox(height: 8),
+                    FadeSlideIn(
+                      delay: const Duration(milliseconds: 400),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          FilledButton(
+                            onPressed: () => context.go(Routes.signup),
+                            child: const Text('Get started'),
+                          ),
+                          const SizedBox(height: 12),
+                          OutlinedButton(
+                            onPressed: () => context.go(Routes.login),
+                            child: const Text('I already have an account'),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 40),
+                    Center(
+                      child: Text(
+                        AppConstants.tagline,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: scheme.onSurfaceVariant,
+                        ),
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 48),
-                Text(
-                  'Co-living budgets,\nshared simply.',
-                  style: theme.textTheme.headlineLarge?.copyWith(
-                    fontWeight: FontWeight.w800,
-                    height: 1.15,
-                    letterSpacing: -1.2,
-                  ),
-                ),
-                const SizedBox(height: 14),
-                Text(
-                  'Track shared household expenses, set category budgets, and keep flatmates in sync with ${AppConstants.appName}.',
-                  style: theme.textTheme.bodyLarge?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                    height: 1.5,
-                  ),
-                ),
-                const SizedBox(height: 40),
-                ..._features.map(
-                  (feature) => _FeatureTile(
-                    icon: feature.icon,
-                    title: feature.title,
-                    subtitle: feature.subtitle,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                FilledButton(
-                  onPressed: () => context.go(Routes.signup),
-                  child: const Text('Get started'),
-                ),
-                const SizedBox(height: 12),
-                OutlinedButton(
-                  onPressed: () => context.go(Routes.login),
-                  child: const Text('I already have an account'),
-                ),
-                const SizedBox(height: 48),
-                Center(
-                  child: Text(
-                    AppConstants.tagline,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: scheme.onSurfaceVariant,
-                    ),
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
-        ),
+        ],
       ),
     );
   }
@@ -141,19 +186,11 @@ class _FeatureTile extends StatelessWidget {
     final scheme = theme.colorScheme;
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 20),
+      padding: const EdgeInsets.only(bottom: 18),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: scheme.surfaceContainerHighest,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(icon, size: 20, color: scheme.primary),
-          ),
+          TintedIcon(icon: icon, color: scheme.primary),
           const SizedBox(width: 14),
           Expanded(
             child: Column(
@@ -162,7 +199,7 @@ class _FeatureTile extends StatelessWidget {
                 Text(
                   title,
                   style: theme.textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w700,
                     letterSpacing: -0.2,
                   ),
                 ),
