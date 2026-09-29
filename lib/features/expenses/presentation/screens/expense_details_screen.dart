@@ -122,18 +122,24 @@ class _ExpenseDetailsBody extends ConsumerWidget {
     final memberMap = {for (final m in members) m.id: m};
     final payer = memberMap[expense.paidById];
 
+    final currentUserId = ref.watch(sessionProvider).value?.user?.id;
+    final canDelete = currentUserId != null &&
+        (expense.createdByUserId == currentUserId ||
+            household?.ownerId == currentUserId);
+
     final isDeleting = ref.watch(expenseActionsProvider).isLoading;
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Expense Details'),
         actions: [
-          IconButton(
-            onPressed: isDeleting ? null : () => _deleteExpense(context, ref),
-            icon: const Icon(Icons.delete_outline_rounded),
-            color: scheme.error,
-            tooltip: 'Delete expense',
-          ),
+          if (canDelete)
+            IconButton(
+              onPressed: isDeleting ? null : () => _deleteExpense(context, ref),
+              icon: const Icon(Icons.delete_outline_rounded),
+              color: scheme.error,
+              tooltip: 'Delete expense',
+            ),
         ],
       ),
       body: ListView(

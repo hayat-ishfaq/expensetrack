@@ -169,17 +169,22 @@ void main() {
       expect(householdWithoutCatBudgets.effectiveTotalBudgetPaisa, 5000000);
     });
 
-    test('tracks individual user category spending for dual deductions', () {
+    test('tracks individual user category spending by consumption share and payment', () {
       final stats = DashboardStats.fromExpenses(
         allExpenses: sampleExpenses,
         userId: 'ali',
         targetMonth: now,
       );
 
-      // Ali paid for electricity (8,000 Rs.)
-      expect(stats.userCategorySpending[ExpenseCategory.electricity], 800000);
-      // Ali didn't pay for groceries (Hayat did)
-      expect(stats.userCategorySpending[ExpenseCategory.groceries], isNull);
+      // Ali's allocated share for electricity: 2,667 Rs. (266,700 paisa)
+      expect(stats.userCategorySpending[ExpenseCategory.electricity], 266700);
+      // Ali's allocated share for groceries: 4,833 Rs. (483,300 paisa)
+      expect(stats.userCategorySpending[ExpenseCategory.groceries], 483300);
+
+      // Ali paid out of pocket for electricity: 8,000 Rs. (800,000 paisa)
+      expect(stats.userPaidCategorySpending[ExpenseCategory.electricity], 800000);
+      // Ali didn't front groceries out of pocket (Hayat did)
+      expect(stats.userPaidCategorySpending[ExpenseCategory.groceries], isNull);
     });
 
     test('correctly configures and accesses memberCategoryBudgetsPaisa', () {

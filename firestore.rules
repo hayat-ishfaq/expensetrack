@@ -72,7 +72,8 @@ service cloud.firestore {
       allow create: if isAuthenticated() &&
         request.resource.data.ownerId == request.auth.uid;
       allow update: if isOwnerOf(householdId) || (
-        isAuthenticated() && onlyMemberCountChanged()
+        (isMemberOf(householdId) || householdInviteMatches(householdId)) &&
+        onlyMemberCountChanged()
       ) || (
         isMemberOf(householdId) &&
         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['categorySubcategories'])
@@ -93,7 +94,11 @@ service cloud.firestore {
       match /expenses/{expenseId} {
         allow read: if isMemberOf(householdId);
         allow create: if isMemberOf(householdId) &&
-          request.resource.data.createdByUserId == request.auth.uid;
+          request.resource.data.createdByUserId == request.auth.uid &&
+          request.resource.data.amountPaisa is int &&
+          request.resource.data.amountPaisa > 0 &&
+          request.resource.data.splitAmongIds is list &&
+          request.resource.data.splitAmongIds.size() > 0;
         allow update, delete: if isMemberOf(householdId) &&
           (resource.data.createdByUserId == request.auth.uid || isOwnerOf(householdId));
       }

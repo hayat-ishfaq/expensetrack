@@ -12,6 +12,8 @@ class DashboardStats {
     this.categoryIdBreakdown = const {},
     this.userCategorySpending = const {},
     this.userCategoryIdBreakdown = const {},
+    this.userPaidCategorySpending = const {},
+    this.userPaidCategoryIdBreakdown = const {},
     required this.dailySpending,
     required this.expenseCount,
     this.highestCategory,
@@ -39,11 +41,17 @@ class DashboardStats {
   /// Map of category ID (standard or custom) -> amount in paisa for the household.
   final Map<String, int> categoryIdBreakdown;
 
-  /// Category spending for the current user (amount paid by this user): Category -> amount in paisa.
+  /// Category spending for the current user (their allocated share): Category -> amount in paisa.
   final Map<ExpenseCategory, int> userCategorySpending;
 
-  /// Map of category ID -> amount paid by this user in paisa.
+  /// Map of category ID -> user's allocated share in paisa.
   final Map<String, int> userCategoryIdBreakdown;
+
+  /// Category spending fronted/paid out-of-pocket by the current user.
+  final Map<ExpenseCategory, int> userPaidCategorySpending;
+
+  /// Map of category ID -> amount fronted by this user in paisa.
+  final Map<String, int> userPaidCategoryIdBreakdown;
 
   /// Daily spending map: Day of month (1..31) -> amount in paisa.
   final Map<int, int> dailySpending;
@@ -76,25 +84,32 @@ class DashboardStats {
     final userCatMap = <ExpenseCategory, int>{};
     final categoryIdMap = <String, int>{};
     final userCategoryIdMap = <String, int>{};
+    final userPaidCatMap = <ExpenseCategory, int>{};
+    final userPaidCategoryIdMap = <String, int>{};
     final dayMap = <int, int>{};
 
     for (final exp in monthExpenses) {
       totalPaisa += exp.amountPaisa;
       final catKey = exp.customCategoryId ?? exp.category.id;
 
-      // Track how much user paid
+      // Track how much user paid out of pocket
       if (exp.paidById == userId) {
         userPaid += exp.amountPaisa;
-        userCatMap[exp.category] =
-            (userCatMap[exp.category] ?? 0) + exp.amountPaisa;
-        userCategoryIdMap[catKey] =
-            (userCategoryIdMap[catKey] ?? 0) + exp.amountPaisa;
+        userPaidCatMap[exp.category] =
+            (userPaidCatMap[exp.category] ?? 0) + exp.amountPaisa;
+        userPaidCategoryIdMap[catKey] =
+            (userPaidCategoryIdMap[catKey] ?? 0) + exp.amountPaisa;
       }
 
-      // Track user share from splits
+      // Track user share from splits (true personal consumption)
       final userIndex = exp.splitAmongIds.indexOf(userId);
       if (userIndex != -1 && userIndex < exp.splitAmountsPaisa.length) {
-        userShare += exp.splitAmountsPaisa[userIndex];
+        final share = exp.splitAmountsPaisa[userIndex];
+        userShare += share;
+        userCatMap[exp.category] =
+            (userCatMap[exp.category] ?? 0) + share;
+        userCategoryIdMap[catKey] =
+            (userCategoryIdMap[catKey] ?? 0) + share;
       }
 
       // Category breakdown for household
@@ -137,6 +152,8 @@ class DashboardStats {
       categoryIdBreakdown: categoryIdMap,
       userCategorySpending: userCatMap,
       userCategoryIdBreakdown: userCategoryIdMap,
+      userPaidCategorySpending: userPaidCatMap,
+      userPaidCategoryIdBreakdown: userPaidCategoryIdMap,
       dailySpending: dayMap,
       expenseCount: monthExpenses.length,
       highestCategory: highestCat,

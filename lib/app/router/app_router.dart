@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -21,8 +22,8 @@ import '../../features/household/presentation/screens/join_flat_screen.dart';
 import '../../features/shell/presentation/screens/app_shell_screen.dart';
 import '../../features/shell/presentation/screens/contact_support_screen.dart';
 import '../../features/shell/presentation/screens/expenses_screen.dart';
-import '../../features/shell/presentation/screens/home_screen.dart';
 import '../../features/shell/presentation/screens/help_faq_screen.dart';
+import '../../features/shell/presentation/screens/home_screen.dart';
 import '../../features/shell/presentation/screens/more_screen.dart';
 import '../../features/shell/presentation/screens/settle_up_screen.dart';
 import 'not_found_screen.dart';
@@ -44,13 +45,23 @@ const Set<String> _householdSetupPaths = {
   Routes.joinFlat,
 };
 
-/// App-wide router, rebuilt whenever the session changes so every redirect
-/// runs against the latest auth/household state.
+/// Listenable adapter notifying GoRouter when the session state transitions.
+class _SessionListenable extends ChangeNotifier {
+  _SessionListenable(Ref ref) {
+    ref.listen<AsyncValue<SessionState>>(sessionProvider, (_, _) {
+      notifyListeners();
+    });
+  }
+}
+
+/// App-wide router, stable across session changes while reacting to auth redirects.
 final appRouterProvider = Provider<GoRouter>((ref) {
-  ref.watch(sessionProvider);
+  final sessionListenable = _SessionListenable(ref);
+  ref.onDispose(sessionListenable.dispose);
 
   final router = GoRouter(
     initialLocation: Routes.splash,
+    refreshListenable: sessionListenable,
     routes: [
       GoRoute(path: '/', redirect: (context, state) => Routes.splash),
       GoRoute(

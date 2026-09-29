@@ -51,21 +51,42 @@ abstract final class SplitHelper {
   }) {
     if (percentages.isEmpty || totalPaisa <= 0) return const [];
 
-    final rawShares = percentages.map((p) => (totalPaisa * (p / 100.0)).floor()).toList();
+    final sumPct = percentages.fold<double>(0.0, (prev, curr) => prev + curr);
+    // Normalize percentages if they sum to ~100% within tolerance
+    final normalized = (sumPct > 0)
+        ? percentages.map((p) => (p / sumPct) * 100.0).toList()
+        : percentages;
+
+    final rawShares = normalized
+        .map((p) => (totalPaisa * (p / 100.0)).floor())
+        .toList();
     var sumRaw = rawShares.fold<int>(0, (prev, curr) => prev + curr);
     var remainder = totalPaisa - sumRaw;
 
     // Distribute remaining paisa one by one to items with largest fractional parts
-    final indicesWithFractions = List.generate(percentages.length, (i) {
-      final exact = totalPaisa * (percentages[i] / 100.0);
+    final indicesWithFractions = List.generate(normalized.length, (i) {
+      final exact = totalPaisa * (normalized[i] / 100.0);
       final fraction = exact - rawShares[i];
       return (index: i, fraction: fraction);
     });
     indicesWithFractions.sort((a, b) => b.fraction.compareTo(a.fraction));
 
-    for (var i = 0; i < remainder && i < indicesWithFractions.length; i++) {
-      final targetIdx = indicesWithFractions[i].index;
+    var i = 0;
+    while (remainder > 0 && indicesWithFractions.isNotEmpty) {
+      final targetIdx = indicesWithFractions[i % indicesWithFractions.length].index;
       rawShares[targetIdx] += 1;
+      remainder--;
+      i++;
+    }
+
+    while (remainder < 0 && indicesWithFractions.isNotEmpty) {
+      final targetIdx = indicesWithFractions[
+          indicesWithFractions.length - 1 - (i % indicesWithFractions.length)].index;
+      if (rawShares[targetIdx] > 0) {
+        rawShares[targetIdx] -= 1;
+        remainder++;
+      }
+      i++;
     }
 
     return rawShares;

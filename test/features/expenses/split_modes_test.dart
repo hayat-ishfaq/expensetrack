@@ -81,6 +81,15 @@ void main() {
       expect(shares.fold<int>(0, (a, b) => a + b), 100000);
     });
 
+    test('guarantees exact sum conservation on large amounts with percentage drift', () {
+      // 2,000,000 paisa (Rs. 20,000) with 49.98% + 49.98% (within the 0.05% tolerance)
+      final shares = SplitHelper.computePercentageShares(
+        totalPaisa: 2000000,
+        percentages: [49.98, 49.98],
+      );
+      expect(shares.fold<int>(0, (a, b) => a + b), 2000000);
+    });
+
     test('validates percentages sum to 100%', () {
       expect(
         SplitHelper.validatePercentages(
