@@ -447,19 +447,11 @@ class MoreScreen extends ConsumerWidget {
             isDark: isDark,
             items: [
               _MenuItem(
-                icon: Icons.auto_stories_rounded,
-                iconColor: const Color(0xFF6366F1),
-                title: 'App Tour & Features',
-                subtitle: 'Replay animated onboarding introduction',
-                onTap: () => context.push(Routes.onboarding),
-                isDark: isDark,
-              ),
-              _MenuItem(
                 icon: Icons.help_outline_rounded,
                 iconColor: const Color(0xFF0EA5E9),
                 title: 'Help & FAQ',
                 subtitle: 'Get answers to common questions',
-                onTap: () {},
+                onTap: () => context.push(Routes.helpFaq),
                 isDark: isDark,
               ),
               _MenuItem(
@@ -467,7 +459,7 @@ class MoreScreen extends ConsumerWidget {
                 iconColor: CoSpendColors.jadeGreen,
                 title: 'Contact support',
                 subtitle: 'Reach out to our team',
-                onTap: () {},
+                onTap: () => context.push(Routes.contactSupport),
                 isDark: isDark,
               ),
             ],

@@ -345,7 +345,7 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
             child: ListView(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
               children: [
-                // ── AMOUNT ──────────────────────────────────────────────────
+                // ── AMOUNT (borderless hero entry) ──────────────────────────
                 Text(
                   'AMOUNT',
                   style: TextStyle(
@@ -357,69 +357,67 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                         : CoSpendColors.textMuted,
                   ),
                 ),
-                const SizedBox(height: 8),
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                  decoration: BoxDecoration(
-                    color:
-                        isDark ? CoSpendColors.darkCard : CoSpendColors.white,
-                    borderRadius: CoSpendRadii.cardRadius,
-                    border: Border.all(
-                      color: isDark
-                          ? CoSpendColors.darkBorder
-                          : CoSpendColors.borderLight,
-                      width: 0.8,
+                const SizedBox(height: 4),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.baseline,
+                  textBaseline: TextBaseline.alphabetic,
+                  children: [
+                    Text(
+                      'Rs.',
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w700,
+                        color: isDark
+                            ? CoSpendColors.darkTextMuted
+                            : CoSpendColors.textMuted,
+                      ),
                     ),
-                    boxShadow: isDark ? null : CoSpendShadows.card,
-                  ),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Text(
-                        'Rs. ',
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: TextFormField(
+                        controller: _amountController,
+                        keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true),
+                        inputFormatters: [
+                          FilteringTextInputFormatter.allow(
+                              RegExp(r'^\d*\.?\d{0,2}')),
+                        ],
                         style: TextStyle(
-                          fontSize: 28,
+                          fontSize: 40,
                           fontWeight: FontWeight.w800,
+                          letterSpacing: -1.2,
+                          height: 1.1,
                           color: isDark
                               ? Colors.white
                               : CoSpendColors.prussianBlue,
                         ),
-                      ),
-                      Expanded(
-                        child: TextFormField(
-                          controller: _amountController,
-                          keyboardType: const TextInputType.numberWithOptions(
-                              decimal: true),
-                          inputFormatters: [
-                            FilteringTextInputFormatter.allow(
-                                RegExp(r'^\d*\.?\d{0,2}')),
-                          ],
-                          style: TextStyle(
-                            fontSize: 32,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: -0.5,
+                        decoration: InputDecoration(
+                          hintText: '0',
+                          hintStyle: TextStyle(
+                            fontSize: 40,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -1.2,
+                            height: 1.1,
                             color: isDark
-                                ? Colors.white
-                                : CoSpendColors.prussianBlue,
+                                ? CoSpendColors.darkTextSubtle
+                                : const Color(0xFFC5D0DC),
                           ),
-                          decoration: InputDecoration(
-                            hintText: '0',
-                            hintStyle: TextStyle(
-                              color: isDark
-                                  ? CoSpendColors.darkTextMuted
-                                  : const Color(0xFFCBD5E1),
-                            ),
-                            border: InputBorder.none,
-                            isDense: true,
-                            contentPadding: EdgeInsets.zero,
-                          ),
-                          validator: Validators.amount,
-                          onChanged: (_) => setState(() {}),
+                          border: InputBorder.none,
+                          enabledBorder: InputBorder.none,
+                          focusedBorder: InputBorder.none,
+                          errorBorder: InputBorder.none,
+                          focusedErrorBorder: InputBorder.none,
+                          disabledBorder: InputBorder.none,
+                          filled: false,
+                          fillColor: Colors.transparent,
+                          isDense: true,
+                          contentPadding: const EdgeInsets.only(bottom: 4),
                         ),
+                        validator: Validators.amount,
+                        onChanged: (_) => setState(() {}),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 16),
 

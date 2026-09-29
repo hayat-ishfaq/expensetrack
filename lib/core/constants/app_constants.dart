@@ -19,4 +19,8 @@ abstract final class AppConstants {
 
   /// Practical upper bound for a flat; larger groups get an explicit warning.
   static const int maxHouseholdMembers = 10;
+
+  static const String supportEmail = 'support@cospend.app';
+  static const String supportGithubUrl =
+      'https://github.com/hayat-ishfaq/expensetrack/issues';
 }

@@ -19,8 +19,10 @@ import '../../features/household/presentation/screens/household_settings_screen.
 import '../../features/household/presentation/screens/household_setup_screen.dart';
 import '../../features/household/presentation/screens/join_flat_screen.dart';
 import '../../features/shell/presentation/screens/app_shell_screen.dart';
+import '../../features/shell/presentation/screens/contact_support_screen.dart';
 import '../../features/shell/presentation/screens/expenses_screen.dart';
 import '../../features/shell/presentation/screens/home_screen.dart';
+import '../../features/shell/presentation/screens/help_faq_screen.dart';
 import '../../features/shell/presentation/screens/more_screen.dart';
 import '../../features/shell/presentation/screens/settle_up_screen.dart';
 import 'not_found_screen.dart';
@@ -100,6 +102,16 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: Routes.profile,
         name: 'profile',
         builder: (context, state) => const EditProfileScreen(),
+      ),
+      GoRoute(
+        path: Routes.helpFaq,
+        name: 'help-faq',
+        builder: (context, state) => const HelpFaqScreen(),
+      ),
+      GoRoute(
+        path: Routes.contactSupport,
+        name: 'contact-support',
+        builder: (context, state) => const ContactSupportScreen(),
       ),
       GoRoute(
         path: Routes.settle,
