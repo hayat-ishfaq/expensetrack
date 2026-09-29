@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../../app/router/routes.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../shared/widgets/responsive_center.dart';
 
@@ -12,12 +14,14 @@ class AuthScaffold extends StatelessWidget {
     required this.subtitle,
     required this.child,
     this.footer,
+    this.showBack = false,
   });
 
   final String title;
   final String subtitle;
   final Widget child;
   final Widget? footer;
+  final bool showBack;
 
   @override
   Widget build(BuildContext context) {
@@ -34,6 +38,18 @@ class AuthScaffold extends StatelessWidget {
               children: [
                 Row(
                   children: [
+                    if (showBack)
+                      IconButton(
+                        tooltip: 'Back',
+                        onPressed: () {
+                          if (Navigator.of(context).canPop()) {
+                            context.pop();
+                          } else {
+                            context.go(Routes.householdSetup);
+                          }
+                        },
+                        icon: const Icon(Icons.arrow_back_rounded),
+                      ),
                     ClipRRect(
                       borderRadius: BorderRadius.circular(10),
                       child: Image.asset(

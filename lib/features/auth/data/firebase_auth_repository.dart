@@ -1,24 +1,26 @@
-import 'dart:math';
+import 'dart:typed_data';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 
-import '../../../core/constants/app_constants.dart';
 import '../../../core/constants/firestore_constants.dart';
 import '../../../core/errors/firebase_error_mapper.dart';
 import '../../../shared/models/app_user.dart';
-import '../../../shared/models/household.dart';
-import '../../../shared/models/household_member.dart';
-import '../../household/domain/invite_code.dart';
 import '../domain/auth_repository.dart';
 import '../domain/auth_user.dart';
 
 /// Firestore + Firebase Auth implementation of [AuthRepository].
 class FirebaseAuthRepository implements AuthRepository {
-  FirebaseAuthRepository(this._auth, this._firestore);
+  FirebaseAuthRepository(
+    this._auth,
+    this._firestore, [
+    FirebaseStorage? storage,
+  ]) : _storage = storage ?? FirebaseStorage.instance;
 
   final FirebaseAuth _auth;
   final FirebaseFirestore _firestore;
+  final FirebaseStorage _storage;
 
   static AuthUser _toAuthUser(User user) => AuthUser(
         uid: user.uid,
@@ -65,57 +67,17 @@ class FirebaseAuthRepository implements AuthRepository {
       } catch (_) {}
 
       final now = DateTime.now();
-      final code = InviteCode.generate(Random.secure());
-      final householdRef =
-          _firestore.collection(FirestoreCollections.households).doc();
-      final firstName = name.trim().split(' ').first;
-      final flatName = "$firstName's Flat";
-
-      final household = Household(
-        id: householdRef.id,
-        name: flatName,
-        ownerId: user.uid,
-        inviteCode: code,
-        memberCount: 1,
-        monthlyBudgetPaisa: 0,
-        currency: AppConstants.defaultCurrency,
-        createdAt: now,
-      );
-
-      final member = HouseholdMember(
-        id: user.uid,
-        name: name.trim(),
-        email: email.trim().toLowerCase(),
-        role: MemberRole.owner,
-        joinedAt: now,
-      );
-
       final appUser = AppUser(
         id: user.uid,
         name: name.trim(),
         email: email.trim().toLowerCase(),
-        householdId: household.id,
         createdAt: now,
       );
 
-      final batch = _firestore.batch();
-      batch.set(
-        _firestore.collection(FirestoreCollections.users).doc(user.uid),
-        appUser.toMap(),
-      );
-      batch.set(householdRef, household.toMap());
-      batch.set(
-        _firestore.doc('${FirestoreCollections.inviteCodes}/$code'),
-        {
-          'householdId': household.id,
-          'createdAt': Timestamp.fromDate(now),
-        },
-      );
-      batch.set(
-        householdRef.collection(FirestoreCollections.members).doc(user.uid),
-        member.toMap(),
-      );
-      await batch.commit();
+      await _firestore
+          .collection(FirestoreCollections.users)
+          .doc(user.uid)
+          .set(appUser.toMap());
 
       return appUser;
     } catch (error) {
@@ -136,6 +98,23 @@ class FirebaseAuthRepository implements AuthRepository {
   Future<void> signOut() async {
     try {
       await _auth.signOut();
+    } catch (error) {
+      throw toAppException(error);
+    }
+  }
+
+  @override
+  Future<String> uploadAvatar({
+    required String uid,
+    required Uint8List bytes,
+  }) async {
+    try {
+      final ref = _storage.ref().child('avatars/$uid/profile.jpg');
+      await ref.putData(
+        bytes,
+        SettableMetadata(contentType: 'image/jpeg'),
+      );
+      return await ref.getDownloadURL();
     } catch (error) {
       throw toAppException(error);
     }

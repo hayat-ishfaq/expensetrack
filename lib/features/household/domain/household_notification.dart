@@ -13,6 +13,7 @@ class HouseholdNotification {
     required this.payerName,
     required this.payerId,
     required this.createdAt,
+    this.readByUserIds = const [],
   });
 
   final String id;
@@ -25,6 +26,7 @@ class HouseholdNotification {
   final String payerName;
   final String payerId;
   final DateTime createdAt;
+  final List<String> readByUserIds;
 
   factory HouseholdNotification.fromMap(String id, Map<String, dynamic> map) {
     DateTime parsedDate = DateTime.now();
@@ -46,6 +48,10 @@ class HouseholdNotification {
       payerName: map['payerName'] as String? ?? 'Flatmate',
       payerId: map['payerId'] as String? ?? '',
       createdAt: parsedDate,
+      readByUserIds: (map['readByUserIds'] as List<dynamic>?)
+              ?.map((id) => id.toString())
+              .toList() ??
+          const [],
     );
   }
 
@@ -60,6 +66,7 @@ class HouseholdNotification {
       'payerName': payerName,
       'payerId': payerId,
       'createdAt': Timestamp.fromDate(createdAt),
+      'readByUserIds': readByUserIds,
     };
   }
 }

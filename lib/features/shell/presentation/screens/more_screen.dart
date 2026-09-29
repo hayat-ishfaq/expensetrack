@@ -323,6 +323,14 @@ class MoreScreen extends ConsumerWidget {
                   isDark: isDark,
                 ),
                 _MenuItem(
+                  icon: Icons.swap_horiz_rounded,
+                  iconColor: const Color(0xFF0EA5E9),
+                  title: 'Settle up',
+                  subtitle: 'See who owes whom and record payments',
+                  onTap: () => context.push(Routes.settle),
+                  isDark: isDark,
+                ),
+                _MenuItem(
                   icon: Icons.group_add_rounded,
                   iconColor: const Color(0xFF0EA5E9),
                   title: 'Join another flat',

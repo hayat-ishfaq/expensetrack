@@ -21,12 +21,17 @@ abstract final class SettlementEngine {
   static Settlement compute({
     required List<Expense> expenses,
     Set<String> memberIds = const {},
+    List<RecordedSettlement> recorded = const [],
   }) {
     // Union of the current household and everyone mentioned by an expense.
     final involved = <String>{...memberIds};
     for (final expense in expenses) {
       involved.add(expense.paidById);
       involved.addAll(expense.splitAmongIds);
+    }
+    for (final payment in recorded) {
+      involved.add(payment.fromUserId);
+      involved.add(payment.toUserId);
     }
     if (involved.isEmpty) return Settlement.empty;
 
@@ -39,6 +44,14 @@ abstract final class SettlementEngine {
             : 0;
         net[expense.splitAmongIds[i]] = net[expense.splitAmongIds[i]]! - share;
       }
+    }
+
+    // Recorded cash transfers: debtor's net rises, creditor's net falls.
+    for (final payment in recorded) {
+      net[payment.fromUserId] =
+          (net[payment.fromUserId] ?? 0) + payment.amountPaisa;
+      net[payment.toUserId] =
+          (net[payment.toUserId] ?? 0) - payment.amountPaisa;
     }
 
     final balances = net.entries

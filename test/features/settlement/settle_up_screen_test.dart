@@ -4,6 +4,7 @@ import 'package:expensetrack/features/expenses/domain/expense.dart';
 import 'package:expensetrack/features/expenses/domain/expense_category.dart';
 import 'package:expensetrack/features/expenses/presentation/providers/expense_providers.dart';
 import 'package:expensetrack/features/household/presentation/providers/household_providers.dart';
+import 'package:expensetrack/features/settlement/presentation/providers/settlement_providers.dart';
 import 'package:expensetrack/features/shell/presentation/screens/settle_up_screen.dart';
 import 'package:expensetrack/shared/models/app_user.dart';
 import 'package:expensetrack/shared/models/household.dart';
@@ -15,6 +16,7 @@ import 'package:flutter_test/flutter_test.dart';
 import '../../support/fake_auth_repository.dart';
 import '../../support/fake_expense_repository.dart';
 import '../../support/fake_household_repository.dart';
+import '../../support/fake_settlement_repository.dart';
 
 Expense _expense({
   required String id,
@@ -85,6 +87,7 @@ Widget _buildApp({
       authRepositoryProvider.overrideWithValue(auth),
       expenseRepositoryProvider.overrideWithValue(expenses),
       householdRepositoryProvider.overrideWithValue(household),
+      settlementRepositoryProvider.overrideWithValue(FakeSettlementRepository()),
     ],
     child: const MaterialApp(home: SettleUpScreen()),
   );

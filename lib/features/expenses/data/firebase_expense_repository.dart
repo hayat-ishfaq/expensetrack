@@ -71,6 +71,7 @@ class FirebaseExpenseRepository implements ExpenseRepository {
         'payerName': payerName,
         'payerId': expense.paidById,
         'createdAt': FieldValue.serverTimestamp(),
+        'readByUserIds': <String>[],
       });
 
       await batch.commit();

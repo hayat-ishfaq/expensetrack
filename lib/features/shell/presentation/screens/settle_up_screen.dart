@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 
 import '../../../../core/errors/app_exception.dart';
 import '../../../../core/errors/firebase_error_mapper.dart';
 import '../../../../core/theme/design_system.dart';
 import '../../../../core/utils/money.dart';
 import '../../../../shared/models/household_member.dart';
+import '../../../../shared/widgets/app_snackbar.dart';
 import '../../../../shared/widgets/empty_state.dart';
 import '../../../../shared/widgets/error_view.dart';
 import '../../../../shared/widgets/skeleton_box.dart';
@@ -81,7 +83,7 @@ class SettleUpScreen extends ConsumerWidget {
                     ),
                     const SizedBox(height: 20),
                     Text(
-                      'All settled up! 🎉',
+                      'All settled up',
                       style: TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.w800,
@@ -134,6 +136,26 @@ class _SettlementView extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final members = membersAsync.value ?? const <HouseholdMember>[];
+    final recorded =
+        ref.watch(recordedSettlementsProvider).value ?? const [];
+    final recording = ref.watch(settlementActionsProvider).isLoading;
+
+    ref.listen<AsyncValue<void>>(settlementActionsProvider, (previous, next) {
+      if (next.hasError && !next.isLoading) {
+        final error = next.error!;
+        showAppSnack(
+          context,
+          error is AppException
+              ? error.message
+              : FirebaseErrorMapper.messageFor(error),
+          error: true,
+        );
+      } else if (previous?.isLoading == true &&
+          !next.isLoading &&
+          !next.hasError) {
+        showAppSnack(context, 'Settlement recorded.');
+      }
+    });
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 4, 16, 32),
@@ -157,13 +179,16 @@ class _SettlementView extends ConsumerWidget {
             fromName: _nameFor(transfer.fromMemberId, members),
             toName: _nameFor(transfer.toMemberId, members),
             isDark: isDark,
+            recording: recording,
+            onRecord: () =>
+                ref.read(settlementActionsProvider.notifier).record(transfer),
           ),
 
         const SizedBox(height: 12),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 4),
           child: Text(
-            'Suggestions only — settle however works best for your flat.',
+            'Record a transfer after the money has actually changed hands.',
             style: TextStyle(
               fontSize: 12,
               color: isDark ? CoSpendColors.darkTextMuted : CoSpendColors.textMuted,
@@ -171,6 +196,31 @@ class _SettlementView extends ConsumerWidget {
             ),
           ),
         ),
+        if (recorded.isNotEmpty) ...[
+          const SizedBox(height: 20),
+          const SectionLabel(
+            'Settlement history',
+            padding: EdgeInsets.only(bottom: 8),
+          ),
+          for (final payment in recorded)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: CoSpendCard(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                child: Text(
+                  '${_nameFor(payment.fromUserId, members)} paid '
+                  '${_nameFor(payment.toUserId, members)} '
+                  '${Money.format(payment.amountPaisa)} · '
+                  '${DateFormat('dd MMM yyyy').format(payment.settledAt)}',
+                  style: TextStyle(
+                    fontSize: 13,
+                    height: 1.4,
+                    color: isDark ? Colors.white : CoSpendColors.prussianBlue,
+                  ),
+                ),
+              ),
+            ),
+        ],
       ],
     );
   }
@@ -220,7 +270,7 @@ class _SummaryHeroCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
-                  'TOTAL TO SETTLE',
+                  'Total to settle',
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w700,
@@ -354,12 +404,16 @@ class _TransferTile extends StatelessWidget {
     required this.fromName,
     required this.toName,
     required this.isDark,
+    required this.recording,
+    required this.onRecord,
   });
 
   final SettlementTransfer transfer;
   final String fromName;
   final String toName;
   final bool isDark;
+  final bool recording;
+  final VoidCallback onRecord;
 
   @override
   Widget build(BuildContext context) {
@@ -388,24 +442,12 @@ class _TransferTile extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  RichText(
-                    text: TextSpan(
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: isDark ? Colors.white : CoSpendColors.prussianBlue,
-                      ),
-                      children: [
-                        TextSpan(
-                          text: fromName,
-                          style: const TextStyle(fontWeight: FontWeight.w800),
-                        ),
-                        const TextSpan(text: ' pays '),
-                        TextSpan(
-                          text: toName,
-                          style: const TextStyle(fontWeight: FontWeight.w800),
-                        ),
-                      ],
+                  Text(
+                    '$fromName pays $toName',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w800,
+                      color: isDark ? Colors.white : CoSpendColors.prussianBlue,
                     ),
                   ),
                   const SizedBox(height: 2),
@@ -419,15 +461,24 @@ class _TransferTile extends StatelessWidget {
                 ],
               ),
             ),
-            Text(
-              Money.format(transfer.amountPaisa),
-              style: TextStyle(
-                fontWeight: FontWeight.w800,
-                fontSize: 15.5,
-                letterSpacing: -0.3,
-                color: isDark ? Colors.white : CoSpendColors.prussianBlue,
-                fontFeatures: const [FontFeature.tabularFigures()],
-              ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  Money.format(transfer.amountPaisa),
+                  style: TextStyle(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 15.5,
+                    letterSpacing: -0.3,
+                    color: isDark ? Colors.white : CoSpendColors.prussianBlue,
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
+                ),
+                TextButton(
+                  onPressed: recording ? null : onRecord,
+                  child: const Text('Record'),
+                ),
+              ],
             ),
           ],
         ),

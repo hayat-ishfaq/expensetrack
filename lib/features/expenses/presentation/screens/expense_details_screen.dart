@@ -8,6 +8,7 @@ import '../../../../core/errors/firebase_error_mapper.dart';
 import '../../../../core/utils/money.dart';
 import '../../../../shared/widgets/app_snackbar.dart';
 import '../../../../shared/widgets/confirm_dialog.dart';
+import '../../../../shared/widgets/error_view.dart';
 import '../../../auth/presentation/providers/session_provider.dart';
 import '../../../household/presentation/providers/household_providers.dart';
 import '../../domain/expense.dart';
@@ -16,8 +17,54 @@ import '../providers/expense_providers.dart';
 class ExpenseDetailsScreen extends ConsumerWidget {
   const ExpenseDetailsScreen({
     super.key,
-    required this.expense,
+    this.expense,
+    this.expenseId,
   });
+
+  final Expense? expense;
+  final String? expenseId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final provided = expense;
+    if (provided != null) {
+      return _ExpenseDetailsBody(expense: provided);
+    }
+
+    final expensesAsync = ref.watch(householdExpensesProvider);
+    return expensesAsync.when(
+      loading: () => const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      ),
+      error: (error, _) => Scaffold(
+        appBar: AppBar(title: const Text('Expense Details')),
+        body: ErrorView(
+          message: error is AppException
+              ? error.message
+              : FirebaseErrorMapper.messageFor(error),
+        ),
+      ),
+      data: (expenses) {
+        final id = expenseId ?? '';
+        final found = expenses.where((item) => item.id == id).firstOrNull;
+        if (found == null) {
+          return Scaffold(
+            appBar: AppBar(title: const Text('Expense Details')),
+            body: const ErrorView(
+              title: 'Expense not found',
+              message:
+                  'This expense may have been deleted or is not in your flat.',
+            ),
+          );
+        }
+        return _ExpenseDetailsBody(expense: found);
+      },
+    );
+  }
+}
+
+class _ExpenseDetailsBody extends ConsumerWidget {
+  const _ExpenseDetailsBody({required this.expense});
 
   final Expense expense;
 

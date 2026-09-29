@@ -60,6 +60,7 @@ class _CreateFlatScreenState extends ConsumerState<CreateFlatScreen> {
     final submitting = ref.watch(householdActionsProvider).isLoading;
 
     return AuthScaffold(
+      showBack: true,
       title: 'Create a flat',
       subtitle: 'Give your shared home a name — something like '
           '"Air University Flat".',

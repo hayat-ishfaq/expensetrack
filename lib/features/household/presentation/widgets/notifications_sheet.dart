@@ -5,7 +5,7 @@ import '../../../../core/theme/design_system.dart';
 import '../../../../core/utils/money.dart';
 import '../providers/notification_providers.dart';
 
-class NotificationsSheet extends ConsumerWidget {
+class NotificationsSheet extends ConsumerStatefulWidget {
   const NotificationsSheet({super.key});
 
   static Future<void> show(BuildContext context) {
@@ -15,6 +15,19 @@ class NotificationsSheet extends ConsumerWidget {
       backgroundColor: Colors.transparent,
       builder: (_) => const NotificationsSheet(),
     );
+  }
+
+  @override
+  ConsumerState<NotificationsSheet> createState() => _NotificationsSheetState();
+}
+
+class _NotificationsSheetState extends ConsumerState<NotificationsSheet> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(notificationActionsProvider.notifier).markAllAsRead();
+    });
   }
 
   String _formatTimeAgo(DateTime dateTime) {
@@ -27,7 +40,7 @@ class NotificationsSheet extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final notificationsAsync = ref.watch(householdNotificationsProvider);
 

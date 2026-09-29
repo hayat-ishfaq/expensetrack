@@ -45,12 +45,13 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     _initialized = true;
   }
 
-  Future<void> _pickAvatar() async {
+  Future<void> _pickAvatar(AppUser user) async {
     final currentName = _nameController.text.trim();
     final selected = await AvatarPickerSheet.show(
       context,
       currentAvatarUrl: _photoUrl,
       name: currentName.isNotEmpty ? currentName : 'User',
+      uid: user.id,
     );
 
     if (selected == null || !mounted) return;
@@ -155,14 +156,14 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                         name: _nameController.text,
                         photoUrl: _photoUrl,
                         size: 96,
-                        onTap: _pickAvatar,
+                        onTap: () => _pickAvatar(user),
                       ),
                     ),
                     Positioned(
                       right: 2,
                       bottom: 2,
                       child: GestureDetector(
-                        onTap: _pickAvatar,
+                        onTap: () => _pickAvatar(user),
                         child: Container(
                           padding: const EdgeInsets.all(7),
                           decoration: BoxDecoration(
@@ -191,7 +192,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
               const SizedBox(height: 10),
               Center(
                 child: TextButton.icon(
-                  onPressed: _pickAvatar,
+                  onPressed: () => _pickAvatar(user),
                   icon: const Icon(Icons.palette_outlined, size: 16),
                   label: const Text('Change Avatar'),
                 ),

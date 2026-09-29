@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:typed_data';
 
 import 'package:expensetrack/features/auth/domain/auth_repository.dart';
 import 'package:expensetrack/features/auth/domain/auth_user.dart';
@@ -54,6 +55,14 @@ class FakeAuthRepository implements AuthRepository {
 
   @override
   Future<void> signOut() async {}
+
+  @override
+  Future<String> uploadAvatar({
+    required String uid,
+    required Uint8List bytes,
+  }) async {
+    return 'https://example.com/avatars/$uid.jpg';
+  }
 
   @override
   Future<void> updateProfile({

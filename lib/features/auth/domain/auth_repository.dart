@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import '../../../shared/models/app_user.dart';
 import 'auth_user.dart';
 
@@ -25,6 +27,12 @@ abstract interface class AuthRepository {
 
   /// Streams the `users/{uid}` document; emits null when it does not exist.
   Stream<AppUser?> watchCurrentUser(String uid);
+
+  /// Uploads a JPEG avatar to Cloud Storage and returns its download URL.
+  Future<String> uploadAvatar({
+    required String uid,
+    required Uint8List bytes,
+  });
 
   /// Updates user profile details, syncing Auth, users/{uid}, and household members.
   Future<void> updateProfile({

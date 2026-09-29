@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -16,12 +15,14 @@ import '../../features/expenses/domain/expense.dart';
 import '../../features/expenses/presentation/screens/add_expense_screen.dart';
 import '../../features/expenses/presentation/screens/expense_details_screen.dart';
 import '../../features/household/presentation/screens/create_flat_screen.dart';
+import '../../features/household/presentation/screens/household_settings_screen.dart';
 import '../../features/household/presentation/screens/household_setup_screen.dart';
 import '../../features/household/presentation/screens/join_flat_screen.dart';
 import '../../features/shell/presentation/screens/app_shell_screen.dart';
 import '../../features/shell/presentation/screens/expenses_screen.dart';
 import '../../features/shell/presentation/screens/home_screen.dart';
 import '../../features/shell/presentation/screens/more_screen.dart';
+import '../../features/shell/presentation/screens/settle_up_screen.dart';
 import 'not_found_screen.dart';
 import 'routes.dart';
 
@@ -102,7 +103,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: Routes.settle,
-        redirect: (context, state) => Routes.categoryBudgets,
+        name: 'settle',
+        builder: (context, state) => const SettleUpScreen(),
+      ),
+      GoRoute(
+        path: Routes.householdSettings,
+        name: 'household-settings',
+        builder: (context, state) => const HouseholdSettingsScreen(),
       ),
       GoRoute(
         path: Routes.addExpense,
@@ -113,14 +120,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: Routes.expenseDetails,
         name: 'expense-details',
         builder: (context, state) {
-          final expense = state.extra;
-          if (expense is Expense) {
-            return ExpenseDetailsScreen(expense: expense);
+          final extra = state.extra;
+          if (extra is Expense) {
+            return ExpenseDetailsScreen(expense: extra);
           }
-          final id = state.pathParameters['id'] ?? '';
-          return Scaffold(
-            appBar: AppBar(title: const Text('Expense Details')),
-            body: Center(child: Text('Expense #$id')),
+          return ExpenseDetailsScreen(
+            expenseId: state.pathParameters['id'],
           );
         },
       ),
@@ -197,9 +202,10 @@ String? _redirect(GoRouterState state, SessionState? session) {
 
     // Full access; keep out of the auth/household-setup flows.
     case SessionReady():
-      if (_authPaths.contains(path) ||
-          _householdSetupPaths.contains(path) ||
-          path == Routes.splash) {
+      if (_authPaths.contains(path) || path == Routes.splash) {
+        return Routes.home;
+      }
+      if (path == Routes.householdSetup || path == Routes.createFlat) {
         return Routes.home;
       }
       return null;

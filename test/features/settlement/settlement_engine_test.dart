@@ -399,5 +399,33 @@ void main() {
         ),
       ]);
     });
+
+    test('recorded payments reduce remaining suggested transfers', () {
+      final settlement = SettlementEngine.compute(
+        expenses: [
+          _expense(
+            id: 'e1',
+            paidById: 'a',
+            amountPaisa: 150000,
+            splitAmongIds: const ['a', 'b'],
+            splitAmountsPaisa: const [75000, 75000],
+          ),
+        ],
+        memberIds: const {'a', 'b'},
+        recorded: [
+          RecordedSettlement(
+            id: 's1',
+            fromUserId: 'b',
+            toUserId: 'a',
+            amountPaisa: 75000,
+            recordedByUserId: 'a',
+            settledAt: DateTime(2026, 9, 21),
+          ),
+        ],
+      );
+
+      expect(settlement.isSettled, isTrue);
+      expect(settlement.balances, isEmpty);
+    });
   });
 }

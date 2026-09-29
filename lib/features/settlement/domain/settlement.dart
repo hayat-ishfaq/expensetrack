@@ -35,6 +35,25 @@ class SettlementBalance {
   String toString() => 'SettlementBalance($memberId: $netPaisa)';
 }
 
+/// A settlement that has already been recorded in Firestore.
+class RecordedSettlement {
+  const RecordedSettlement({
+    required this.id,
+    required this.fromUserId,
+    required this.toUserId,
+    required this.amountPaisa,
+    required this.recordedByUserId,
+    required this.settledAt,
+  });
+
+  final String id;
+  final String fromUserId;
+  final String toUserId;
+  final int amountPaisa;
+  final String recordedByUserId;
+  final DateTime settledAt;
+}
+
 /// One suggested transfer: [fromMemberId] (the debtor) pays [toMemberId]
 /// (the creditor) [amountPaisa].
 class SettlementTransfer {

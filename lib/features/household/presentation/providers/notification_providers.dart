@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/constants/firestore_constants.dart';
+import '../../../auth/presentation/providers/session_provider.dart';
 import '../../domain/household_notification.dart';
 import 'household_providers.dart';
 
@@ -26,24 +27,48 @@ final householdNotificationsProvider =
   });
 });
 
-/// Tracks the timestamp when the user last opened the notifications sheet.
-class LastViewedNotificationNotifier extends Notifier<DateTime> {
+class NotificationActions extends AsyncNotifier<void> {
   @override
-  DateTime build() => DateTime.now();
+  Future<void> build() => Future.value();
 
-  void markAllAsRead() {
-    state = DateTime.now();
+  Future<void> markAllAsRead() async {
+    final householdId = ref.read(sessionProvider).value?.householdId;
+    final uid = ref.read(sessionProvider).value?.user?.id;
+    if (householdId == null || uid == null) return;
+
+    final notifications =
+        ref.read(householdNotificationsProvider).value ?? const [];
+    final unread = notifications
+        .where((notification) => !notification.readByUserIds.contains(uid))
+        .toList();
+    if (unread.isEmpty) return;
+
+    final firestore = FirebaseFirestore.instance;
+    final batch = firestore.batch();
+    for (final notification in unread) {
+      final doc = firestore
+          .collection(FirestoreCollections.households)
+          .doc(householdId)
+          .collection('notifications')
+          .doc(notification.id);
+      batch.update(doc, {
+        'readByUserIds': FieldValue.arrayUnion([uid]),
+      });
+    }
+    await batch.commit();
   }
 }
 
-final lastViewedNotificationProvider =
-    NotifierProvider<LastViewedNotificationNotifier, DateTime>(
-  LastViewedNotificationNotifier.new,
-);
+final notificationActionsProvider =
+    AsyncNotifierProvider<NotificationActions, void>(NotificationActions.new);
 
-/// Count of notifications newer than the last viewed time (excluding current user's own expenses).
+/// Count of notifications the current user has not marked read.
 final unreadNotificationCountProvider = Provider<int>((ref) {
-  final notifications = ref.watch(householdNotificationsProvider).value ?? const [];
-  final lastViewed = ref.watch(lastViewedNotificationProvider);
-  return notifications.where((n) => n.createdAt.isAfter(lastViewed)).length;
+  final uid = ref.watch(sessionProvider).value?.user?.id;
+  if (uid == null) return 0;
+  final notifications =
+      ref.watch(householdNotificationsProvider).value ?? const [];
+  return notifications
+      .where((notification) => !notification.readByUserIds.contains(uid))
+      .length;
 });

@@ -129,29 +129,6 @@ class FirebaseHouseholdRepository implements HouseholdRepository {
         householdId = codeSnapshot.data()?['householdId'] as String?;
       }
 
-      // Fallback: search household collection by inviteCode directly if index doc is missing
-      if (householdId == null || householdId.isEmpty) {
-        final query = await _firestore
-            .collection(FirestoreCollections.households)
-            .where('inviteCode', isEqualTo: code)
-            .limit(1)
-            .get();
-        if (query.docs.isNotEmpty) {
-          householdId = query.docs.first.id;
-          // Self-heal the inviteCodes index document for fast subsequent lookups
-          try {
-            await _firestore
-                .doc('${FirestoreCollections.inviteCodes}/$code')
-                .set({
-              'householdId': householdId,
-              'createdAt': FieldValue.serverTimestamp(),
-            });
-          } catch (_) {
-            // Non-critical if rules restrict direct writing
-          }
-        }
-      }
-
       if (householdId == null || householdId.isEmpty) {
         throw const HouseholdException(
           "That invite code doesn't match any flat. "
@@ -162,12 +139,6 @@ class FirebaseHouseholdRepository implements HouseholdRepository {
       final householdRef = _firestore
           .collection(FirestoreCollections.households)
           .doc(householdId);
-      final householdSnapshot = await householdRef.get();
-      if (!householdSnapshot.exists) throw const NotFoundException();
-      final household = Household.fromMap(
-        householdId,
-        householdSnapshot.data()!,
-      );
 
       final profile = await _currentUserProfile();
       final now = DateTime.now();
@@ -230,7 +201,10 @@ class FirebaseHouseholdRepository implements HouseholdRepository {
         SetOptions(merge: true),
       );
       await batch.commit();
-      return household;
+
+      final joinedSnapshot = await householdRef.get();
+      if (!joinedSnapshot.exists) throw const NotFoundException();
+      return Household.fromMap(householdId, joinedSnapshot.data()!);
     } catch (error) {
       throw toAppException(error);
     }
@@ -363,6 +337,7 @@ class FirebaseHouseholdRepository implements HouseholdRepository {
     required CustomCategory category,
   }) async {
     try {
+      await _assertOwner(householdId);
       await _firestore
           .collection(FirestoreCollections.households)
           .doc(householdId)

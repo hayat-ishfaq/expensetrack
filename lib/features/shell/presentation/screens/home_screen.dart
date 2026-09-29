@@ -124,9 +124,6 @@ class HomeScreen extends ConsumerWidget {
                     ),
                     tooltip: 'Activity & Alerts',
                     onPressed: () {
-                      ref
-                          .read(lastViewedNotificationProvider.notifier)
-                          .markAllAsRead();
                       NotificationsSheet.show(context);
                     },
                   ),

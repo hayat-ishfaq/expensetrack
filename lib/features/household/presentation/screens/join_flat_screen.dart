@@ -61,6 +61,7 @@ class _JoinFlatScreenState extends ConsumerState<JoinFlatScreen> {
     final submitting = ref.watch(householdActionsProvider).isLoading;
 
     return AuthScaffold(
+      showBack: true,
       title: 'Join a flat',
       subtitle: 'Enter the invite code your roommate shared. It looks like '
           'FLAT-7K29.',

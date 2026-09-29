@@ -1,23 +1,27 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../../../shared/widgets/app_avatar.dart';
+import '../providers/auth_providers.dart';
 
-class AvatarPickerSheet extends StatefulWidget {
+class AvatarPickerSheet extends ConsumerStatefulWidget {
   const AvatarPickerSheet({
     super.key,
     required this.currentAvatarUrl,
     required this.name,
+    required this.uid,
   });
 
   final String? currentAvatarUrl;
   final String name;
+  final String uid;
 
   static Future<String?> show(
     BuildContext context, {
     required String? currentAvatarUrl,
     required String name,
+    required String uid,
   }) {
     return showModalBottomSheet<String>(
       context: context,
@@ -26,15 +30,16 @@ class AvatarPickerSheet extends StatefulWidget {
       builder: (context) => AvatarPickerSheet(
         currentAvatarUrl: currentAvatarUrl,
         name: name,
+        uid: uid,
       ),
     );
   }
 
   @override
-  State<AvatarPickerSheet> createState() => _AvatarPickerSheetState();
+  ConsumerState<AvatarPickerSheet> createState() => _AvatarPickerSheetState();
 }
 
-class _AvatarPickerSheetState extends State<AvatarPickerSheet> {
+class _AvatarPickerSheetState extends ConsumerState<AvatarPickerSheet> {
   late String? _selected;
   late TextEditingController _urlController;
   bool _showCustomUrl = false;
@@ -54,10 +59,12 @@ class _AvatarPickerSheetState extends State<AvatarPickerSheet> {
       );
       if (picked != null) {
         final bytes = await picked.readAsBytes();
-        final base64String = base64Encode(bytes);
-        final dataUri = 'data:image/jpeg;base64,$base64String';
+        final url = await ref.read(authActionsProvider.notifier).uploadAvatar(
+              uid: widget.uid,
+              bytes: bytes,
+            );
         if (mounted) {
-          Navigator.of(context).pop(dataUri);
+          Navigator.of(context).pop(url);
         }
       } else {
         if (mounted) {
