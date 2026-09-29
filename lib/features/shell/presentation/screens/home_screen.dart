@@ -9,7 +9,6 @@ import '../../../../core/errors/firebase_error_mapper.dart';
 import '../../../../core/theme/design_system.dart';
 import '../../../../core/utils/money.dart';
 import '../../../../shared/widgets/app_avatar.dart';
-import '../../../../shared/widgets/app_snackbar.dart';
 import '../../../../shared/widgets/empty_state.dart';
 import '../../../../shared/widgets/error_view.dart';
 import '../../../../shared/widgets/skeleton_box.dart';
@@ -69,22 +68,6 @@ class HomeScreen extends ConsumerWidget {
 
     final currentUserId = session?.user?.id ?? '';
     final unreadNotifs = ref.watch(unreadNotificationCountProvider);
-
-    // Listen for new flatmate spending notifications and display an in-app banner toast
-    ref.listen(householdNotificationsProvider, (previous, next) {
-      if (next.value != null && previous?.value != null) {
-        final previousIds = previous!.value!.map((n) => n.id).toSet();
-        for (final item in next.value!) {
-          if (!previousIds.contains(item.id) && item.payerId != currentUserId) {
-            showAppSnack(
-              context,
-              '🔔 ${item.title}: ${item.body}',
-            );
-          }
-        }
-      }
-    });
-
     final userName = session?.user?.name ?? 'Roommate';
     final isDark = theme.brightness == Brightness.dark;
 

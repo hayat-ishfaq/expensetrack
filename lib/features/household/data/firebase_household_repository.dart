@@ -194,6 +194,20 @@ class FirebaseHouseholdRepository implements HouseholdRepository {
         batch.update(householdRef, {
           'memberCount': FieldValue.increment(1),
         });
+
+        final notifRef = householdRef.collection('notifications').doc();
+        batch.set(notifRef, {
+          'householdId': householdId,
+          'title': 'New roommate joined! 🎉',
+          'body': '${member.name} joined the flat',
+          'amountPaisa': 0,
+          'category': 'Household',
+          'subcategory': null,
+          'payerName': member.name,
+          'payerId': uid,
+          'createdAt': FieldValue.serverTimestamp(),
+          'readByUserIds': <String>[],
+        });
       }
       batch.set(
         _firestore.collection(FirestoreCollections.users).doc(uid),

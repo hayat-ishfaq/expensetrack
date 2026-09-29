@@ -49,13 +49,53 @@ class FirebaseSettlementRepository implements SettlementRepository {
     required String recordedByUserId,
   }) async {
     try {
-      await _collection(householdId).add({
+      final batch = _firestore.batch();
+      final settlementRef = _collection(householdId).doc();
+      batch.set(settlementRef, {
         'fromUserId': transfer.fromMemberId,
         'toUserId': transfer.toMemberId,
         'amountPaisa': transfer.amountPaisa,
         'recordedByUserId': recordedByUserId,
         'settledAt': FieldValue.serverTimestamp(),
       });
+
+      // Look up member names for the broadcast notification
+      String fromName = 'A roommate';
+      String toName = 'a roommate';
+      try {
+        final fromDoc = await _firestore
+            .collection(FirestoreCollections.users)
+            .doc(transfer.fromMemberId)
+            .get();
+        final toDoc = await _firestore
+            .collection(FirestoreCollections.users)
+            .doc(transfer.toMemberId)
+            .get();
+        fromName = fromDoc.data()?['name'] as String? ?? 'A roommate';
+        toName = toDoc.data()?['name'] as String? ?? 'a roommate';
+      } catch (_) {}
+
+      final amountRupees = (transfer.amountPaisa / 100).toStringAsFixed(0);
+      final notifRef = _firestore
+          .collection(FirestoreCollections.households)
+          .doc(householdId)
+          .collection('notifications')
+          .doc();
+
+      batch.set(notifRef, {
+        'householdId': householdId,
+        'title': 'Payment settled: Rs. $amountRupees',
+        'body': '$fromName paid $toName Rs. $amountRupees',
+        'amountPaisa': transfer.amountPaisa,
+        'category': 'Settlement',
+        'subcategory': null,
+        'payerName': fromName,
+        'payerId': recordedByUserId,
+        'createdAt': FieldValue.serverTimestamp(),
+        'readByUserIds': <String>[],
+      });
+
+      await batch.commit();
     } catch (error) {
       throw toAppException(error);
     }
