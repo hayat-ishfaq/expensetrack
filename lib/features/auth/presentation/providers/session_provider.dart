@@ -24,3 +24,11 @@ final sessionProvider =
     AsyncNotifierProvider<SessionController, SessionState>(
   SessionController.new,
 );
+
+/// Tracks the minimum splash display duration (1.5 seconds) on initial launch.
+///
+/// Ensures users see CoSpend's brand identity, logo animation, and tagline
+/// rather than experiencing an abrupt white flash or instant jump.
+final splashMinDelayProvider = FutureProvider<void>((ref) async {
+  await Future<void>.delayed(const Duration(milliseconds: 1500));
+});

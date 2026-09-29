@@ -22,11 +22,12 @@ class ErrorView extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.all(32),
       child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 360),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
+        child: SingleChildScrollView(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 360),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
               Icon(Icons.cloud_off_rounded, size: 44, color: scheme.outline),
               const SizedBox(height: 16),
               Text(
@@ -59,6 +60,7 @@ class ErrorView extends StatelessWidget {
           ),
         ),
       ),
-    );
+    ),
+  );
   }
 }

@@ -45,10 +45,14 @@ const Set<String> _householdSetupPaths = {
   Routes.joinFlat,
 };
 
-/// Listenable adapter notifying GoRouter when the session state transitions.
+/// Listenable adapter notifying GoRouter when the session state transitions or
+/// when the initial splash presentation window has completed.
 class _SessionListenable extends ChangeNotifier {
   _SessionListenable(Ref ref) {
     ref.listen<AsyncValue<SessionState>>(sessionProvider, (_, _) {
+      notifyListeners();
+    });
+    ref.listen<AsyncValue<void>>(splashMinDelayProvider, (_, _) {
       notifyListeners();
     });
   }
@@ -195,8 +199,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         ],
       ),
     ],
-    redirect: (context, state) =>
-        _redirect(state, ref.read(sessionProvider).value),
+    redirect: (context, state) {
+      final session = ref.read(sessionProvider).value;
+      final isSplashDelayComplete = !ref.read(splashMinDelayProvider).isLoading;
+      return _redirect(state, session, isSplashDelayComplete);
+    },
     errorBuilder: (context, state) =>
         NotFoundScreen(location: state.uri.toString()),
   );
@@ -204,8 +211,19 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   return router;
 });
 
-String? _redirect(GoRouterState state, SessionState? session) {
+String? _redirect(
+  GoRouterState state,
+  SessionState? session,
+  bool isSplashDelayComplete,
+) {
   final path = state.uri.path;
+
+  // On cold start / initial app launch, guarantee the branded splash screen is
+  // displayed for at least the minimum delay so the user experiences the smooth
+  // entrance animation rather than a jarring flash or skip.
+  if (!isSplashDelayComplete && (path == Routes.splash || path == '/')) {
+    return null;
+  }
 
   switch (session) {
     // Session still resolving: only the splash screen is allowed.
