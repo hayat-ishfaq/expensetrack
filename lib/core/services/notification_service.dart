@@ -38,14 +38,17 @@ class NotificationService {
         },
       );
 
-      // Request notification permission for Android 13+ (API 33+)
+      _initialized = true;
+
+      // Request notification permission asynchronously without blocking UI
       final androidPlatform = _plugin
           .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
       if (androidPlatform != null) {
-        await androidPlatform.requestNotificationsPermission();
+        androidPlatform.requestNotificationsPermission().catchError((e) {
+          debugPrint('Notification permission error: $e');
+          return null;
+        });
       }
-
-      _initialized = true;
     } catch (e) {
       debugPrint('Failed to initialize NotificationService: $e');
     }

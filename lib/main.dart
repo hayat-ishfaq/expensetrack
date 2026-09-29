@@ -11,6 +11,9 @@ Future<void> main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  await NotificationService.instance.initialize();
   runApp(const ProviderScope(child: CoSpendApp()));
+  // Initialize notifications asynchronously without blocking the UI
+  NotificationService.instance.initialize().catchError((e) {
+    debugPrint('Failed to initialize notifications: $e');
+  });
 }
