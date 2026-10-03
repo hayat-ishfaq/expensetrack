@@ -30,7 +30,10 @@ class SplashScreen extends ConsumerWidget {
           child: ErrorView(
             title: "Can't connect to ${AppConstants.appName}",
             message: message,
-            onRetry: () => ref.invalidate(sessionProvider),
+            onRetry: () {
+              ref.invalidate(firebaseInitProvider);
+              ref.invalidate(sessionProvider);
+            },
           ),
         ),
       );
