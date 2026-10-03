@@ -1,7 +1,7 @@
 # CoSpend — Complete App Overview & QA Test Guide
 
 > **Document Version:** 1.0  
-> **Target Release:** v1.0.0 (Release Build)  
+> **Target Release:** v1.5.4 (Build 10, Release Build)  
 > **Platform:** Android (APK)  
 > **APK File:** [`build/app/outputs/flutter-apk/app-release.apk`](file:///C:/Users/M.Hayat/OneDrive/Desktop/expense_track/expensetrack/build/app/outputs/flutter-apk/app-release.apk)  
 
@@ -139,6 +139,10 @@
 | **TC-02.4** | Sign Up Success | Enter valid Name, Email, Password | Account is created in Firebase; user transitions to Household Setup screen. | [ ] |
 | **TC-02.5** | Session Persistence | Log in, close app completely, relaunch | App bypasses login and opens directly on the dashboard after splash. | [ ] |
 | **TC-02.6** | Logout Flow | Go to More tab ➔ Tap "Logout" | Returns to Login screen; subsequent launch starts at Onboarding/Login. | [ ] |
+| **TC-02.7** | Forgot Password Validation | Go to Login ➔ Tap "Forgot password?" ➔ Leave empty or enter invalid email format | Input validation error appears ("Email is required." or "Enter a valid email address."). | [ ] |
+| **TC-02.8** | Reset Link Dispatch & Inbox Screen | Enter valid email ➔ Tap "Send reset link" | Seamlessly transitions to "Check your inbox" screen showing the recipient email badge and "Open email app" button. | [ ] |
+| **TC-02.9** | Resend Cooldown Timer | On "Check your inbox" screen, observe resend button | Displays a 30-second cooldown countdown (`Resend link in 30s`). Disabled until timer elapses. | [ ] |
+| **TC-02.10** | In-App Password Reset (Settings) | While signed in, navigate to More tab ➔ Tap "Reset password" | Confirmation dialog appears; on confirm, triggers reset email to active account with feedback snackbar. | [ ] |
 
 ---
 
