@@ -283,7 +283,6 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 controller: _upiController,
                 decoration: const InputDecoration(
                   labelText: 'UPI ID / Payment Handle (Optional)',
-                  hintText: 'e.g. name@okhdfcbank or 03001234567',
                   prefixIcon: Icon(Icons.payment_rounded),
                   border: OutlineInputBorder(),
                   helperText: 'Displayed to flatmates when settling shared expenses',
