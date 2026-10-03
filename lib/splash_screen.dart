@@ -83,19 +83,41 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     return Scaffold(
       backgroundColor: Colors.white,
       body: Center(
-        child: SizedBox(
-          width: 220,
-          height: 220,
-          child: Lottie.asset(
-            'assets/animations/logo_splash.json',
-            controller: _controller,
-            onLoaded: (composition) {
-              _controller.duration = composition.duration;
-              _controller.forward().then((_) {
-                _handleAnimationComplete();
-              });
-            },
-          ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(
+              width: 220,
+              height: 220,
+              child: Lottie.asset(
+                'assets/animations/logo_splash.json',
+                controller: _controller,
+                onLoaded: (composition) {
+                  _controller.duration = composition.duration;
+                  _controller.forward().then((_) {
+                    _handleAnimationComplete();
+                  });
+                },
+              ),
+            ),
+            const SizedBox(height: 12),
+            FadeTransition(
+              opacity: CurvedAnimation(
+                parent: _controller,
+                curve: const Interval(0.2, 0.6, curve: Curves.easeOut),
+              ),
+              child: const Text(
+                'CoSpend',
+                style: TextStyle(
+                  fontFamily: 'Lufga',
+                  fontSize: 32,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: -0.6,
+                  color: Color(0xFF0A2542),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
