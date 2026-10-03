@@ -33,7 +33,7 @@ class AuthActions extends AsyncNotifier<void> {
   AuthRepository get _repository => ref.read(authRepositoryProvider);
 
   @override
-  Future<void> build() async {}
+  void build() {}
 
   Future<void> signIn({
     required String email,
