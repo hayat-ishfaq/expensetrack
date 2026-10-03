@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../../../shared/widgets/app_avatar.dart';
+import '../../../../shared/widgets/app_snackbar.dart';
 import '../providers/auth_providers.dart';
 
 class AvatarPickerSheet extends ConsumerStatefulWidget {
@@ -78,8 +79,10 @@ class _AvatarPickerSheetState extends ConsumerState<AvatarPickerSheet> {
         setState(() {
           _isProcessingImage = false;
         });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to load image: $e')),
+        showAppSnack(
+          context,
+          'Unable to load image. Please verify camera/gallery permissions in device settings.',
+          error: true,
         );
       }
     }

@@ -199,6 +199,7 @@
 | **TC-07.1** | Dark Mode Toggle | Go to More ➔ Toggle Dark Theme | Instant switch to deep navy background (`#050F1C`); all text, cards, and charts remain readable. | [ ] |
 | **TC-07.2** | Light Mode Toggle | Toggle back to Light Theme | Clean white & light grey surfaces; crisp Prussian Blue headings. | [ ] |
 | **TC-07.3** | Font Consistency | Inspect labels across screens | Custom **Lufga** font is applied consistently (no fallback serif/default Roboto). | [ ] |
+| **TC-07.4** | Gallery / Camera Avatar Upload | Go to More ➔ Edit Profile ➔ Change Avatar ➔ Select Gallery ➔ Pick photo | Image preview updates instantly; persists and displays across Home, More, and Profile screens without error. | [ ] |
 
 ---
 

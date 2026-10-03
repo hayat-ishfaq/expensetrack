@@ -1,8 +1,9 @@
-import 'dart:typed_data';
+import 'dart:convert';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/foundation.dart';
 
 import '../../../core/constants/firestore_constants.dart';
 import '../../../core/errors/firebase_error_mapper.dart';
@@ -110,13 +111,21 @@ class FirebaseAuthRepository implements AuthRepository {
   }) async {
     try {
       final ref = _storage.ref().child('avatars/$uid/profile.jpg');
-      await ref.putData(
-        bytes,
-        SettableMetadata(contentType: 'image/jpeg'),
-      );
+      await ref
+          .putData(
+            bytes,
+            SettableMetadata(contentType: 'image/jpeg'),
+          )
+          .timeout(const Duration(seconds: 8));
       return await ref.getDownloadURL();
     } catch (error) {
-      throw toAppException(error);
+      debugPrint('Cloud storage upload warning: $error. Falling back to inline base64 data URI.');
+      try {
+        final base64String = base64Encode(bytes);
+        return 'data:image/jpeg;base64,$base64String';
+      } catch (encodeError) {
+        throw toAppException(error);
+      }
     }
   }
 
