@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -5,7 +6,15 @@ import '../../../auth/presentation/providers/session_provider.dart';
 import '../../../expenses/domain/expense_category.dart';
 import '../../../expenses/presentation/providers/expense_providers.dart';
 import '../../../household/presentation/providers/household_providers.dart';
+import '../../data/firebase_budget_repository.dart';
+import '../../domain/budget_repository.dart';
 import '../../domain/dashboard_stats.dart';
+
+/// Riverpod provider for the [BudgetRepository] data layer.
+/// Wire FirebaseBudgetRepository in production; override in tests.
+final budgetRepositoryProvider = Provider<BudgetRepository>((ref) {
+  return FirebaseBudgetRepository(FirebaseFirestore.instance);
+});
 
 /// Currently selected month on the dashboard (defaults to current month).
 class DashboardMonthNotifier extends Notifier<DateTime> {

@@ -19,13 +19,13 @@ import '../../features/household/presentation/screens/create_flat_screen.dart';
 import '../../features/household/presentation/screens/household_settings_screen.dart';
 import '../../features/household/presentation/screens/household_setup_screen.dart';
 import '../../features/household/presentation/screens/join_flat_screen.dart';
+import '../../features/settlement/presentation/screens/settle_up_screen.dart';
 import '../../features/shell/presentation/screens/app_shell_screen.dart';
 import '../../features/shell/presentation/screens/contact_support_screen.dart';
 import '../../features/shell/presentation/screens/expenses_screen.dart';
 import '../../features/shell/presentation/screens/help_faq_screen.dart';
 import '../../features/shell/presentation/screens/home_screen.dart';
 import '../../features/shell/presentation/screens/more_screen.dart';
-import '../../features/shell/presentation/screens/settle_up_screen.dart';
 import 'not_found_screen.dart';
 import 'routes.dart';
 

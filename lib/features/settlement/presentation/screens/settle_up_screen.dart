@@ -14,8 +14,8 @@ import '../../../../shared/widgets/skeleton_box.dart';
 import '../../../expenses/domain/expense.dart';
 import '../../../expenses/presentation/providers/expense_providers.dart';
 import '../../../household/presentation/providers/household_providers.dart';
-import '../../../settlement/domain/settlement.dart';
-import '../../../settlement/presentation/providers/settlement_providers.dart';
+import '../../domain/settlement.dart';
+import '../providers/settlement_providers.dart';
 
 /// Settle-up tab: who owes whom, with the fewest transfers possible.
 class SettleUpScreen extends ConsumerWidget {
