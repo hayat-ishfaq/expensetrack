@@ -17,7 +17,10 @@ import '../../support/fake_auth_repository.dart';
 /// auth -> profile -> session chain alive.
 Future<SessionState> resolveSession(FakeAuthRepository fakeAuth) {
   final container = ProviderContainer(
-    overrides: [authRepositoryProvider.overrideWithValue(fakeAuth)],
+    overrides: [
+      authRepositoryProvider.overrideWithValue(fakeAuth),
+      firebaseInitProvider.overrideWith((ref) async {}),
+    ],
   );
   addTearDown(container.dispose);
 
@@ -39,6 +42,7 @@ Future<SessionState> resolveSession(FakeAuthRepository fakeAuth) {
 }
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
   AppUser profileWithHousehold({String? householdId}) => AppUser(
         id: 'u1',
         name: 'Hayat',

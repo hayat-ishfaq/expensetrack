@@ -9,6 +9,7 @@ import '../../../../core/utils/validators.dart';
 import '../../../../shared/widgets/app_snackbar.dart';
 import '../../../../shared/widgets/loading_button.dart';
 import '../providers/auth_providers.dart';
+import '../providers/session_provider.dart';
 import '../widgets/auth_scaffold.dart';
 import '../widgets/password_field.dart';
 
@@ -24,6 +25,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _passwordController = TextEditingController();
   String? _emailError;
   String? _passwordError;
+  String? _formError;
 
   @override
   void dispose() {
@@ -33,12 +35,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   void _submit() {
-    final email = _emailController.text;
+    final email = _emailController.text.trim();
     final password = _passwordController.text;
+
     setState(() {
       _emailError = Validators.email(email);
       _passwordError = Validators.password(password);
+      _formError = null;
     });
+
     if (_emailError != null || _passwordError != null) return;
 
     ref.read(authActionsProvider.notifier).signIn(
@@ -52,13 +57,27 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     ref.listen<AsyncValue<void>>(authActionsProvider, (previous, next) {
       if (next.hasError && !next.isLoading) {
         final error = next.error!;
+        final message = error is AppException
+            ? error.message
+            : FirebaseErrorMapper.messageFor(error);
+
+        setState(() {
+          _formError = message;
+        });
+
         showAppSnack(
           context,
-          error is AppException
-              ? error.message
-              : FirebaseErrorMapper.messageFor(error),
+          message,
           error: true,
         );
+      } else if ((previous?.isLoading ?? false) &&
+          !next.isLoading &&
+          !next.hasError) {
+        // Sign-in succeeded. Ensure session provider refreshes state immediately.
+        setState(() {
+          _formError = null;
+        });
+        ref.invalidate(sessionProvider);
       }
     });
 
@@ -85,13 +104,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             textInputAction: TextInputAction.next,
             decoration: InputDecoration(
               labelText: 'Email',
+              hintText: 'alex@example.com',
               prefixIcon: const Icon(Icons.alternate_email_rounded),
               errorText: _emailError,
             ),
             onChanged: (_) {
-              if (_emailError != null) {
+              if (_emailError != null || _formError != null) {
                 setState(() {
-                  _emailError = Validators.email(_emailController.text);
+                  _emailError = Validators.email(_emailController.text.trim());
+                  _formError = null;
                 });
               }
             },
@@ -101,6 +122,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             controller: _passwordController,
             errorText: _passwordError,
             autofillHints: const [AutofillHints.password],
+            onFieldSubmitted: (_) => _submit(),
           ),
           Align(
             alignment: Alignment.centerRight,
@@ -109,7 +131,35 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               child: const Text('Forgot password?'),
             ),
           ),
-          const SizedBox(height: 8),
+          if (_formError != null) ...[
+            Container(
+              margin: const EdgeInsets.only(bottom: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              decoration: BoxDecoration(
+                color: Colors.red.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.error_outline_rounded,
+                      color: Colors.red, size: 20),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      _formError!,
+                      style: const TextStyle(
+                        color: Colors.red,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+          const SizedBox(height: 4),
           LoadingButton(
             label: 'Sign in',
             isLoading: submitting,

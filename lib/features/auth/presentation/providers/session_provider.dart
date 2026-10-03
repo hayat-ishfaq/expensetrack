@@ -1,10 +1,13 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/constants/firestore_constants.dart';
 import '../../../../core/services/fcm_service.dart';
 import '../../../../core/services/notification_service.dart';
 import '../../../../firebase_options.dart';
+import '../../../../shared/models/app_user.dart';
 import '../../domain/session_state.dart';
 import 'auth_providers.dart';
 
@@ -13,9 +16,13 @@ import 'auth_providers.dart';
 /// Running this inside a provider instead of blocking main() allows the app
 /// to mount and display the splash screen immediately on frame 1 without delay.
 final firebaseInitProvider = FutureProvider<void>((ref) async {
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+  } catch (e) {
+    debugPrint('Firebase.initializeApp warning: $e');
+  }
 
   // Initialize local notification tray (foreground alerts via Firestore).
   NotificationService.instance.initialize().catchError((e) {
@@ -34,13 +41,41 @@ class SessionController extends AsyncNotifier<SessionState> {
   @override
   Future<SessionState> build() async {
     // Ensure Firebase is initialized before accessing FirebaseAuth / Firestore
-    await ref.watch(firebaseInitProvider.future);
+    try {
+      await ref.watch(firebaseInitProvider.future);
+    } catch (_) {}
 
     final authUser = await ref.watch(authStateProvider.future);
     if (authUser == null) return const SessionSignedOut();
 
-    final appUser = await ref.watch(currentUserProvider.future);
-    if (appUser == null) return const SessionSignedOut();
+    AppUser? appUser = await ref.watch(currentUserProvider.future);
+    if (appUser == null) {
+      // Auto-heal missing profile document for authenticated user:
+      final fallbackName = authUser.displayName?.trim().isNotEmpty == true
+          ? authUser.displayName!.trim()
+          : (authUser.email.contains('@')
+              ? authUser.email.split('@').first
+              : 'User');
+      final fallbackUser = AppUser(
+        id: authUser.uid,
+        name: fallbackName,
+        email: authUser.email,
+        createdAt: DateTime.now(),
+      );
+
+      // Attempt to heal Firestore document in the background
+      try {
+        await FirebaseFirestore.instance
+            .collection(FirestoreCollections.users)
+            .doc(authUser.uid)
+            .set(fallbackUser.toMap(), SetOptions(merge: true));
+        appUser = fallbackUser;
+      } catch (e) {
+        debugPrint('Auto-heal profile document: $e');
+        appUser = fallbackUser;
+      }
+    }
+
     if (appUser.householdId == null) {
       return SessionNeedsHousehold(user: appUser);
     }
