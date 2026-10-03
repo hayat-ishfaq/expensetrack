@@ -53,9 +53,18 @@ final sessionProvider =
   SessionController.new,
 );
 
-/// Guarantees the splash screen is displayed for 2.5 seconds (2–3 seconds window)
-/// on launch so the user sees the smooth logo entrance animation and branding,
-/// after which the router transitions smoothly to the next screen.
-final splashMinDelayProvider = FutureProvider<void>((ref) async {
-  await Future<void>.delayed(const Duration(milliseconds: 2500));
-});
+/// Tracks whether the animated Lottie splash animation has completed.
+///
+/// Driven directly by the animation controller completing its forward pass,
+/// eliminating hardcoded timers.
+class SplashAnimationController extends Notifier<bool> {
+  @override
+  bool build() => false;
+
+  void complete() => state = true;
+}
+
+final splashAnimationCompletedProvider =
+    NotifierProvider<SplashAnimationController, bool>(
+  SplashAnimationController.new,
+);

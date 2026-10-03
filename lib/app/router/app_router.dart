@@ -9,7 +9,6 @@ import '../../features/auth/presentation/screens/forgot_password_screen.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/onboarding_screen.dart';
 import '../../features/auth/presentation/screens/signup_screen.dart';
-import '../../features/auth/presentation/screens/splash_screen.dart';
 import '../../features/auth/presentation/screens/welcome_screen.dart';
 import '../../features/dashboard/presentation/screens/category_budget_screen.dart';
 import '../../features/expenses/domain/expense.dart';
@@ -26,6 +25,7 @@ import '../../features/shell/presentation/screens/expenses_screen.dart';
 import '../../features/shell/presentation/screens/help_faq_screen.dart';
 import '../../features/shell/presentation/screens/home_screen.dart';
 import '../../features/shell/presentation/screens/more_screen.dart';
+import '../../splash_screen.dart';
 import 'not_found_screen.dart';
 import 'routes.dart';
 
@@ -52,7 +52,7 @@ class _SessionListenable extends ChangeNotifier {
     ref.listen<AsyncValue<SessionState>>(sessionProvider, (_, _) {
       notifyListeners();
     });
-    ref.listen<AsyncValue<void>>(splashMinDelayProvider, (_, _) {
+    ref.listen<bool>(splashAnimationCompletedProvider, (_, _) {
       notifyListeners();
     });
   }
@@ -201,8 +201,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     ],
     redirect: (context, state) {
       final session = ref.read(sessionProvider).value;
-      final isSplashDelayComplete = !ref.read(splashMinDelayProvider).isLoading;
-      return _redirect(state, session, isSplashDelayComplete);
+      final isSplashAnimationComplete =
+          ref.read(splashAnimationCompletedProvider);
+      return _redirect(state, session, isSplashAnimationComplete);
     },
     errorBuilder: (context, state) =>
         NotFoundScreen(location: state.uri.toString()),
@@ -214,14 +215,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
 String? _redirect(
   GoRouterState state,
   SessionState? session,
-  bool isSplashDelayComplete,
+  bool isSplashAnimationComplete,
 ) {
   final path = state.uri.path;
 
-  // On cold start / initial app launch, guarantee the branded splash screen is
-  // displayed for at least the minimum delay so the user experiences the smooth
-  // entrance animation rather than a jarring flash or skip.
-  if (!isSplashDelayComplete && (path == Routes.splash || path == '/')) {
+  // On cold start / initial app launch, remain on splash until the Lottie
+  // animation completes.
+  if (!isSplashAnimationComplete && (path == Routes.splash || path == '/')) {
     return null;
   }
 
