@@ -2,7 +2,7 @@
 
 **Product Name**: CoSpend (formerly FlatSplit)  
 **Platform**: Android & iOS (Flutter)  
-**Version**: 1.5.0  
+**Version**: 2.0.0  
 **Target Audience**: Flatmates, roommates, co-living groups, students, and shared households  
 **Document Owner**: Engineering & Product Team  
 **Status**: Active / In Production  
@@ -111,8 +111,15 @@ To be the most intuitive, beautiful, and effortless co-living financial operatin
 - **FR-BUD-2**: View-Only Member Mode: Members can inspect all budgets, limits, and progress bars, but all editing controls, save actions, and quick chips are locked.
 - **FR-BUD-3**: Member Category Quotas: Owner can allocate category targets per roommate (e.g. Food budget divided equally or custom per member).
 - **FR-BUD-4**: Exceeded Alerts: High-visibility dashboard warning cards triggered when an individual member or the flat exceeds a category budget limit.
+- **FR-BUD-5**: Spending Trends & Velocity Analytics: Interactive modal displaying daily average spend, projected month-end spend, peak spending day, daily allowance for remaining days, and a daily flow bar chart with tooltips.
+- **FR-BUD-6**: Bulk Limit Controls & Auto-Distribution: Quick percentage scaling chips (`+10%`, `+20%`, `+50%`, `-10%`, `-25%`), auto-distribute total budget input, match current spending, and equal member quota splits.
+- **FR-BUD-7**: Budget Health Indicator Guide: Informative guide sheet documenting health thresholds (🟢 On Track `<80%`, 🟡 Near Limit `80-99%`, 🔴 Over Budget `100%+`) and cycle rules.
 
-### 5.9 Settlement & Debt Minimization
+### 5.9 App Launch & Onboarding Experience
+- **FR-LAUNCH-1**: Animated Lottie Splash: Instant startup displaying pure white native window, playing a ~2.5s Lottie logo animation with the CoSpend title smoothly fading in, and immediately routing on animation completion.
+- **FR-LAUNCH-2**: Concentric Onboarding: 3-screen animated onboarding introducing Track Together, Split Fairly, and Settle Easily with concentric page transitions.
+
+### 5.10 Settlement & Debt Minimization
 - **FR-SETTLE-1**: Greedy Bipartite Debt Simplification: Computes net balances ($Credits - Debts$) and generates the minimum number of transactions ($N - 1$ max) required to balance the flat.
 - **FR-SETTLE-2**: One-Tap Settlement: Mark a transfer as paid to clear debts with persistent settlement transaction records.
 - **FR-SETTLE-3**: Settlement History: Audit log of past recorded settlements.
@@ -133,16 +140,17 @@ To be the most intuitive, beautiful, and effortless co-living financial operatin
 
 ### 6.3 Usability & Aesthetics
 - **Dark/Light Theme**: Automatic system detection with manual override.
+- **Typography**: Complete adoption of the **Lufga** geometric font family across 18 weights and styles (100 Thin to 900 Black).
 - **Curated CoSpend Palette**:
   - *Jade Green* (`#00BC57` / `hsla(148, 100%, 37%, 1)`): Primary brand accent, progress fill, budget remainder, and CTAs.
   - *Prussian Blue* (`#0A2542` / `hsla(211, 74%, 15%, 1)`): Deep navy contrast headers, dark mode foundation canvas, active filter pills, and gradient hero cards.
   - *Crisp White & Off-White Canvas* (`#FFFFFF` / `#F7F8FA`): Clean, uncluttered light mode canvas eliminating visual noise with warm separation.
   - *Alert Red* (`#EF4444`): Strictly reserved for budget-exceeded alerts and destructive confirmations.
 - **Fintech Component System (`lib/core/theme/design_system.dart`)**:
-  - 12px rounded corner radii for all cards, text fields, and modal sheets.
+  - 16px rounded corner radii for all cards and text fields; 20px for hero cards.
   - 999px full-pill stadium geometry for action buttons, chips, badges, and search bars.
-  - Soft Prussian-Blue-tinted shadows (`rgba(10, 37, 66, 0.05)` to `0.08` with 14px blur).
-  - 11–12px uppercase section labels with 0.8 letter-spacing.
+  - Soft Prussian-Blue-tinted shadows (`Color(0x0D0A2542)` with 18px blur, spread -2).
+  - 11px uppercase section labels with 1.0 letter-spacing.
   - Tactile micro-interactions (`BouncingButton` with 0.97 scale feedback).
 - **Brand Identity & Iconography**:
   - Official high-resolution CoSpend emblem (`assets/images/app_logo.png`).

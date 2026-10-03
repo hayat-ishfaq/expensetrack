@@ -1,7 +1,7 @@
 # CoSpend — Technical Architecture Document
 
-**System Version**: 1.5.0  
-**Stack**: Flutter (Dart 3.x), Riverpod 2.x, Firebase (Auth & Cloud Firestore), GoRouter  
+**System Version**: 2.0.0  
+**Stack**: Flutter (Dart 3.x), Riverpod 3.x, Firebase (Auth & Cloud Firestore), GoRouter, Lottie  
 **Target Environments**: Android (API 21+), iOS (iOS 13+)  
 
 ---
@@ -39,6 +39,8 @@ The codebase follows a modular feature-first layout under `lib/`:
 
 ```
 lib/
+├── main.dart                   # Application entrypoint (instant non-blocking start)
+├── splash_screen.dart          # Lottie animated splash & startup coordinator
 ├── app/                        # Application composition root
 │   ├── app.dart                # MaterialApp.router configuration & theme bindings
 │   ├── router/                 # Navigation contracts & route definitions
@@ -49,7 +51,7 @@ lib/
 ├── core/                       # Shared platform primitives & utilities
 │   ├── constants/              # AppConstants, FirestoreCollections
 │   ├── errors/                 # AppException hierarchy & FirebaseErrorMapper
-│   ├── theme/                  # Design System & Theme Engine
+│   ├── theme/                  # Design System, Lufga Typography & Theme Engine
 │   │   ├── app_theme.dart      # ThemeData configuration (Light & Dark)
 │   │   └── design_system.dart  # Tokens, Colors, Shadows, Radii & Reusable Widgets
 │   └── utils/                  # Money (Paisa formatting), Validators, DateFormatters
@@ -58,7 +60,7 @@ lib/
 │   ├── auth/                   # Authentication, profile & avatar studio
 │   │   ├── domain/             # AuthUser, AuthRepository, SessionState
 │   │   ├── data/               # FirebaseAuthRepository
-│   │   └── presentation/       # Login, SignUp, Splash, EditProfileScreen, AvatarPickerSheet
+│   │   └── presentation/       # Login, SignUp, Onboarding, EditProfileScreen, AvatarPickerSheet
 │   ├── household/              # Flat setup, members, invite codes & notifications
 │   │   ├── domain/             # Household, HouseholdMember, InviteCode, SpendNotification
 │   │   ├── data/               # FirebaseHouseholdRepository
@@ -67,7 +69,7 @@ lib/
 │   │   ├── domain/             # Expense, SplitCalculator, CustomCategory
 │   │   ├── data/               # FirebaseExpenseRepository
 │   │   └── presentation/       # AddExpenseScreen, ExpensesScreen, ExpenseProviders
-│   ├── dashboard/              # Aggregations, financial cards, budget targets
+│   ├── dashboard/              # Aggregations, financial cards, budget targets & velocity
 │   │   ├── domain/             # DashboardStats
 │   │   └── presentation/       # CategoryBudgetScreen, FinancialCard, BudgetProgressCard
 │   ├── settlement/             # Debt minimization engine & settlement records
@@ -213,10 +215,39 @@ To eliminate Flutter Android release build failures caused by dynamic `IconData(
 - Looks up const `IconData` instances in $O(1)$ time, falling back safely to `Icons.category_rounded`.
 - Works out-of-the-box with standard `--release` builds without requiring `--no-tree-shake-icons`.
 
+### 5.4 Non-Blocking Startup & Lottie Splash Sequence
+To eliminate startup lag and white/black flashes on app cold launch:
+- `main()` calls `WidgetsFlutterBinding.ensureInitialized()` and `runApp(const ProviderScope(child: CoSpendApp()))` immediately without blocking on Firebase I/O.
+- Firebase, FCM, and local notifications initialize concurrently in the background while the UI draws the splash screen on the very first frame.
+- Android 12+ Splash API and `launch_background` are styled with a clean white canvas (`#FFFFFF`) with transparent icon, handing rendering seamlessly to Flutter.
+- [`lib/splash_screen.dart`](file:///lib/splash_screen.dart) plays `assets/animations/logo_splash.json` (~2.5s) using an `AnimationController` on a white background with a smooth `FadeTransition` for the "CoSpend" title.
+- Navigation away from splash is strictly driven by the animation completing (`_controller.forward().then(...)` triggering `splashAnimationCompletedProvider`), with zero arbitrary `Future.delayed` timers.
+
+### 5.5 Budgets Hub Velocity & Limit Management Architecture
+`CategoryBudgetScreen` orchestrates financial planning through three core sub-architectures:
+1. **Spending Velocity Analysis (`_SpendingTrendsSheet`)**:
+   - Calculates daily burn rate: $\text{DailyAvg} = \text{TotalSpent} / \text{CurrentDay}$.
+   - Projects month-end spending: $\text{Projected} = \text{DailyAvg} \times \text{DaysInMonth}$.
+   - Daily allowance for remaining cycle: $\text{Allowance} = (\text{Budget} - \text{Spent}) / \text{RemainingDays}$.
+   - Renders interactive daily bar chart via `fl_chart: ^1.2.0` with touch tooltips and category velocity ranking.
+2. **Bulk Limit Controls (`_ManageLimitsSheet`)**:
+   - Instant percentage scaling (`+10%`, `+20%`, `+50%`, `-10%`, `-25%`).
+   - Even target auto-distribution: divides total flat budget evenly across all categories.
+   - Snaps limits to current monthly spend.
+   - Splits limits equally across roommates.
+3. **Health Indicator Engine**:
+   - 🟢 **On Track** ($< 80\%$ budget consumed).
+   - 🟡 **Near Limit** ($80\% - 99\%$ budget consumed).
+   - 🔴 **Over Budget** ($\ge 100\%$ budget consumed).
+
 ---
 
 ## 6. Fintech Design System Architecture (`lib/core/theme/design_system.dart`)
 
+### 6.1 Typography (`Lufga`)
+All text across both Light and Dark themes uses the **Lufga** geometric font family (`CoSpendTypography.fontFamily = 'Lufga'`), packaged locally from `assets/fonts/lufga/` across all 18 standard weight/style variants (100 Thin to 900 Black).
+
+### 6.2 Visual Tokens
 The UI layer is decoupled from ad-hoc styling via strict tokens:
 - **`CoSpendColors`**:
   - `prussianBlue`: `#0A2542` (Primary Brand & Typography)
@@ -225,16 +256,19 @@ The UI layer is decoupled from ad-hoc styling via strict tokens:
   - `cardSurface`: `#FFFFFF` (Elevated card background)
   - `alertRed`: `#EF4444` (Exclusively for budget breaches)
 - **`CoSpendRadii`**:
-  - `card`: `12px`
-  - `input`: `12px`
+  - `card`: `16px`
+  - `cardLarge`: `20px`
+  - `input`: `16px`
   - `pill`: `999px`
 - **`CoSpendShadows`**:
-  - `softCard`: `BoxShadow(color: Color(0x0C0A2542), blurRadius: 14, offset: Offset(0, 4))`
+  - `softCard`: `BoxShadow(color: Color(0x0D0A2542), blurRadius: 18, offset: Offset(0, 4), spreadRadius: -2)`
+  - `hero`: `BoxShadow(color: Color(0x500A2542), blurRadius: 32, offset: Offset(0, 12), spreadRadius: -8)`
+  - `fabGlow`: `BoxShadow(color: Color(0x4400BC57), blurRadius: 24, offset: Offset(0, 8), spreadRadius: -4)`
 - **Reusable Fintech Primitives**:
-  - `CoSpendCard`: 12px rounded, soft-shadowed white container.
+  - `CoSpendCard`: 16px rounded, soft-shadowed white container.
   - `BouncingButton`: Micro-interaction component with 0.97 scale tap feedback.
   - `TintedIcon`: 36px circular tinted icon container in Prussian Blue or Jade Green.
-  - `SectionLabel`: 11–12px uppercase semibold label with 0.8 letter-spacing.
+  - `SectionLabel`: 11px uppercase semibold label with 1.0 letter-spacing.
   - `CoSpendSegmentedControl`: Custom sliding pill control replacing stock Flutter widgets.
 
 ---
@@ -244,3 +278,4 @@ The UI layer is decoupled from ad-hoc styling via strict tokens:
 - **`FirebaseErrorMapper`**: Maps low-level platform error codes (`invalid-credential`, `permission-denied`, `unavailable`) into clear, actionable user messages.
 - **Dual Invite Lookup**: When joining a flat, queries the `inviteCodes` index; if absent, falls back to querying `households` by `inviteCode` and automatically self-heals the index.
 - **Resilient Profile Persistence**: Uses Firestore `.set(userUpdates, SetOptions(merge: true))` to safely handle new or partial documents, and isolates data URIs from `FirebaseAuth.currentUser.updatePhotoURL()`.
+

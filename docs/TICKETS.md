@@ -202,16 +202,51 @@ This document tracks the complete development lifecycle for **CoSpend** (formerl
 
 ---
 
-## Epic 12: Future Roadmap & Backlog (Next Sprints)
+## Epic 12: Visual Brand & Experience Modernization (v2.0.0)
 
-### [BACKLOG] CS-1201: Push Notifications via FCM
+### [DONE] CS-1201: Concentric Animated Onboarding Carousel
+- **Type**: Feature | **Priority**: P1 | **Status**: Closed
+- **Description**: Implement 3-page onboarding flow using `concentric_transition` featuring Track Together, Split Fairly, and Settle Easily with circular animation physics.
+- **Acceptance Criteria**:
+  - Full-screen animated transitions with smooth color morphing.
+  - Skip and next action buttons with direct navigation to login/signup.
+
+### [DONE] CS-1202: Lufga Geometric Typography Family Adoption
+- **Type**: UI Polish | **Priority**: P0 | **Status**: Closed
+- **Description**: Migrate entire application from generic system fonts to **Lufga** font family (18 weight & style variants from 100 Thin to 900 Black).
+- **Acceptance Criteria**:
+  - Configured in `pubspec.yaml` under `fonts: - family: Lufga`.
+  - Defined in `CoSpendTypography.fontFamily` and applied across all light and dark theme text styles.
+
+### [DONE] CS-1203: Animated Lottie Splash Screen & Clean Startup Sequence
+- **Type**: Feature / UX | **Priority**: P0 | **Status**: Closed
+- **Description**: Implement animated Lottie splash screen (`assets/animations/logo_splash.json`) on pure white background with "CoSpend" title fade-in and instant session routing.
+- **Acceptance Criteria**:
+  - Removed frozen static logo from native Android window (`launch_background.xml` & `values-v31/styles.xml`).
+  - Lottie animation runs ~2.5s and drives router transition upon completion without hardcoded `Future.delayed` timers.
+  - Transparent transition directly to Onboarding/Login or Dashboard based on session resolution.
+
+### [DONE] CS-1204: Budgets Hub Spending Velocity & Limit Management Tools
+- **Type**: Feature | **Priority**: P0 | **Status**: Closed
+- **Description**: Expand `CategoryBudgetScreen` with Spending Trends bottom sheet, interactive bar chart, Manage Limits sheet, and Health Guide modal.
+- **Acceptance Criteria**:
+  - **Spending Trends**: Daily Average, Projected Spend, Peak Spending Day, Daily Allowance, and interactive `fl_chart` bar chart with tooltips.
+  - **Manage Limits**: Quick percentage scaling chips (`+10%`, `+20%`, `+50%`, `-10%`, `-25%`), target auto-distribution, and current spend matching.
+  - **Budgeting Guide `(i)`**: Modal sheet documenting health status indicators (🟢 On Track, 🟡 Near Limit, 🔴 Over Budget).
+  - **"See All →"**: Expanding and collapsing all member quotas at once.
+
+---
+
+## Epic 13: Future Roadmap & Backlog (Next Sprints)
+
+### [BACKLOG] CS-1301: Push Notifications via FCM
 - **Type**: Feature | **Priority**: P1 | **Status**: Planned
 - **Description**: Send background push notifications via Firebase Cloud Messaging when roommate spends or limits are exceeded.
 
-### [BACKLOG] CS-1202: Smart Receipt OCR Scanner
+### [BACKLOG] CS-1302: Smart Receipt OCR Scanner
 - **Type**: Feature | **Priority**: P2 | **Status**: Planned
 - **Description**: Scan grocery / utility receipts using ML Kit and automatically extract total amount, vendor, and line items.
 
-### [BACKLOG] CS-1203: Export to CSV / PDF Statement
+### [BACKLOG] CS-1303: Export to CSV / PDF Statement
 - **Type**: Feature | **Priority**: P2 | **Status**: Planned
 - **Description**: Generate and download monthly household expense statements and tax reports.

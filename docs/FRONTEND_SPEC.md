@@ -75,10 +75,12 @@ BoxShadow(color: Color(0x4400BC57), blurRadius: 24, offset: Offset(0, 8), spread
 BoxShadow(color: Color(0x140A2542), blurRadius: 24, offset: Offset(0, -4))
 ```
 
-### 1.5 Typography & Hierarchy
+### 1.5 Typography & Hierarchy (`Lufga`)
+All application typography is rendered exclusively in the geometric **Lufga** font family (weights 100 to 900):
+- **Font Family**: `'Lufga'` (`CoSpendTypography.fontFamily`).
 - **Page AppBar Titles**: 20px, `FontWeight.w800`, letterSpacing `-0.5` (e.g., "Expenses", "More").
 - **Primary Headings & Hero Amounts**: High contrast Prussian Blue, 22–30px, `w800`, letterSpacing `-0.6` to `-0.8`.
-- **Section Labels**: 11px, `w700`, uppercase, letterSpacing `1.0` (e.g., `RECENT TRANSACTIONS`). *(Upgraded from 0.8)*
+- **Section Labels**: 11px, `w700`, uppercase, letterSpacing `1.0` (e.g., `RECENT TRANSACTIONS`).
 - **Captions & Metadata**: Slate gray (`#64748B`), 11–13px regular.
 - **Numbers & Monetary Figures**: Bold tabular figures with explicit currency prefix (`Rs. X,XXX`).
 
@@ -124,11 +126,24 @@ BoxShadow(color: Color(0x140A2542), blurRadius: 24, offset: Offset(0, -4))
 
 ## 3. Screen-by-Screen Specifications
 
-### 3.1 HomeScreen (Dashboard)
+### 3.0 SplashScreen (Lottie Animated Launch)
+- **Native Splash Window**: Pure white background (`#FFFFFF`) with transparent icon (eliminating frozen/static logos).
+- **Lottie Animation**: Centered `220x220` animation (`assets/animations/logo_splash.json`) playing smoothly (~2.5s).
+- **Branded Typography**: "CoSpend" title in bold Lufga font (`32px`, `w800`, Prussian Blue `#0A2542`) fading in via `FadeTransition` during logo resolution.
+- **Completion Navigation**: Driven strictly by animation completion event (`_controller.forward().then(...)`) transitioning via `pushReplacement` to the appropriate initial screen.
+
+### 3.1 OnboardingScreen (Concentric Animation)
+- **Transitions**: 3 full-screen pages using `concentric_transition: ^1.0.3`.
+- **Slide 1**: Track Together — Keep all your shared expenses organized in one place.
+- **Slide 2**: Split Fairly — Divide expenses equally, by amount, or by percentage.
+- **Slide 3**: Settle Easily — See who owes what and settle up without confusion.
+- **Controls**: Smooth circular next button and top skip action.
+
+### 3.2 HomeScreen (Dashboard)
 - **Top Bar**:
   - Full user name with dynamic time greeting (`Good afternoon, Bilal 👋`).
-  - User avatar with **jade-green → prussian-blue gradient ring** (double-container technique). *(Upgraded)*
-  - Interactive pill month selector with **green dot indicator + neutral text**. *(Upgraded)*
+  - User avatar with **jade-green → prussian-blue gradient ring** (double-container technique).
+  - Interactive pill month selector with **green dot indicator + neutral text**.
   - Notification bell with unread badge opening `NotificationsSheet`.
 - **4-Card Financial Metric Grid** (`FinancialSummaryCards`):
   - 2x2 grid with 10px gutter, 34px icon circles, `0.8px` borders.
@@ -143,14 +158,14 @@ BoxShadow(color: Color(0x140A2542), blurRadius: 24, offset: Offset(0, -4))
 - **Recent Transactions Feed**: `CoSpendCard` rows with `TintedIcon` category badge.
 - **FAB**: Solid Jade Green stadium pill (`+ Add Expense`) with strong green glow shadow.
 
-### 3.2 ExpensesScreen (Feed & Filter)
+### 3.3 ExpensesScreen (Feed & Filter)
 - **AppBar**: 20px `w800` title, letterSpacing `-0.4`.
 - **Pill Search Bar**: Stadium-shaped text input with subtle shadow.
 - **Segmented Filter Chips**: Active: Solid Prussian Blue pill. Inactive: transparent with 1px border.
 - **Transaction Cards**: 16px rounded cards grouped under date section headers.
 - **FAB**: Matches Home screen.
 
-### 3.3 SettleUpScreen (Balances & Transfers) *(Major redesign)*
+### 3.4 SettleUpScreen (Balances & Transfers)
 - **Summary Hero Card**: Full 3-stop gradient (`20px` radius) with glassmorphism icon container.
   - 28px `w800` total amount, tabular figures.
   - "Across all flatmates" caption at 60% white opacity.
@@ -159,16 +174,18 @@ BoxShadow(color: Color(0x140A2542), blurRadius: 24, offset: Offset(0, -4))
   - Name + description column.
   - Color-coded pill badge (`jadeGreenTint` for credit, `alertRedTint` for debit).
 - **Transfer Tiles**: `CoSpendCard` rows with rounded arrow icon box, bold rich-text `fromName pays toName`.
-- **All Settled State**: Premium celebration layout — large circle icon + headline + body. *(Upgraded from generic EmptyState)*
+- **All Settled State**: Premium celebration layout — large circle icon + headline + body.
 - **Skeleton**: Radii-matched skeleton boxes (`radius: 16`).
 
-### 3.4 CategoryBudgetScreen (Budgets Tab)
-- **Summary Hero**: 3-stop Prussian Blue gradient card.
-- **Category Cards**: Subtle `CONFIGURED` or `EXCEEDED` pill badge.
-- **No Disabled Input Chrome**: Clean read-only statement text for roommates.
-- **Owner Edit Flow**: Modal bottom sheet with quick adjustment pills.
+### 3.5 CategoryBudgetScreen (Budgets Tab)
+- **Summary Hero**: Circular Donut chart with spend percentage, total spent vs remaining budget, and status badge pill (🟢 On Track, 🟡 Near Limit, 🔴 Over Budget).
+- **Top Action Bar**:
+  - **Spending Trends Button**: Opens `_SpendingTrendsSheet` with daily velocity metrics (Daily Avg, Projected Spend, Peak Day, Daily Allowance) and interactive `fl_chart` daily bar chart with touch tooltips.
+  - **Manage Limits Button**: Opens `_ManageLimitsSheet` with quick percentage scaling chips (`+10%`, `+20%`, `+50%`, `-10%`, `-25%`), auto-distribute target input, snap to spend, equal splits, and save controls.
+  - **Info `(i)` Button**: Opens `_BudgetGuideSheet` detailing health indicator percentage thresholds and cycle reset rules.
+- **Category Cards**: Individual category limits, monthly spend progress bars, quick increment pills (`+1,000`, `+5,000`, `+10,000`), and expandable member quota breakdowns with "See All →" toggle.
 
-### 3.5 MoreScreen (Settings & Profile)
+### 3.6 MoreScreen (Settings & Profile)
 - **Profile Card**: `CoSpendCard` with **jade-green → prussian-blue gradient ring** on avatar. *(Upgraded)*
   - "Owner" role badge with gradient fill (not flat blue). *(Upgraded)*
   - Chevron trailing instead of edit icon.
