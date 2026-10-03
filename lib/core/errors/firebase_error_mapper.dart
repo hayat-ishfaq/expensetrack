@@ -9,7 +9,22 @@ AppException toAppException(Object error) {
   if (error is AppException) return error;
   if (error is TimeoutException) return const NetworkException();
   if (error is FirebaseAuthException) {
+    if (error.code == 'network-request-failed') {
+      return const NetworkException();
+    }
     return AuthException(FirebaseErrorMapper.messageFor(error));
+  }
+  if (error is FirebaseException) {
+    if (error.code == 'unavailable' || error.code == 'deadline-exceeded') {
+      return const NetworkException();
+    }
+    if (error.code == 'permission-denied') {
+      return const PermissionException();
+    }
+    if (error.code == 'not-found') {
+      return const NotFoundException();
+    }
+    return UnknownException(FirebaseErrorMapper.messageFor(error));
   }
   return UnknownException(FirebaseErrorMapper.messageFor(error));
 }
@@ -38,7 +53,7 @@ abstract final class FirebaseErrorMapper {
           : 'Database error (${error.code}).';
     }
     if (error is TimeoutException) {
-      return 'The request timed out. Please try again.';
+      return 'The request timed out. Please check your internet connection and try again.';
     }
     if (error is Exception) {
       final str = error.toString().replaceFirst('Exception: ', '');
@@ -48,10 +63,11 @@ abstract final class FirebaseErrorMapper {
   }
 
   static String _mapAuth(String code) => switch (code) {
-    'invalid-credential' || 'wrong-password' || 'user-not-found' =>
+    'invalid-credential' || 'wrong-password' =>
       'Incorrect email or password.',
+    'user-not-found' => 'No account found with this email address.',
     'email-already-in-use' => 'An account already exists for that email.',
-    'weak-password' => 'Password is too weak. Use at least 8 characters.',
+    'weak-password' => 'Password is too weak. Use at least 6 characters.',
     'invalid-email' => 'Enter a valid email address.',
     'network-request-failed' => offlineMessage,
     'too-many-requests' =>
@@ -60,18 +76,24 @@ abstract final class FirebaseErrorMapper {
     'operation-not-allowed' =>
       'Email/password sign-in is not enabled in Firebase Console yet.',
     'requires-recent-login' => 'Please sign in again to confirm it was you.',
+    'expired-action-code' =>
+      'This password reset link has expired. Please request a new one.',
+    'invalid-action-code' =>
+      'This password reset link is invalid or has already been used.',
+    'user-token-expired' => 'Your session expired. Please sign in again.',
     _ => genericMessage,
   };
 
   static String _mapFirestore(String code) => switch (code) {
     'unavailable' || 'deadline-exceeded' => offlineMessage,
     'permission-denied' =>
-      'Database permission denied. Please verify Firestore rules in Firebase Console.',
+      'Database permission denied. Please verify your access permissions.',
     'not-found' => 'This item no longer exists.',
-    'already-exists' => 'That already exists.',
+    'already-exists' => 'That item already exists.',
     'resource-exhausted' =>
       'Too many requests right now. Please try again shortly.',
     'unauthenticated' => 'Your session expired. Please sign in again.',
+    'cancelled' => 'The request was cancelled.',
     _ => genericMessage,
   };
 }

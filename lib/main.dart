@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -13,5 +14,16 @@ import 'app/app.dart';
 /// via [firebaseInitProvider] during the splash presentation window.
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
+
+  FlutterError.onError = (details) {
+    FlutterError.presentError(details);
+    debugPrint('CoSpend Flutter Framework Error: ${details.exceptionAsString()}');
+  };
+
+  PlatformDispatcher.instance.onError = (error, stack) {
+    debugPrint('CoSpend Unhandled Async Error: $error\n$stack');
+    return true;
+  };
+
   runApp(const ProviderScope(child: CoSpendApp()));
 }

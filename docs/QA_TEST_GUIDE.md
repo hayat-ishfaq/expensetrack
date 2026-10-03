@@ -200,6 +200,18 @@
 
 ---
 
+### Module 8: Error Handling & Resilience
+| Test ID | Test Scenario | Steps | Expected Result | Pass/Fail |
+|---|---|---|---|---|
+| **TC-08.1** | Offline Detection | Enable Airplane Mode ➔ Attempt to save expense or sign in | Surfaces friendly banner: *"You're offline. This action will be available when you're connected."* | [ ] |
+| **TC-08.2** | Wrong Password / Bad Credentials | Enter wrong password on Login screen | Displays `"Incorrect email or password."` without crashing or showing raw Firebase exception codes. | [ ] |
+| **TC-08.3** | Unregistered Reset Email | In Forgot Password, enter unregistered address | Surfaces `"No account found with this email address."` gracefully. | [ ] |
+| **TC-08.4** | Rate Limiting Protection | Attempt rapid repeated requests | 30s cooldown prevents form abuse; Firebase `too-many-requests` surfaces *"Too many attempts. Take a short break and try again."* | [ ] |
+| **TC-08.5** | Invalid Invite Code | Enter incorrect flat code in Join Flat | Displays validation error *"No flat found with that invite code."* | [ ] |
+| **TC-08.6** | Global Screen Error Fallback | Trigger an unexpected display fault | CoSpend styled error fallback screen appears with recovery guidance instead of a blank screen. | [ ] |
+
+---
+
 ## 6. How to Report a Defect (Bug Template)
 
 When reporting issues, please format your report using the template below:
