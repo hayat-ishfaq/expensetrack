@@ -80,6 +80,10 @@ abstract final class AppTheme {
 
     return ThemeData(
       useMaterial3: true,
+      fontFamily: CoSpendTypography.fontFamily,
+      textTheme: (isDark ? ThemeData.dark().textTheme : ThemeData.light().textTheme).apply(
+        fontFamily: CoSpendTypography.fontFamily,
+      ),
       colorScheme: scheme,
       scaffoldBackgroundColor: isDark ? canvasDark : canvasLight,
       pageTransitionsTheme: const PageTransitionsTheme(
@@ -101,6 +105,7 @@ abstract final class AppTheme {
         scrolledUnderElevation: 0,
         centerTitle: false,
         titleTextStyle: TextStyle(
+          fontFamily: CoSpendTypography.fontFamily,
           fontSize: 20,
           fontWeight: FontWeight.w800,
           letterSpacing: -0.5,

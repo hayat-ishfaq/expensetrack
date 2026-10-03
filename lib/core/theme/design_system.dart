@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 
 /// Centralized design tokens and reusable visual primitives for CoSpend.
-/// Premium fintech UI inspired by Revolut, Monarch Money, and Apple Wallet.
+/// Centralized typography tokens for CoSpend.
+abstract final class CoSpendTypography {
+  static const String fontFamily = 'Lufga';
+}
+
 abstract final class CoSpendColors {
   // ── Primary brand palette ──────────────────────────────────────────────────
   static const Color prussianBlue = Color(0xFF0A2542);
