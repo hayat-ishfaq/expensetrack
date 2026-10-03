@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/services/fcm_service.dart';
 import '../../../../shared/models/household.dart';
 import '../../../../shared/models/household_member.dart';
 import '../../../auth/presentation/providers/session_provider.dart';
@@ -47,14 +48,30 @@ class HouseholdActions extends AsyncNotifier<void> {
   Future<void> create({required String name}) async {
     state = const AsyncLoading();
     state = await AsyncValue.guard(() async {
-      await _repository.createHousehold(name: name);
+      final household = await _repository.createHousehold(name: name);
+      // Subscribe this device to the household's FCM topic so it receives
+      // push notifications for new expenses, settlements, and member activity.
+      FcmService.instance
+          .subscribeToHousehold(household.id)
+          .catchError((_) {}); // Non-fatal — don't block navigation
     });
   }
 
   Future<void> join({required String inviteCode}) async {
     state = const AsyncLoading();
     state = await AsyncValue.guard(() async {
-      await _repository.joinHousehold(inviteCode: inviteCode);
+      // Unsubscribe from any previous household topic before joining a new one.
+      final oldHouseholdId = ref.read(sessionProvider).value?.householdId;
+      if (oldHouseholdId != null && oldHouseholdId.isNotEmpty) {
+        FcmService.instance
+            .unsubscribeFromHousehold(oldHouseholdId)
+            .catchError((_) {});
+      }
+      final household = await _repository.joinHousehold(inviteCode: inviteCode);
+      // Subscribe to the new household topic.
+      FcmService.instance
+          .subscribeToHousehold(household.id)
+          .catchError((_) {});
     });
   }
 
@@ -102,7 +119,16 @@ class HouseholdActions extends AsyncNotifier<void> {
   Future<void> leave() async {
     state = const AsyncLoading();
     state = await AsyncValue.guard(() async {
+      // Capture the household ID BEFORE the Firestore leave clears it.
+      final householdId = ref.read(sessionProvider).value?.householdId;
       await _repository.leaveHousehold();
+      // Unsubscribe from the FCM topic so this device stops receiving
+      // push notifications for the household it just left.
+      if (householdId != null && householdId.isNotEmpty) {
+        FcmService.instance
+            .unsubscribeFromHousehold(householdId)
+            .catchError((_) {});
+      }
     });
   }
 
