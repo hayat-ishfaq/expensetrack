@@ -3,7 +3,7 @@
 > **Document Version:** 1.0  
 > **Target Release:** v1.5.4 (Build 10, Release Build)  
 > **Platform:** Android (APK)  
-> **APK File:** [`build/app/outputs/flutter-apk/app-release.apk`](file:///C:/Users/M.Hayat/OneDrive/Desktop/expense_track/expensetrack/build/app/outputs/flutter-apk/app-release.apk)  
+> **APK File:** [`copend-v1.apk`](file:///C:/Users/M.Hayat/OneDrive/Desktop/expense_track/expensetrack/copend-v1.apk) (Also available at [`build/app/outputs/flutter-apk/copend-v1.apk`](file:///C:/Users/M.Hayat/OneDrive/Desktop/expense_track/expensetrack/build/app/outputs/flutter-apk/copend-v1.apk))  
 
 ---
 
