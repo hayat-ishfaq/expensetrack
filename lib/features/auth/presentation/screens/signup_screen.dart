@@ -10,6 +10,7 @@ import '../../../../core/utils/validators.dart';
 import '../../../../shared/widgets/app_snackbar.dart';
 import '../../../../shared/widgets/loading_button.dart';
 import '../providers/auth_providers.dart';
+import '../widgets/auth_error_banner.dart';
 import '../widgets/auth_scaffold.dart';
 import '../widgets/password_field.dart';
 
@@ -25,10 +26,12 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmController = TextEditingController();
+
   String? _nameError;
   String? _emailError;
   String? _passwordError;
   String? _confirmError;
+  String? _formError;
 
   @override
   void dispose() {
@@ -40,22 +43,30 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
   }
 
   void _submit() {
-    final name = _nameController.text;
-    final email = _emailController.text;
+    final name = _nameController.text.trim();
+    final email = _emailController.text.trim();
     final password = _passwordController.text;
+
+    final nameErr = Validators.name(name);
+    final emailErr = Validators.email(email);
+    final passErr = Validators.password(password);
+    final confirmErr = Validators.confirmPassword(
+      _confirmController.text,
+      password,
+    );
+
     setState(() {
-      _nameError = Validators.name(name);
-      _emailError = Validators.email(email);
-      _passwordError = Validators.password(password);
-      _confirmError = Validators.confirmPassword(
-        _confirmController.text,
-        password,
-      );
+      _nameError = nameErr;
+      _emailError = emailErr;
+      _passwordError = passErr;
+      _confirmError = confirmErr;
+      _formError = null;
     });
-    if (_nameError != null ||
-        _emailError != null ||
-        _passwordError != null ||
-        _confirmError != null) {
+
+    if (nameErr != null ||
+        emailErr != null ||
+        passErr != null ||
+        confirmErr != null) {
       return;
     }
 
@@ -69,17 +80,43 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
     ref.listen<AsyncValue<void>>(authActionsProvider, (previous, next) {
       if (next.hasError && !next.isLoading) {
         final error = next.error!;
+        final message = error is AppException
+            ? error.message
+            : FirebaseErrorMapper.messageFor(error);
+
+        setState(() {
+          _formError = message;
+          if (message.toLowerCase().contains('already exists')) {
+            _emailError = 'Email already registered';
+          }
+        });
+
         showAppSnack(
           context,
-          error is AppException
-              ? error.message
-              : FirebaseErrorMapper.messageFor(error),
+          message,
           error: true,
         );
+      } else if ((previous?.isLoading ?? false) &&
+          !next.isLoading &&
+          !next.hasError) {
+        setState(() {
+          _formError = null;
+        });
       }
     });
 
     final submitting = ref.watch(authActionsProvider).isLoading;
+
+    // Provide contextual action in error banner if account already exists
+    String? bannerActionLabel;
+    VoidCallback? bannerAction;
+    if (_formError != null) {
+      final lower = _formError!.toLowerCase();
+      if (lower.contains('already exists') || lower.contains('already in use')) {
+        bannerActionLabel = 'Sign in instead';
+        bannerAction = () => context.go(Routes.login);
+      }
+    }
 
     return AuthScaffold(
       title: 'Create your account',
@@ -95,18 +132,20 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
         children: [
           TextField(
             controller: _nameController,
-            autocorrect: false,
             textCapitalization: TextCapitalization.words,
+            autofillHints: const [AutofillHints.name],
             textInputAction: TextInputAction.next,
             decoration: InputDecoration(
               labelText: 'Full name',
+              hintText: 'Alex Morgan',
               prefixIcon: const Icon(Icons.person_outline_rounded),
               errorText: _nameError,
             ),
             onChanged: (_) {
-              if (_nameError != null) {
+              if (_nameError != null || _formError != null) {
                 setState(() {
-                  _nameError = Validators.name(_nameController.text);
+                  _nameError = Validators.name(_nameController.text.trim());
+                  _formError = null;
                 });
               }
             },
@@ -120,13 +159,15 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
             textInputAction: TextInputAction.next,
             decoration: InputDecoration(
               labelText: 'Email',
+              hintText: 'alex@example.com',
               prefixIcon: const Icon(Icons.alternate_email_rounded),
               errorText: _emailError,
             ),
             onChanged: (_) {
-              if (_emailError != null) {
+              if (_emailError != null || _formError != null) {
                 setState(() {
-                  _emailError = Validators.email(_emailController.text);
+                  _emailError = Validators.email(_emailController.text.trim());
+                  _formError = null;
                 });
               }
             },
@@ -136,6 +177,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
             controller: _passwordController,
             errorText: _passwordError,
             autofillHints: const [AutofillHints.newPassword],
+            onFieldSubmitted: (_) => _submit(),
           ),
           const SizedBox(height: 16),
           PasswordField(
@@ -145,7 +187,14 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
             autofillHints: const [AutofillHints.newPassword],
             onFieldSubmitted: (_) => _submit(),
           ),
-          const SizedBox(height: 28),
+          const SizedBox(height: 16),
+          if (_formError != null)
+            AuthErrorBanner(
+              message: _formError!,
+              actionLabel: bannerActionLabel,
+              onAction: bannerAction,
+              onDismiss: () => setState(() => _formError = null),
+            ),
           LoadingButton(
             label: 'Create account',
             isLoading: submitting,

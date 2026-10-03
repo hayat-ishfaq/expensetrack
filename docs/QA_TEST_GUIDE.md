@@ -143,6 +143,8 @@
 | **TC-02.8** | Reset Link Dispatch & Inbox Screen | Enter valid email ➔ Tap "Send reset link" | Seamlessly transitions to "Check your inbox" screen showing the recipient email badge and "Open email app" button. | [ ] |
 | **TC-02.9** | Resend Cooldown Timer | On "Check your inbox" screen, observe resend button | Displays a 30-second cooldown countdown (`Resend link in 30s`). Disabled until timer elapses. | [ ] |
 | **TC-02.10** | In-App Password Reset (Settings) | While signed in, navigate to More tab ➔ Tap "Reset password" | Confirmation dialog appears; on confirm, triggers reset email to active account with feedback snackbar. | [ ] |
+| **TC-02.11** | Inline Auth Error Banner & Actions | Enter wrong password or unlinked email on Login / Sign Up | Prominent inline error banner appears directly above the CTA button with contextual recovery links (e.g., *"Create an account"* or *"Forgot password?"*). | [ ] |
+| **TC-02.12** | Profile Auto-Healing on Login | Sign in with an account lacking a `users/{uid}` doc | Automatically heals and writes the Firestore profile document; redirects user to Household Setup without getting stuck. | [ ] |
 
 ---
 

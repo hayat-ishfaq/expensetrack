@@ -10,6 +10,7 @@ import '../../../../shared/widgets/app_snackbar.dart';
 import '../../../../shared/widgets/loading_button.dart';
 import '../providers/auth_providers.dart';
 import '../providers/session_provider.dart';
+import '../widgets/auth_error_banner.dart';
 import '../widgets/auth_scaffold.dart';
 import '../widgets/password_field.dart';
 
@@ -38,13 +39,23 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final email = _emailController.text.trim();
     final password = _passwordController.text;
 
+    final emailErr = Validators.email(email);
+    final passErr = Validators.password(password);
+
     setState(() {
-      _emailError = Validators.email(email);
-      _passwordError = Validators.password(password);
+      _emailError = emailErr;
+      _passwordError = passErr;
       _formError = null;
     });
 
-    if (_emailError != null || _passwordError != null) return;
+    if (emailErr != null || passErr != null) {
+      if (emailErr != null && passErr != null) {
+        setState(() {
+          _formError = 'Please fill in both email and password.';
+        });
+      }
+      return;
+    }
 
     ref.read(authActionsProvider.notifier).signIn(
           email: email,
@@ -73,7 +84,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       } else if ((previous?.isLoading ?? false) &&
           !next.isLoading &&
           !next.hasError) {
-        // Sign-in succeeded. Ensure session provider refreshes state immediately.
         setState(() {
           _formError = null;
         });
@@ -82,6 +92,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     });
 
     final submitting = ref.watch(authActionsProvider).isLoading;
+
+    // Provide contextual action in error banner if appropriate
+    String? bannerActionLabel;
+    VoidCallback? bannerAction;
+    if (_formError != null) {
+      final lower = _formError!.toLowerCase();
+      if (lower.contains('no account found') || lower.contains('not found')) {
+        bannerActionLabel = 'Create an account';
+        bannerAction = () => context.go(Routes.signup);
+      } else if (lower.contains('incorrect') || lower.contains('password')) {
+        bannerActionLabel = 'Forgot password?';
+        bannerAction = () => context.go(Routes.forgotPassword);
+      }
+    }
 
     return AuthScaffold(
       title: 'Welcome back',
@@ -131,34 +155,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               child: const Text('Forgot password?'),
             ),
           ),
-          if (_formError != null) ...[
-            Container(
-              margin: const EdgeInsets.only(bottom: 12),
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              decoration: BoxDecoration(
-                color: Colors.red.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.error_outline_rounded,
-                      color: Colors.red, size: 20),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      _formError!,
-                      style: const TextStyle(
-                        color: Colors.red,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+          if (_formError != null)
+            AuthErrorBanner(
+              message: _formError!,
+              actionLabel: bannerActionLabel,
+              onAction: bannerAction,
+              onDismiss: () => setState(() => _formError = null),
             ),
-          ],
           const SizedBox(height: 4),
           LoadingButton(
             label: 'Sign in',

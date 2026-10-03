@@ -13,6 +13,7 @@ import '../../../../core/utils/validators.dart';
 import '../../../../shared/widgets/app_snackbar.dart';
 import '../../../../shared/widgets/loading_button.dart';
 import '../providers/auth_providers.dart';
+import '../widgets/auth_error_banner.dart';
 import '../widgets/auth_scaffold.dart';
 
 class ForgotPasswordScreen extends ConsumerStatefulWidget {
@@ -26,6 +27,7 @@ class ForgotPasswordScreen extends ConsumerStatefulWidget {
 class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   final _emailController = TextEditingController();
   String? _emailError;
+  String? _formError;
   bool _isEmailSent = false;
   String _submittedEmail = '';
   Timer? _cooldownTimer;
@@ -63,10 +65,12 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
 
   void _submit() {
     final email = _emailController.text.trim();
+    final err = Validators.email(email);
     setState(() {
-      _emailError = Validators.email(email);
+      _emailError = err;
+      _formError = null;
     });
-    if (_emailError != null) return;
+    if (err != null) return;
     ref.read(authActionsProvider.notifier).resetPassword(email: email);
   }
 
@@ -103,16 +107,25 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
     ref.listen<AsyncValue<void>>(authActionsProvider, (previous, next) {
       if (next.hasError && !next.isLoading) {
         final error = next.error!;
+        final message = error is AppException
+            ? error.message
+            : FirebaseErrorMapper.messageFor(error);
+
+        setState(() {
+          _formError = message;
+        });
+
         showAppSnack(
           context,
-          error is AppException
-              ? error.message
-              : FirebaseErrorMapper.messageFor(error),
+          message,
           error: true,
         );
       } else if ((previous?.isLoading ?? false) &&
           !next.isLoading &&
           !next.hasError) {
+        setState(() {
+          _formError = null;
+        });
         if (!_isEmailSent) {
           setState(() {
             _isEmailSent = true;
@@ -139,6 +152,16 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
 
   Widget _buildInputState(BuildContext context, bool submitting) {
     final theme = Theme.of(context);
+
+    String? bannerActionLabel;
+    VoidCallback? bannerAction;
+    if (_formError != null) {
+      final lower = _formError!.toLowerCase();
+      if (lower.contains('no account found') || lower.contains('not found')) {
+        bannerActionLabel = 'Create an account';
+        bannerAction = () => context.go(Routes.signup);
+      }
+    }
 
     return AuthScaffold(
       showBack: true,
@@ -176,15 +199,23 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
               errorText: _emailError,
             ),
             onChanged: (_) {
-              if (_emailError != null) {
+              if (_emailError != null || _formError != null) {
                 setState(() {
                   _emailError = Validators.email(_emailController.text.trim());
+                  _formError = null;
                 });
               }
             },
             onSubmitted: (_) => _submit(),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 20),
+          if (_formError != null)
+            AuthErrorBanner(
+              message: _formError!,
+              actionLabel: bannerActionLabel,
+              onAction: bannerAction,
+              onDismiss: () => setState(() => _formError = null),
+            ),
           LoadingButton(
             label: 'Send reset link',
             isLoading: submitting,
