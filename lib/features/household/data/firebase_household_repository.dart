@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 
 import '../../../core/constants/app_constants.dart';
 import '../../../core/constants/firestore_constants.dart';
@@ -114,7 +115,8 @@ class FirebaseHouseholdRepository implements HouseholdRepository {
   Future<Household> joinHousehold({required String inviteCode}) async {
     try {
       final uid = _uid;
-      final code = Validators.normalizeInviteCode(inviteCode);
+      final rawTrimmed = inviteCode.trim();
+      final code = Validators.normalizeInviteCode(rawTrimmed);
       if (!_invitePattern.hasMatch(code)) {
         throw const HouseholdException(
           'That invite code looks wrong — codes look like FLAT-7K29.',
@@ -122,6 +124,8 @@ class FirebaseHouseholdRepository implements HouseholdRepository {
       }
 
       String? householdId;
+
+      // Strategy 1: Check inviteCodes collection with normalized code (e.g. FLAT-7K29)
       final codeSnapshot = await _firestore
           .doc('${FirestoreCollections.inviteCodes}/$code')
           .get();
@@ -129,11 +133,79 @@ class FirebaseHouseholdRepository implements HouseholdRepository {
         householdId = codeSnapshot.data()?['householdId'] as String?;
       }
 
+      // Strategy 2: Check raw trimmed input (e.g. flat-7k29 or uppercase)
+      if (householdId == null || householdId.isEmpty) {
+        final rawUpper = rawTrimmed.toUpperCase();
+        if (rawUpper != code) {
+          final rawSnapshot = await _firestore
+              .doc('${FirestoreCollections.inviteCodes}/$rawUpper')
+              .get();
+          if (rawSnapshot.exists) {
+            householdId = rawSnapshot.data()?['householdId'] as String?;
+          }
+        }
+      }
+
+      // Strategy 3: Check short 4-character suffix in inviteCodes (e.g. 7K29)
+      if (householdId == null || householdId.isEmpty) {
+        final suffix = code.startsWith(AppConstants.invitePrefix)
+            ? code.substring(AppConstants.invitePrefix.length)
+            : code;
+        final suffixSnapshot = await _firestore
+            .doc('${FirestoreCollections.inviteCodes}/$suffix')
+            .get();
+        if (suffixSnapshot.exists) {
+          householdId = suffixSnapshot.data()?['householdId'] as String?;
+        }
+      }
+
+      // Strategy 4: Query households collection directly where inviteCode == normalized code
+      if (householdId == null || householdId.isEmpty) {
+        try {
+          final query = await _firestore
+              .collection(FirestoreCollections.households)
+              .where('inviteCode', isEqualTo: code)
+              .limit(1)
+              .get();
+          if (query.docs.isNotEmpty) {
+            householdId = query.docs.first.id;
+          }
+        } catch (_) {}
+      }
+
+      // Strategy 5: Query households where inviteCode == suffix (without prefix)
+      if (householdId == null || householdId.isEmpty) {
+        final suffix = code.startsWith(AppConstants.invitePrefix)
+            ? code.substring(AppConstants.invitePrefix.length)
+            : code;
+        try {
+          final query = await _firestore
+              .collection(FirestoreCollections.households)
+              .where('inviteCode', isEqualTo: suffix)
+              .limit(1)
+              .get();
+          if (query.docs.isNotEmpty) {
+            householdId = query.docs.first.id;
+          }
+        } catch (_) {}
+      }
+
       if (householdId == null || householdId.isEmpty) {
         throw const HouseholdException(
           "That invite code doesn't match any flat. "
           'Double-check it with whoever shared it.',
         );
+      }
+
+      // Auto-heal inviteCodes doc if resolved via fallback
+      if (!codeSnapshot.exists) {
+        _firestore
+            .doc('${FirestoreCollections.inviteCodes}/$code')
+            .set({
+              'householdId': householdId,
+              'createdAt': Timestamp.now(),
+            }, SetOptions(merge: true))
+            .catchError((_) {});
       }
 
       final householdRef = _firestore
@@ -169,34 +241,26 @@ class FirebaseHouseholdRepository implements HouseholdRepository {
             : now,
       );
 
-      final batch = _firestore.batch();
+      // Core Join Write: add member and associate user with household
+      final joinBatch = _firestore.batch();
+      joinBatch.set(memberDocRef, member.toMap());
+      joinBatch.set(
+        _firestore.collection(FirestoreCollections.users).doc(uid),
+        {'householdId': householdId},
+        SetOptions(merge: true),
+      );
+      await joinBatch.commit();
 
-      // Clean up previous flat membership if user was in another flat
-      final oldHouseholdId = profile['householdId'] as String?;
-      if (oldHouseholdId != null &&
-          oldHouseholdId.isNotEmpty &&
-          oldHouseholdId != householdId) {
-        try {
-          final oldRef = _firestore
-              .collection(FirestoreCollections.households)
-              .doc(oldHouseholdId);
-          batch.delete(
-            oldRef.collection(FirestoreCollections.members).doc(uid),
-          );
-          batch.update(oldRef, {'memberCount': FieldValue.increment(-1)});
-        } catch (_) {
-          // Ignore if previous flat cleanup cannot be completed
-        }
-      }
-
-      batch.set(memberDocRef, member.toMap());
+      // Secondary non-fatal updates: memberCount increment, notification, and old flat cleanup
       if (!alreadyMember) {
-        batch.update(householdRef, {
+        householdRef.update({
           'memberCount': FieldValue.increment(1),
+        }).catchError((e) {
+          debugPrint('Non-fatal memberCount increment error: $e');
         });
 
         final notifRef = householdRef.collection('notifications').doc();
-        batch.set(notifRef, {
+        notifRef.set({
           'householdId': householdId,
           'title': 'New roommate joined! 🎉',
           'body': '${member.name} joined the flat',
@@ -207,17 +271,41 @@ class FirebaseHouseholdRepository implements HouseholdRepository {
           'payerId': uid,
           'createdAt': FieldValue.serverTimestamp(),
           'readByUserIds': <String>[],
+        }).catchError((e) {
+          debugPrint('Non-fatal notification write error: $e');
         });
       }
-      batch.set(
-        _firestore.collection(FirestoreCollections.users).doc(uid),
-        {'householdId': householdId},
-        SetOptions(merge: true),
-      );
-      await batch.commit();
+
+      final oldHouseholdId = profile['householdId'] as String?;
+      if (oldHouseholdId != null &&
+          oldHouseholdId.isNotEmpty &&
+          oldHouseholdId != householdId) {
+        () async {
+          try {
+            final oldRef = _firestore
+                .collection(FirestoreCollections.households)
+                .doc(oldHouseholdId);
+            await oldRef.collection(FirestoreCollections.members).doc(uid).delete();
+            await oldRef.update({'memberCount': FieldValue.increment(-1)});
+          } catch (e) {
+            debugPrint('Non-fatal cleanup of old flat $oldHouseholdId: $e');
+          }
+        }();
+      }
 
       final joinedSnapshot = await householdRef.get();
-      if (!joinedSnapshot.exists) throw const NotFoundException();
+      if (!joinedSnapshot.exists) {
+        return Household(
+          id: householdId,
+          name: 'Flat',
+          ownerId: uid,
+          inviteCode: code,
+          memberCount: 1,
+          monthlyBudgetPaisa: 0,
+          currency: AppConstants.defaultCurrency,
+          createdAt: now,
+        );
+      }
       return Household.fromMap(householdId, joinedSnapshot.data()!);
     } catch (error) {
       throw toAppException(error);
