@@ -19,6 +19,7 @@ import '../../../auth/presentation/providers/session_provider.dart';
 import '../../../expenses/domain/expense_category.dart';
 import '../../../expenses/presentation/widgets/create_category_sheet.dart';
 import '../../../household/presentation/providers/household_providers.dart';
+import '../../../household/presentation/widgets/notification_bell_button.dart';
 import '../../domain/dashboard_stats.dart';
 import '../providers/dashboard_providers.dart';
 
@@ -536,14 +537,7 @@ class _CategoryBudgetScreenState extends ConsumerState<CategoryBudgetScreen> {
           ),
         ),
         actions: [
-          IconButton(
-            icon: Icon(
-              Icons.notifications_outlined,
-              color: isDark ? Colors.white70 : CoSpendColors.textMuted,
-              size: 22,
-            ),
-            onPressed: () {},
-          ),
+          const NotificationBellButton(),
           Padding(
             padding: const EdgeInsets.only(right: 12),
             child: GestureDetector(

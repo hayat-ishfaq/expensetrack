@@ -18,6 +18,7 @@ import '../../../expenses/domain/expense.dart';
 import '../../../expenses/domain/expense_category.dart';
 import '../../../expenses/presentation/providers/expense_providers.dart';
 import '../../../household/presentation/providers/household_providers.dart';
+import '../../../household/presentation/widgets/notification_bell_button.dart';
 
 enum DateFilter { all, today, thisWeek, thisMonth }
 
@@ -129,14 +130,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
           ),
         ),
         actions: [
-          IconButton(
-            icon: Icon(
-              Icons.notifications_outlined,
-              color: isDark ? Colors.white70 : CoSpendColors.textMuted,
-              size: 22,
-            ),
-            onPressed: () {},
-          ),
+          const NotificationBellButton(),
           Padding(
             padding: const EdgeInsets.only(right: 12),
             child: GestureDetector(

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/theme/design_system.dart';
 import '../../../../core/utils/money.dart';
+import '../../domain/household_notification.dart';
 import '../providers/notification_providers.dart';
 
 class NotificationsSheet extends ConsumerStatefulWidget {
@@ -43,6 +44,15 @@ class _NotificationsSheetState extends ConsumerState<NotificationsSheet> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final notificationsAsync = ref.watch(householdNotificationsProvider);
+
+    ref.listen<AsyncValue<List<HouseholdNotification>>>(
+      householdNotificationsProvider,
+      (prev, next) {
+        if (next.hasValue && next.value != null && next.value!.isNotEmpty) {
+          ref.read(notificationActionsProvider.notifier).markAllAsRead();
+        }
+      },
+    );
 
     return Container(
       constraints: BoxConstraints(
@@ -178,18 +188,23 @@ class _NotificationsSheetState extends ConsumerState<NotificationsSheet> {
                   separatorBuilder: (_, _) => const SizedBox(height: 8),
                   itemBuilder: (context, index) {
                     final item = items[index];
-                    return Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: isDark ? CoSpendColors.darkCanvas : CoSpendColors.canvas,
-                        borderRadius: CoSpendRadii.cardRadius,
-                        border: Border.all(
-                          color: isDark ? CoSpendColors.darkBorder : CoSpendColors.borderLight,
+                    return InkWell(
+                      borderRadius: CoSpendRadii.cardRadius,
+                      onTap: () {
+                        ref.read(notificationActionsProvider.notifier).markAsRead(item.id);
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: isDark ? CoSpendColors.darkCanvas : CoSpendColors.canvas,
+                          borderRadius: CoSpendRadii.cardRadius,
+                          border: Border.all(
+                            color: isDark ? CoSpendColors.darkBorder : CoSpendColors.borderLight,
+                          ),
                         ),
-                      ),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
                           Container(
                             margin: const EdgeInsets.only(top: 2),
                             width: 32,
@@ -265,8 +280,9 @@ class _NotificationsSheetState extends ConsumerState<NotificationsSheet> {
                           ),
                         ],
                       ),
-                    );
-                  },
+                    ),
+                  );
+                },
                 );
               },
             ),

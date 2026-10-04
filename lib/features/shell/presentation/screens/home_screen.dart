@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -16,9 +16,8 @@ import '../../../auth/presentation/providers/session_provider.dart';
 import '../../../dashboard/presentation/providers/dashboard_providers.dart';
 import '../../../expenses/presentation/providers/expense_providers.dart';
 import '../../../household/presentation/providers/household_providers.dart';
-import '../../../household/presentation/providers/notification_providers.dart';
 import '../../../household/presentation/widgets/invite_members_sheet.dart';
-import '../../../household/presentation/widgets/notifications_sheet.dart';
+import '../../../household/presentation/widgets/notification_bell_button.dart';
 import '../../../settlement/presentation/providers/settlement_providers.dart';
 import '../widgets/home_budget_alert_banner.dart';
 import '../widgets/home_hero_spend_card.dart';
@@ -73,7 +72,6 @@ class HomeScreen extends ConsumerWidget {
     final settlementAsync = ref.watch(settlementProvider);
 
     final currentUserId = currentUser?.id ?? '';
-    final unreadNotifs = ref.watch(unreadNotificationCountProvider);
     final userName = currentUser?.name ?? 'Roommate';
     final userPhotoUrl = currentUser?.photoUrl;
     final isDark = theme.brightness == Brightness.dark;
@@ -101,22 +99,7 @@ class HomeScreen extends ConsumerWidget {
               return Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  IconButton(
-                    icon: Badge(
-                      isLabelVisible: unreadNotifs > 0,
-                      backgroundColor: CoSpendColors.alertRed,
-                      label: Text('$unreadNotifs'),
-                      child: Icon(
-                        Icons.notifications_outlined,
-                        color: isDark ? Colors.white70 : CoSpendColors.textMuted,
-                        size: 22,
-                      ),
-                    ),
-                    tooltip: 'Activity & Alerts',
-                    onPressed: () {
-                      NotificationsSheet.show(context);
-                    },
-                  ),
+                  const NotificationBellButton(),
                   Padding(
                     padding: const EdgeInsets.only(right: 12),
                     child: GestureDetector(

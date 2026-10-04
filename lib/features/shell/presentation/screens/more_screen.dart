@@ -15,6 +15,7 @@ import '../../../auth/presentation/providers/auth_providers.dart';
 import '../../../auth/presentation/providers/session_provider.dart';
 import '../../../household/presentation/providers/household_providers.dart';
 import '../../../household/presentation/widgets/invite_members_sheet.dart';
+import '../../../household/presentation/widgets/notification_bell_button.dart';
 
 /// Settings / More tab — premium fintech style matching CoSpend design system.
 class MoreScreen extends ConsumerWidget {
@@ -129,6 +130,7 @@ class MoreScreen extends ConsumerWidget {
           ),
         ),
         actions: [
+          const NotificationBellButton(),
           Padding(
             padding: const EdgeInsets.only(right: 12),
             child: GestureDetector(

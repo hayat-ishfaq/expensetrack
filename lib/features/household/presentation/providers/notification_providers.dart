@@ -27,35 +27,118 @@ final householdNotificationsProvider =
   });
 });
 
+class LocallyReadNotificationsController extends Notifier<Set<String>> {
+  @override
+  Set<String> build() => <String>{};
+
+  void markIds(Iterable<String> ids) {
+    state = {...state, ...ids};
+  }
+
+  void markOne(String id) {
+    state = {...state, id};
+  }
+}
+
+/// Tracks notification IDs that have been viewed by the user in this session,
+/// clearing the red badge popup immediately without waiting for network latency.
+final locallyReadNotificationIdsProvider =
+    NotifierProvider<LocallyReadNotificationsController, Set<String>>(
+  LocallyReadNotificationsController.new,
+);
+
 class NotificationActions extends AsyncNotifier<void> {
   @override
-  Future<void> build() => Future.value();
+  void build() {}
 
+  /// Mark all notifications as read both locally (instant badge disappearance)
+  /// and remotely in Firestore.
   Future<void> markAllAsRead() async {
     final householdId = ref.read(sessionProvider).value?.householdId;
     final uid = ref.read(sessionProvider).value?.user?.id;
     if (householdId == null || uid == null) return;
 
-    final notifications =
-        ref.read(householdNotificationsProvider).value ?? const [];
-    final unread = notifications
-        .where((notification) => !notification.readByUserIds.contains(uid))
-        .toList();
-    if (unread.isEmpty) return;
-
     final firestore = FirebaseFirestore.instance;
-    final batch = firestore.batch();
-    for (final notification in unread) {
-      final doc = firestore
+
+    // 1. Instant local badge clearance
+    final currentNotifs = ref.read(householdNotificationsProvider).value;
+    if (currentNotifs != null && currentNotifs.isNotEmpty) {
+      ref.read(locallyReadNotificationIdsProvider.notifier).markIds(
+            currentNotifs.map((n) => n.id),
+          );
+    }
+
+    // 2. Resolve target notification IDs to mark as read in Firestore
+    List<String> unreadIds = [];
+    if (currentNotifs != null && currentNotifs.isNotEmpty) {
+      unreadIds = currentNotifs
+          .where((n) => !n.readByUserIds.contains(uid))
+          .map((n) => n.id)
+          .toList();
+    } else {
+      try {
+        final querySnap = await firestore
+            .collection(FirestoreCollections.households)
+            .doc(householdId)
+            .collection('notifications')
+            .limit(40)
+            .get();
+        unreadIds = querySnap.docs
+            .where((doc) {
+              final readList =
+                  (doc.data()['readByUserIds'] as List<dynamic>?) ?? [];
+              return !readList.contains(uid);
+            })
+            .map((doc) => doc.id)
+            .toList();
+
+        // Also add any newly discovered IDs to local read set
+        ref.read(locallyReadNotificationIdsProvider.notifier).markIds(unreadIds);
+      } catch (e) {
+        // Fallback silently
+      }
+    }
+
+    if (unreadIds.isEmpty) return;
+
+    // 3. Persist to Firestore
+    try {
+      final batch = firestore.batch();
+      for (final docId in unreadIds) {
+        final doc = firestore
+            .collection(FirestoreCollections.households)
+            .doc(householdId)
+            .collection('notifications')
+            .doc(docId);
+        batch.update(doc, {
+          'readByUserIds': FieldValue.arrayUnion([uid]),
+        });
+      }
+      await batch.commit();
+    } catch (e) {
+      // Non-fatal if offline or network delay; local badge already cleared
+    }
+  }
+
+  /// Mark an individual notification as read.
+  Future<void> markAsRead(String notificationId) async {
+    final householdId = ref.read(sessionProvider).value?.householdId;
+    final uid = ref.read(sessionProvider).value?.user?.id;
+    if (householdId == null || uid == null) return;
+
+    // Immediate local clearance
+    ref.read(locallyReadNotificationIdsProvider.notifier).markOne(notificationId);
+
+    try {
+      await FirebaseFirestore.instance
           .collection(FirestoreCollections.households)
           .doc(householdId)
           .collection('notifications')
-          .doc(notification.id);
-      batch.update(doc, {
+          .doc(notificationId)
+          .update({
         'readByUserIds': FieldValue.arrayUnion([uid]),
       });
-    }
-    await batch.commit();
+    } catch (_) {}
   }
 }
 
@@ -63,12 +146,16 @@ final notificationActionsProvider =
     AsyncNotifierProvider<NotificationActions, void>(NotificationActions.new);
 
 /// Count of notifications the current user has not marked read.
+/// Evaluates both Firestore status and instant local views.
 final unreadNotificationCountProvider = Provider<int>((ref) {
   final uid = ref.watch(sessionProvider).value?.user?.id;
   if (uid == null) return 0;
   final notifications =
       ref.watch(householdNotificationsProvider).value ?? const [];
-  return notifications
-      .where((notification) => !notification.readByUserIds.contains(uid))
-      .length;
+  final locallyRead = ref.watch(locallyReadNotificationIdsProvider);
+
+  return notifications.where((notification) {
+    if (locallyRead.contains(notification.id)) return false;
+    return !notification.readByUserIds.contains(uid);
+  }).length;
 });
