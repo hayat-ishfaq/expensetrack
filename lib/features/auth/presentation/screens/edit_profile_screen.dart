@@ -65,7 +65,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     if (!_formKey.currentState!.validate()) return;
 
     try {
-      await ref.read(authActionsProvider.notifier).updateProfile(
+      await ref
+          .read(authActionsProvider.notifier)
+          .updateProfile(
             uid: user.id,
             name: _nameController.text.trim(),
             photoUrl: _photoUrl,
@@ -127,7 +129,10 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                     height: 18,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
-                : const Text('Save', style: TextStyle(fontWeight: FontWeight.w700)),
+                : const Text(
+                    'Save',
+                    style: TextStyle(fontWeight: FontWeight.w700),
+                  ),
           ),
         ],
       ),
@@ -193,8 +198,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
               Center(
                 child: TextButton.icon(
                   onPressed: () => _pickAvatar(user),
-                  icon: const Icon(Icons.palette_outlined, size: 16),
-                  label: const Text('Change Avatar'),
+                  icon: const Icon(Icons.camera_alt_outlined, size: 16),
+                  label: const Text('Change Photo'),
                 ),
               ),
               const SizedBox(height: 24),
@@ -241,7 +246,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                   prefixIcon: const Icon(Icons.email_outlined),
                   suffixIcon: const Icon(Icons.lock_outline_rounded, size: 18),
                   filled: true,
-                  fillColor: scheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                  fillColor: scheme.surfaceContainerHighest.withValues(
+                    alpha: 0.5,
+                  ),
                   border: const OutlineInputBorder(),
                 ),
               ),
@@ -282,10 +289,11 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
               TextFormField(
                 controller: _upiController,
                 decoration: const InputDecoration(
-                  labelText: 'UPI ID / Payment Handle (Optional)',
+                  labelText: 'Payment Handle (Optional)',
                   prefixIcon: Icon(Icons.payment_rounded),
                   border: OutlineInputBorder(),
-                  helperText: 'Displayed to flatmates when settling shared expenses',
+                  helperText:
+                      'Displayed to flatmates when settling shared expenses',
                 ),
               ),
               const SizedBox(height: 16),

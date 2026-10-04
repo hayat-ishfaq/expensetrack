@@ -1,6 +1,5 @@
 import 'package:expensetrack/app/router/routes.dart';
 import 'package:expensetrack/core/errors/app_exception.dart';
-import 'package:expensetrack/features/auth/domain/auth_repository.dart';
 import 'package:expensetrack/features/auth/presentation/providers/auth_providers.dart';
 import 'package:expensetrack/features/auth/presentation/screens/forgot_password_screen.dart';
 import 'package:flutter/material.dart';
