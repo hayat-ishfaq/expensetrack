@@ -1,4 +1,4 @@
-﻿import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 
 import 'notification_service.dart';
@@ -33,15 +33,26 @@ class FcmService {
   FcmService._();
   static final FcmService instance = FcmService._();
 
-  final FirebaseMessaging _messaging = FirebaseMessaging.instance;
+  FirebaseMessaging? _messagingInstance;
+  FirebaseMessaging? get _messaging {
+    try {
+      return _messagingInstance ??= FirebaseMessaging.instance;
+    } catch (e) {
+      debugPrint('[FCM] FirebaseMessaging unavailable: $e');
+      return null;
+    }
+  }
 
   /// Call once from [main()] after Firebase.initializeApp().
   Future<void> initialize() async {
+    final messaging = _messaging;
+    if (messaging == null) return;
+
     // Register the background handler (must be called before runApp).
     FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
 
     // Request permission (Android 13+ / iOS).
-    final settings = await _messaging.requestPermission(
+    final settings = await messaging.requestPermission(
       alert: true,
       badge: true,
       sound: true,
@@ -53,13 +64,13 @@ class FcmService {
 
     // Subscribe to the global household topic for broadcast messages.
     // Individual household topics are subscribed when a household is joined.
-    await _messaging.subscribeToTopic('cospend_global');
+    await messaging.subscribeToTopic('cospend_global');
 
     // Handle notification taps when app is in the BACKGROUND (not killed).
     FirebaseMessaging.onMessageOpenedApp.listen(_handleMessage);
 
     // Handle notification taps from TERMINATED state.
-    final initial = await _messaging.getInitialMessage();
+    final initial = await messaging.getInitialMessage();
     if (initial != null) _handleMessage(initial);
 
     // Handle messages while app is in FOREGROUND — show local notification.
@@ -80,7 +91,7 @@ class FcmService {
   /// Store this on the user's Firestore document to enable targeted pushes.
   Future<String?> getToken() async {
     try {
-      return await _messaging.getToken();
+      return await _messaging?.getToken();
     } catch (e) {
       debugPrint('[FCM] Failed to get token: $e');
       return null;
@@ -91,7 +102,7 @@ class FcmService {
   /// broadcast push notifications without maintaining a token list.
   Future<void> subscribeToHousehold(String householdId) async {
     try {
-      await _messaging.subscribeToTopic('household_$householdId');
+      await _messaging?.subscribeToTopic('household_$householdId');
       debugPrint('[FCM] Subscribed to household_$householdId');
     } catch (e) {
       debugPrint('[FCM] Failed to subscribe to household: $e');
@@ -101,7 +112,7 @@ class FcmService {
   /// Unsubscribe when a user leaves a household.
   Future<void> unsubscribeFromHousehold(String householdId) async {
     try {
-      await _messaging.unsubscribeFromTopic('household_$householdId');
+      await _messaging?.unsubscribeFromTopic('household_$householdId');
       debugPrint('[FCM] Unsubscribed from household_$householdId');
     } catch (e) {
       debugPrint('[FCM] Failed to unsubscribe from household: $e');

@@ -1,3 +1,4 @@
+import 'package:expensetrack/core/errors/app_exception.dart';
 import 'package:expensetrack/features/expenses/domain/custom_category.dart';
 import 'package:expensetrack/features/household/domain/household_repository.dart';
 import 'package:expensetrack/shared/models/household.dart';
@@ -20,13 +21,34 @@ class FakeHouseholdRepository implements HouseholdRepository {
     yield members;
   }
 
+  String? lastJoinedInviteCode;
+  bool shouldThrowOnJoin = false;
+  String? joinThrowMessage;
+
   @override
   Future<Household> createHousehold({required String name}) =>
       throw UnimplementedError('Not exercised in widget tests.');
 
   @override
-  Future<Household> joinHousehold({required String inviteCode}) =>
-      throw UnimplementedError('Not exercised in widget tests.');
+  Future<Household> joinHousehold({required String inviteCode}) async {
+    lastJoinedInviteCode = inviteCode;
+    if (shouldThrowOnJoin) {
+      throw HouseholdException(
+        joinThrowMessage ?? "That invite code doesn't match any flat.",
+      );
+    }
+    return household ??
+        Household(
+          id: 'hh-joined',
+          name: 'Joined Flat',
+          ownerId: 'u-owner',
+          inviteCode: inviteCode,
+          memberCount: 2,
+          monthlyBudgetPaisa: 0,
+          currency: 'PKR',
+          createdAt: DateTime.now(),
+        );
+  }
 
   @override
   Future<void> leaveHousehold() async {}

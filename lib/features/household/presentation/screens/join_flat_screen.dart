@@ -21,6 +21,7 @@ class JoinFlatScreen extends ConsumerStatefulWidget {
 class _JoinFlatScreenState extends ConsumerState<JoinFlatScreen> {
   final _codeController = TextEditingController();
   String? _codeError;
+  bool _submitted = false;
 
   @override
   void dispose() {
@@ -35,13 +36,16 @@ class _JoinFlatScreenState extends ConsumerState<JoinFlatScreen> {
       _codeError = Validators.inviteCode(raw);
     });
     if (_codeError != null) return;
+    _submitted = true;
     ref.read(householdActionsProvider.notifier).join(inviteCode: code);
   }
 
   @override
   Widget build(BuildContext context) {
     ref.listen<AsyncValue<void>>(householdActionsProvider, (previous, next) {
+      if (!_submitted) return;
       if (next.hasError && !next.isLoading) {
+        _submitted = false;
         final error = next.error!;
         showAppSnack(
           context,
@@ -53,6 +57,7 @@ class _JoinFlatScreenState extends ConsumerState<JoinFlatScreen> {
       } else if (!next.isLoading &&
           !next.hasError &&
           previous?.isLoading == true) {
+        _submitted = false;
         showAppSnack(context, 'Successfully joined flat!');
         context.go(Routes.home);
       }

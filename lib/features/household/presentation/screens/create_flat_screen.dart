@@ -21,6 +21,7 @@ class CreateFlatScreen extends ConsumerStatefulWidget {
 class _CreateFlatScreenState extends ConsumerState<CreateFlatScreen> {
   final _nameController = TextEditingController();
   String? _nameError;
+  bool _submitted = false;
 
   @override
   void dispose() {
@@ -34,13 +35,16 @@ class _CreateFlatScreenState extends ConsumerState<CreateFlatScreen> {
       _nameError = Validators.flatName(name);
     });
     if (_nameError != null) return;
+    _submitted = true;
     ref.read(householdActionsProvider.notifier).create(name: name);
   }
 
   @override
   Widget build(BuildContext context) {
     ref.listen<AsyncValue<void>>(householdActionsProvider, (previous, next) {
+      if (!_submitted) return;
       if (next.hasError && !next.isLoading) {
+        _submitted = false;
         final error = next.error!;
         showAppSnack(
           context,
@@ -52,6 +56,7 @@ class _CreateFlatScreenState extends ConsumerState<CreateFlatScreen> {
       } else if (!next.isLoading &&
           !next.hasError &&
           previous?.isLoading == true) {
+        _submitted = false;
         showAppSnack(context, 'Flat created successfully!');
         context.go(Routes.home);
       }

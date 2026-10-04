@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/services/fcm_service.dart';
 import '../../../../shared/models/household.dart';
 import '../../../../shared/models/household_member.dart';
+import '../../../auth/presentation/providers/auth_providers.dart';
 import '../../../auth/presentation/providers/session_provider.dart';
 import '../../../expenses/domain/custom_category.dart';
 import '../../data/firebase_household_repository.dart';
@@ -40,7 +41,7 @@ final householdMembersProvider = StreamProvider<List<HouseholdMember>>((ref) {
 /// loading state and surface mapped errors.
 class HouseholdActions extends AsyncNotifier<void> {
   @override
-  Future<void> build() => Future.value();
+  void build() {}
 
   HouseholdRepository get _repository =>
       ref.read(householdRepositoryProvider);
@@ -49,6 +50,8 @@ class HouseholdActions extends AsyncNotifier<void> {
     state = const AsyncLoading();
     state = await AsyncValue.guard(() async {
       final household = await _repository.createHousehold(name: name);
+      ref.invalidate(currentUserProvider);
+      ref.invalidate(sessionProvider);
       // Subscribe this device to the household's FCM topic so it receives
       // push notifications for new expenses, settlements, and member activity.
       FcmService.instance
@@ -68,6 +71,8 @@ class HouseholdActions extends AsyncNotifier<void> {
             .catchError((_) {});
       }
       final household = await _repository.joinHousehold(inviteCode: inviteCode);
+      ref.invalidate(currentUserProvider);
+      ref.invalidate(sessionProvider);
       // Subscribe to the new household topic.
       FcmService.instance
           .subscribeToHousehold(household.id)

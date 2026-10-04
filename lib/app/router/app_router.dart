@@ -246,7 +246,7 @@ String? _redirect(
       if (_authPaths.contains(path) || path == Routes.splash) {
         return Routes.home;
       }
-      if (path == Routes.householdSetup || path == Routes.createFlat) {
+      if (_householdSetupPaths.contains(path)) {
         return Routes.home;
       }
       return null;
