@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -22,16 +24,24 @@ class SplashScreen extends ConsumerStatefulWidget {
 class _SplashScreenState extends ConsumerState<SplashScreen>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
+  Timer? _fallbackTimer;
   bool _hasNavigated = false;
 
   @override
   void initState() {
     super.initState();
     _controller = AnimationController(vsync: this);
+    // Safety fallback: ensure splash sequence resolves gracefully even if Lottie loading delays
+    _fallbackTimer = Timer(const Duration(milliseconds: 2500), () {
+      if (mounted && !_hasNavigated) {
+        _handleAnimationComplete();
+      }
+    });
   }
 
   @override
   void dispose() {
+    _fallbackTimer?.cancel();
     _controller.dispose();
     super.dispose();
   }

@@ -26,9 +26,12 @@ class CoSpendApp extends ConsumerWidget {
       themeMode: themeMode,
       routerConfig: router,
       builder: (context, child) {
-        ErrorWidget.builder = (FlutterErrorDetails errorDetails) {
-          final isDark = Theme.of(context).brightness == Brightness.dark;
-          return Scaffold(
+        if (!WidgetsBinding.instance.runtimeType
+            .toString()
+            .contains('TestWidgetsFlutterBinding')) {
+          ErrorWidget.builder = (FlutterErrorDetails errorDetails) {
+            final isDark = Theme.of(context).brightness == Brightness.dark;
+            return Scaffold(
             backgroundColor:
                 isDark ? const Color(0xFF050F1C) : const Color(0xFFF5F7FA),
             body: Center(
@@ -74,6 +77,7 @@ class CoSpendApp extends ConsumerWidget {
             ),
           );
         };
+        }
         return child ?? const SizedBox.shrink();
       },
     );

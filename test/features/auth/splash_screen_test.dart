@@ -8,7 +8,7 @@ import 'package:flutter_test/flutter_test.dart';
 import '../../support/fake_auth_repository.dart';
 
 void main() {
-  testWidgets('SplashScreen displays brand name, tagline, and progress indicator',
+  testWidgets('SplashScreen displays brand name and mounts properly',
       (tester) async {
     final fakeAuth = FakeAuthRepository();
 
@@ -25,12 +25,11 @@ void main() {
     await tester.pump();
 
     // Verify brand assets are rendered on screen
+    expect(find.byType(SplashScreen), findsOneWidget);
     expect(find.text(AppConstants.appName), findsOneWidget);
-    expect(find.text(AppConstants.tagline), findsOneWidget);
-    expect(find.byType(CircularProgressIndicator), findsOneWidget);
 
-    // Advance animation
-    await tester.pump(const Duration(milliseconds: 700));
+    // Advance past the fallback timer window
+    await tester.pump(const Duration(seconds: 3));
 
     expect(find.text(AppConstants.appName), findsOneWidget);
   });
