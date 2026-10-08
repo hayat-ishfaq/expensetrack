@@ -1,5 +1,7 @@
 import 'package:expensetrack/features/auth/domain/auth_user.dart';
+import 'package:expensetrack/features/auth/domain/session_state.dart';
 import 'package:expensetrack/features/auth/presentation/providers/auth_providers.dart';
+import 'package:expensetrack/features/auth/presentation/providers/session_provider.dart';
 import 'package:expensetrack/features/expenses/domain/expense.dart';
 import 'package:expensetrack/features/expenses/domain/expense_category.dart';
 import 'package:expensetrack/features/expenses/presentation/providers/expense_providers.dart';
@@ -67,6 +69,13 @@ final _household = Household(
   createdAt: DateTime(2026, 9, 1),
 );
 
+class _FakeSessionController extends SessionController {
+  _FakeSessionController(this._state);
+  final SessionState _state;
+  @override
+  Future<SessionState> build() async => _state;
+}
+
 Widget _buildApp({
   required FakeExpenseRepository expenses,
   required FakeHouseholdRepository household,
@@ -84,6 +93,13 @@ Widget _buildApp({
 
   return ProviderScope(
     overrides: [
+      sessionProvider.overrideWith(
+        () => _FakeSessionController(
+          SessionReady(
+            user: auth.appUser!,
+          ),
+        ),
+      ),
       authRepositoryProvider.overrideWithValue(auth),
       expenseRepositoryProvider.overrideWithValue(expenses),
       householdRepositoryProvider.overrideWithValue(household),

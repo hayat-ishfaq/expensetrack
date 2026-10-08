@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../../app/router/routes.dart';
 import '../../../../core/theme/design_system.dart';
 import '../../../../core/utils/money.dart';
+import '../../../../shared/widgets/app_snackbar.dart';
+import '../../../auth/presentation/providers/session_provider.dart';
 import '../../domain/household_notification.dart';
 import '../providers/notification_providers.dart';
 
@@ -114,6 +118,20 @@ class _NotificationsSheetState extends ConsumerState<NotificationsSheet> {
                     ],
                   ),
                 ),
+                TextButton(
+                  onPressed: () {
+                    ref.read(notificationActionsProvider.notifier).markAllAsRead();
+                    showAppSnack(context, 'All notifications marked as read.');
+                  },
+                  child: const Text(
+                    'Mark all read',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: CoSpendColors.jadeGreen,
+                    ),
+                  ),
+                ),
                 IconButton(
                   icon: const Icon(Icons.close_rounded, size: 20),
                   onPressed: () => Navigator.pop(context),
@@ -182,16 +200,28 @@ class _NotificationsSheetState extends ConsumerState<NotificationsSheet> {
                   );
                 }
 
+                final currentUserId = ref.watch(sessionProvider).value?.user?.id ?? '';
+                final locallyRead = ref.watch(locallyReadNotificationIdsProvider);
+
                 return ListView.separated(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   itemCount: items.length,
                   separatorBuilder: (_, _) => const SizedBox(height: 8),
                   itemBuilder: (context, index) {
                     final item = items[index];
+                    final isUnread = !item.readByUserIds.contains(currentUserId) &&
+                        !locallyRead.contains(item.id);
+
                     return InkWell(
                       borderRadius: CoSpendRadii.cardRadius,
                       onTap: () {
                         ref.read(notificationActionsProvider.notifier).markAsRead(item.id);
+                        Navigator.of(context).pop();
+                        if (item.category.toLowerCase().contains('settle')) {
+                          context.push(Routes.settle);
+                        } else {
+                          context.push(Routes.expenses);
+                        }
                       },
                       child: Container(
                         padding: const EdgeInsets.all(12),
@@ -199,7 +229,10 @@ class _NotificationsSheetState extends ConsumerState<NotificationsSheet> {
                           color: isDark ? CoSpendColors.darkCanvas : CoSpendColors.canvas,
                           borderRadius: CoSpendRadii.cardRadius,
                           border: Border.all(
-                            color: isDark ? CoSpendColors.darkBorder : CoSpendColors.borderLight,
+                            color: isUnread
+                                ? CoSpendColors.jadeGreen.withValues(alpha: 0.6)
+                                : (isDark ? CoSpendColors.darkBorder : CoSpendColors.borderLight),
+                            width: isUnread ? 1.4 : 1.0,
                           ),
                         ),
                         child: Row(
@@ -214,8 +247,10 @@ class _NotificationsSheetState extends ConsumerState<NotificationsSheet> {
                               shape: BoxShape.circle,
                             ),
                             alignment: Alignment.center,
-                            child: const Icon(
-                              Icons.receipt_rounded,
+                            child: Icon(
+                              item.category.toLowerCase().contains('settle')
+                                  ? Icons.swap_horiz_rounded
+                                  : Icons.receipt_rounded,
                               size: 16,
                               color: CoSpendColors.jadeGreen,
                             ),
@@ -229,14 +264,31 @@ class _NotificationsSheetState extends ConsumerState<NotificationsSheet> {
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
                                     Expanded(
-                                      child: Text(
-                                        item.title,
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.w700,
-                                          fontSize: 13.5,
-                                          color: isDark ? Colors.white : CoSpendColors.prussianBlue,
-                                        ),
-                                        overflow: TextOverflow.ellipsis,
+                                      child: Row(
+                                        children: [
+                                          Flexible(
+                                            child: Text(
+                                              item.title,
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.w700,
+                                                fontSize: 13.5,
+                                                color: isDark ? Colors.white : CoSpendColors.prussianBlue,
+                                              ),
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                          if (isUnread) ...[
+                                            const SizedBox(width: 6),
+                                            Container(
+                                              width: 7,
+                                              height: 7,
+                                              decoration: const BoxDecoration(
+                                                color: CoSpendColors.jadeGreen,
+                                                shape: BoxShape.circle,
+                                              ),
+                                            ),
+                                          ],
+                                        ],
                                       ),
                                     ),
                                     Text(

@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 
 import '../../../../core/theme/design_system.dart';
 import '../../../../core/utils/money.dart';
@@ -12,6 +12,8 @@ class HomeQuickInsightsRow extends StatelessWidget {
     required this.settlement,
     required this.currentUserId,
     required this.isDark,
+    this.onTapSettlements,
+    this.onTapBalance,
   });
 
   final int myBalance;
@@ -19,6 +21,8 @@ class HomeQuickInsightsRow extends StatelessWidget {
   final dynamic settlement;
   final String currentUserId;
   final bool isDark;
+  final VoidCallback? onTapSettlements;
+  final VoidCallback? onTapBalance;
 
   @override
   Widget build(BuildContext context) {
@@ -57,30 +61,44 @@ class HomeQuickInsightsRow extends StatelessWidget {
       child: Row(
         children: [
           Expanded(
-            child: Padding(
-              padding: const EdgeInsets.all(18),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.trending_down_rounded,
-                        size: 15,
-                        color: isDark ? CoSpendColors.darkTextMuted : CoSpendColors.textMuted,
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        'SETTLEMENTS',
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 0.8,
-                          color: isDark ? CoSpendColors.darkTextMuted : CoSpendColors.textMuted,
+            child: GestureDetector(
+              onTap: onTapSettlements,
+              behavior: HitTestBehavior.opaque,
+              child: Padding(
+                padding: const EdgeInsets.all(18),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.trending_down_rounded,
+                              size: 15,
+                              color: isDark ? CoSpendColors.darkTextMuted : CoSpendColors.textMuted,
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              'SETTLEMENTS',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 0.8,
+                                color: isDark ? CoSpendColors.darkTextMuted : CoSpendColors.textMuted,
+                              ),
+                            ),
+                          ],
                         ),
-                      ),
-                    ],
-                  ),
+                        if (onTapSettlements != null)
+                          Icon(
+                            Icons.arrow_forward_ios_rounded,
+                            size: 10,
+                            color: isDark ? CoSpendColors.darkTextMuted : CoSpendColors.textSubtle,
+                          ),
+                      ],
+                    ),
                   const SizedBox(height: 8),
                   Text(
                     owedAmount > 0
@@ -108,36 +126,51 @@ class HomeQuickInsightsRow extends StatelessWidget {
               ),
             ),
           ),
-          Container(
-            width: 1,
-            height: 80,
-            color: isDark ? CoSpendColors.darkBorder : CoSpendColors.borderLight,
-          ),
+        ),
+        Container(
+          width: 1,
+          height: 80,
+          color: isDark ? CoSpendColors.darkBorder : CoSpendColors.borderLight,
+        ),
           Expanded(
-            child: Padding(
-              padding: const EdgeInsets.all(18),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.trending_up_rounded,
-                        size: 15,
-                        color: isDark ? CoSpendColors.darkTextMuted : CoSpendColors.textMuted,
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        'BALANCE',
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 0.8,
-                          color: isDark ? CoSpendColors.darkTextMuted : CoSpendColors.textMuted,
+            child: GestureDetector(
+              onTap: onTapBalance,
+              behavior: HitTestBehavior.opaque,
+              child: Padding(
+                padding: const EdgeInsets.all(18),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.trending_up_rounded,
+                              size: 15,
+                              color: isDark ? CoSpendColors.darkTextMuted : CoSpendColors.textMuted,
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              'BALANCE',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 0.8,
+                                color: isDark ? CoSpendColors.darkTextMuted : CoSpendColors.textMuted,
+                              ),
+                            ),
+                          ],
                         ),
-                      ),
-                    ],
-                  ),
+                        if (onTapBalance != null)
+                          Icon(
+                            Icons.arrow_forward_ios_rounded,
+                            size: 10,
+                            color: isDark ? CoSpendColors.darkTextMuted : CoSpendColors.textSubtle,
+                          ),
+                      ],
+                    ),
                   const SizedBox(height: 8),
                   Text(
                     owesAmount > 0
@@ -165,8 +198,9 @@ class HomeQuickInsightsRow extends StatelessWidget {
               ),
             ),
           ),
-        ],
-      ),
-    );
-  }
+        ),
+      ],
+    ),
+  );
+}
 }

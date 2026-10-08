@@ -421,12 +421,15 @@ class FirebaseHouseholdRepository implements HouseholdRepository {
   }) async {
     try {
       await _assertOwner(householdId);
+      final totalPaisa =
+          categoryBudgetsPaisa.values.fold<int>(0, (a, b) => a + b);
       await _firestore
           .collection(FirestoreCollections.households)
           .doc(householdId)
           .update({
         'categoryBudgetsPaisa': categoryBudgetsPaisa,
         'memberCategoryBudgetsPaisa': memberCategoryBudgetsPaisa,
+        'monthlyBudgetPaisa': totalPaisa,
       });
     } catch (error) {
       throw toAppException(error);

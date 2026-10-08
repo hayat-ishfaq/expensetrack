@@ -14,6 +14,7 @@ class HomeHeroSpendCard extends StatelessWidget {
     required this.sharedSpendingPaisa,
     required this.individualSpendingPaisa,
     this.budgetStatus,
+    this.onTap,
   });
 
   final int totalSpendingPaisa;
@@ -21,6 +22,7 @@ class HomeHeroSpendCard extends StatelessWidget {
   final int sharedSpendingPaisa;
   final int individualSpendingPaisa;
   final BudgetStatus? budgetStatus;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -34,30 +36,32 @@ class HomeHeroSpendCard extends StatelessWidget {
             ? CoSpendColors.warningAmber
             : CoSpendColors.jadeGreen;
 
-    return Container(
-      padding: const EdgeInsets.all(22),
-      decoration: BoxDecoration(
-        borderRadius: CoSpendRadii.cardLargeRadius,
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Color(0xFF0A1F3D),
-            Color(0xFF0E2D5A),
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(22),
+        decoration: BoxDecoration(
+          borderRadius: CoSpendRadii.cardLargeRadius,
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFF0A1F3D),
+              Color(0xFF0E2D5A),
+            ],
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: CoSpendColors.prussianBlue.withValues(alpha: 0.45),
+              blurRadius: 28,
+              offset: const Offset(0, 12),
+              spreadRadius: -4,
+            ),
           ],
         ),
-        boxShadow: [
-          BoxShadow(
-            color: CoSpendColors.prussianBlue.withValues(alpha: 0.45),
-            blurRadius: 28,
-            offset: const Offset(0, 12),
-            spreadRadius: -4,
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -198,7 +202,8 @@ class HomeHeroSpendCard extends StatelessWidget {
           ),
         ],
       ),
-    );
+    ),
+  );
   }
 }
 

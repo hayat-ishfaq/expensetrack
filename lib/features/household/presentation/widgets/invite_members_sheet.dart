@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../../../../core/constants/app_constants.dart';
 import '../../../../shared/models/household.dart';
@@ -43,12 +44,27 @@ class InviteMembersSheet extends ConsumerWidget {
 
   Future<void> _shareInvite(BuildContext context) async {
     final text = _buildShareMessage();
-    await Clipboard.setData(ClipboardData(text: text));
-    if (context.mounted) {
-      showAppSnack(
-        context,
-        'Invitation message copied to clipboard! Paste it into WhatsApp or Messages.',
+    try {
+      final box = context.findRenderObject() as RenderBox?;
+      final origin = box != null && box.hasSize
+          ? (box.localToGlobal(Offset.zero) & box.size)
+          : null;
+      await SharePlus.instance.share(
+        ShareParams(
+          text: text,
+          subject: 'Join "${household.name}" on ${AppConstants.appName}',
+          sharePositionOrigin: origin,
+        ),
       );
+    } catch (e) {
+      debugPrint('Share sheet error: $e');
+      await Clipboard.setData(ClipboardData(text: text));
+      if (context.mounted) {
+        showAppSnack(
+          context,
+          'Invitation message copied to clipboard! Paste it into WhatsApp or Messages.',
+        );
+      }
     }
   }
 

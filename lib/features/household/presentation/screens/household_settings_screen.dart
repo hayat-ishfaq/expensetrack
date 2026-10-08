@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../../../../app/router/routes.dart';
+import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/design_system.dart';
 import '../../../../shared/models/household.dart';
 import '../../../../shared/models/household_member.dart';
@@ -121,15 +123,47 @@ class HouseholdSettingsScreen extends ConsumerWidget {
                         ),
                         title: const Text('Invite code'),
                         subtitle: Text(household.inviteCode),
-                        trailing: IconButton(
-                          tooltip: 'Copy code',
-                          icon: const Icon(Icons.copy_rounded),
-                          onPressed: () {
-                            Clipboard.setData(
-                              ClipboardData(text: household.inviteCode),
-                            );
-                            showAppSnack(context, 'Invite code copied.');
-                          },
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              tooltip: 'Copy code',
+                              icon: const Icon(Icons.copy_rounded, size: 20),
+                              onPressed: () {
+                                Clipboard.setData(
+                                  ClipboardData(text: household.inviteCode),
+                                );
+                                showAppSnack(context, 'Invite code copied.');
+                              },
+                            ),
+                            IconButton(
+                              tooltip: 'Share invite',
+                              icon: const Icon(Icons.share_rounded, size: 20),
+                              onPressed: () async {
+                                final text = 'Hey! Join our flat "${household.name}" on ${AppConstants.appName} to manage our shared household expenses and category budgets.\n\n'
+                                    'Flat Invite Code: ${household.inviteCode}\n\n'
+                                    'Install ${AppConstants.appName}, open Settings -> "Join another flat", and enter this code!';
+                                final box = context.findRenderObject() as RenderBox?;
+                                final origin = box != null && box.hasSize
+                                    ? (box.localToGlobal(Offset.zero) & box.size)
+                                    : null;
+                                try {
+                                  await SharePlus.instance.share(
+                                    ShareParams(
+                                      text: text,
+                                      subject: 'Join "${household.name}" on ${AppConstants.appName}',
+                                      sharePositionOrigin: origin,
+                                    ),
+                                  );
+                                } catch (_) {
+                                  await Clipboard.setData(ClipboardData(text: text));
+                                  if (context.mounted) {
+                                    showAppSnack(context, 'Invite message copied to clipboard.');
+                                  }
+                                }
+                              },
+                            ),
+                          ],
                         ),
                         onTap: () =>
                             InviteMembersSheet.show(context, household),

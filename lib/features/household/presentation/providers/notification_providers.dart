@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../core/constants/firestore_constants.dart';
 import '../../../auth/presentation/providers/session_provider.dart';
@@ -28,15 +29,39 @@ final householdNotificationsProvider =
 });
 
 class LocallyReadNotificationsController extends Notifier<Set<String>> {
+  static const String _prefKey = 'cospend_locally_read_notification_ids';
+
   @override
-  Set<String> build() => <String>{};
+  Set<String> build() {
+    _loadFromPrefs();
+    return <String>{};
+  }
+
+  Future<void> _loadFromPrefs() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final stored = prefs.getStringList(_prefKey) ?? [];
+      if (stored.isNotEmpty) {
+        state = {...state, ...stored};
+      }
+    } catch (_) {}
+  }
 
   void markIds(Iterable<String> ids) {
     state = {...state, ...ids};
+    _saveToPrefs();
   }
 
   void markOne(String id) {
     state = {...state, id};
+    _saveToPrefs();
+  }
+
+  Future<void> _saveToPrefs() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setStringList(_prefKey, state.toList());
+    } catch (_) {}
   }
 }
 

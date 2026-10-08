@@ -27,6 +27,17 @@ class MoreScreen extends ConsumerWidget {
     String householdId,
     String currentName,
   ) async {
+    final household = ref.read(currentHouseholdProvider).value;
+    final currentUserId = ref.read(sessionProvider).value?.user?.id;
+    if (household == null || household.ownerId != currentUserId) {
+      showAppSnack(
+        context,
+        'Only the flat owner (admin) can change the flat name.',
+        error: true,
+      );
+      return;
+    }
+
     final controller = TextEditingController(text: currentName);
     final formKey = GlobalKey<FormState>();
 
@@ -296,16 +307,21 @@ class MoreScreen extends ConsumerWidget {
             _MenuGroup(
               isDark: isDark,
               items: [
-                _MenuItem(
-                  icon: Icons.home_work_rounded,
-                  iconColor: CoSpendColors.prussianBlue,
-                  title: 'Flat name',
-                  subtitle: household.name,
-                  onTap: () =>
-                      _renameFlat(context, ref, household.id, household.name),
-                  trailing: Icons.edit_outlined,
-                  isDark: isDark,
-                ),
+                if (isOwner)
+                  _MenuItem(
+                    icon: Icons.edit_rounded,
+                    iconColor: CoSpendColors.prussianBlue,
+                    title: 'Rename flat',
+                    subtitle: household.name,
+                    onTap: () => _renameFlat(
+                      context,
+                      ref,
+                      household.id,
+                      household.name,
+                    ),
+                    trailing: Icons.edit_outlined,
+                    isDark: isDark,
+                  ),
                 _MenuItem(
                   icon: Icons.donut_large_rounded,
                   iconColor: const Color(0xFF8B5CF6),

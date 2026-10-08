@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 
 import '../../../../core/theme/design_system.dart';
 import '../../../../core/utils/money.dart';
@@ -12,6 +12,10 @@ class HomeStatsGrid extends StatelessWidget {
     required this.userSharePaisa,
     required this.userPaidPaisa,
     required this.isDark,
+    this.onTapTotalBudget,
+    this.onTapTotalSpending,
+    this.onTapUserShare,
+    this.onTapUserPaid,
   });
 
   final int totalBudgetPaisa;
@@ -19,6 +23,10 @@ class HomeStatsGrid extends StatelessWidget {
   final int userSharePaisa;
   final int userPaidPaisa;
   final bool isDark;
+  final VoidCallback? onTapTotalBudget;
+  final VoidCallback? onTapTotalSpending;
+  final VoidCallback? onTapUserShare;
+  final VoidCallback? onTapUserPaid;
 
   @override
   Widget build(BuildContext context) {
@@ -39,6 +47,7 @@ class HomeStatsGrid extends StatelessWidget {
                 value: Money.format(totalBudgetPaisa),
                 subtitle: 'Household limit',
                 isDark: isDark,
+                onTap: onTapTotalBudget,
               ),
             ),
             const SizedBox(width: 12),
@@ -52,6 +61,7 @@ class HomeStatsGrid extends StatelessWidget {
                     ? '$budgetUsedPct% of flat budget used'
                     : 'This month',
                 isDark: isDark,
+                onTap: onTapTotalSpending,
               ),
             ),
           ],
@@ -67,6 +77,7 @@ class HomeStatsGrid extends StatelessWidget {
                 value: Money.format(userSharePaisa),
                 subtitle: 'Your allocated quota',
                 isDark: isDark,
+                onTap: onTapUserShare,
               ),
             ),
             const SizedBox(width: 12),
@@ -80,6 +91,7 @@ class HomeStatsGrid extends StatelessWidget {
                     ? '${Money.format(remainingPaisa)} remaining'
                     : '${Money.format(remainingPaisa)} over',
                 isDark: isDark,
+                onTap: onTapUserPaid,
               ),
             ),
           ],
@@ -97,6 +109,7 @@ class _StatCard extends StatelessWidget {
     required this.value,
     required this.subtitle,
     required this.isDark,
+    this.onTap,
   });
 
   final IconData icon;
@@ -105,39 +118,55 @@ class _StatCard extends StatelessWidget {
   final String value;
   final String subtitle;
   final bool isDark;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: isDark ? CoSpendColors.darkCard : CoSpendColors.white,
-        borderRadius: CoSpendRadii.cardRadius,
-        border: Border.all(
-          color: isDark ? CoSpendColors.darkBorder : CoSpendColors.borderLight,
-          width: 0.8,
-        ),
-        boxShadow: isDark ? null : CoSpendShadows.card,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 34,
-            height: 34,
-            decoration: BoxDecoration(
-              color: iconColor.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(9),
-            ),
-            alignment: Alignment.center,
-            child: Icon(icon, size: 17, color: iconColor),
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: isDark ? CoSpendColors.darkCard : CoSpendColors.white,
+          borderRadius: CoSpendRadii.cardRadius,
+          border: Border.all(
+            color: isDark ? CoSpendColors.darkBorder : CoSpendColors.borderLight,
+            width: 0.8,
           ),
-          const SizedBox(height: 10),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w700,
+          boxShadow: isDark ? null : CoSpendShadows.card,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Container(
+                  width: 34,
+                  height: 34,
+                  decoration: BoxDecoration(
+                    color: iconColor.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(9),
+                  ),
+                  alignment: Alignment.center,
+                  child: Icon(icon, size: 17, color: iconColor),
+                ),
+                if (onTap != null)
+                  Icon(
+                    Icons.arrow_forward_ios_rounded,
+                    size: 11,
+                    color: isDark
+                        ? CoSpendColors.darkTextMuted
+                        : CoSpendColors.textSubtle,
+                  ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w700,
               letterSpacing: 0.6,
               color: isDark ? CoSpendColors.darkTextMuted : CoSpendColors.textMuted,
             ),
@@ -165,6 +194,7 @@ class _StatCard extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
+    ),
+  );
+}
 }

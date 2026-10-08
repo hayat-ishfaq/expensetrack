@@ -176,20 +176,23 @@ class HomeScreen extends ConsumerWidget {
                 sharedSpendingPaisa: stats.totalSpendingPaisa - stats.userPaidPaisa,
                 individualSpendingPaisa: stats.userPaidPaisa,
                 budgetStatus: budgetStatus,
+                onTap: () => context.push(Routes.categoryBudgets),
               ),
               const SizedBox(height: 14),
 
-              // â”€â”€ 2Ã—2 Stats Grid â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
               HomeStatsGrid(
                 totalBudgetPaisa: household.effectiveTotalBudgetPaisa,
                 totalSpendingPaisa: stats.totalSpendingPaisa,
                 userSharePaisa: stats.userSharePaisa,
                 userPaidPaisa: stats.userPaidPaisa,
                 isDark: isDark,
+                onTapTotalBudget: () => context.push(Routes.categoryBudgets),
+                onTapTotalSpending: () => context.go(Routes.expenses),
+                onTapUserShare: () => context.push(Routes.categoryBudgets),
+                onTapUserPaid: () => context.go(Routes.expenses),
               ),
               const SizedBox(height: 12),
 
-              // â”€â”€ Budget Alerts â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
               if (exceededAlerts.isNotEmpty) ...[
                 for (final alert in exceededAlerts)
                   HomeBudgetAlertBanner(
@@ -197,6 +200,7 @@ class HomeScreen extends ConsumerWidget {
                     mySpentPaisa: alert.mySpentPaisa,
                     myBudgetPaisa: alert.myBudgetPaisa,
                     isDark: isDark,
+                    onTap: () => context.push(Routes.categoryBudgets),
                   ),
               ],
 
@@ -359,6 +363,8 @@ class HomeScreen extends ConsumerWidget {
                 settlement: settlementAsync.value,
                 currentUserId: currentUserId,
                 isDark: isDark,
+                onTapSettlements: () => context.push(Routes.settle),
+                onTapBalance: () => context.push(Routes.settle),
               ),
             ],
           );
